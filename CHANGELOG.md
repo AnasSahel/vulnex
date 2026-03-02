@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/AnasSahel/vulnex/compare/v1.0.0...v1.1.0) (2026-03-02)
+
+
+### Features
+
+* **output:** add rich formatted display for advisory get ([7f7c6f8](https://github.com/AnasSahel/vulnex/commit/7f7c6f8708d281f9aeca4791df1c8a1a094df055))
+* **sbom:** improve check output with component grouping, severity fix, and exit code ([f3f5076](https://github.com/AnasSahel/vulnex/commit/f3f507691b90dee039afc5b1fdcc2516d2eaf0a9))
+
+
+### Bug Fixes
+
+* **build:** add Formula directory to goreleaser Homebrew config ([4170ff3](https://github.com/AnasSahel/vulnex/commit/4170ff323c91fa669cb2ce0fff31375f05c4868b))
+
 ## 1.0.0 (2026-03-02)
 
 
