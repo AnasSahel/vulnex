@@ -252,6 +252,59 @@ func (f *markdownFormatter) FormatAdvisories(w io.Writer, advisories []model.Adv
 	return nil
 }
 
+func (f *markdownFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult) error {
+	fmt.Fprintf(w, "# SBOM Vulnerability Check\n\n")
+	fmt.Fprintf(w, "**File:** %s  \n", result.File)
+	fmt.Fprintf(w, "**Components scanned:** %d  \n\n", result.TotalComponents)
+
+	if len(result.Findings) == 0 {
+		fmt.Fprintf(w, "No vulnerabilities found.\n")
+		return nil
+	}
+
+	// Group findings by component
+	type componentKey struct {
+		ecosystem, name, version string
+	}
+	var order []componentKey
+	groups := make(map[componentKey][]model.SBOMFinding)
+	for _, finding := range result.Findings {
+		key := componentKey{finding.Ecosystem, finding.Name, finding.Version}
+		if _, exists := groups[key]; !exists {
+			order = append(order, key)
+		}
+		groups[key] = append(groups[key], finding)
+	}
+
+	for _, key := range order {
+		findings := groups[key]
+		fmt.Fprintf(w, "## %s %s (%s)\n\n", key.name, key.version, key.ecosystem)
+		fmt.Fprintf(w, "| ID | Severity | Fixed | Summary |\n")
+		fmt.Fprintf(w, "|----|----------|-------|---------|\n")
+		for _, finding := range findings {
+			sev := strings.ToUpper(finding.Advisory.Severity)
+			if sev == "" {
+				sev = "UNKNOWN"
+			}
+			fixed := finding.Fixed
+			if fixed == "" {
+				fixed = "-"
+			}
+			summary := finding.Advisory.Summary
+			if len(summary) > 60 {
+				summary = summary[:57] + "..."
+			}
+			fmt.Fprintf(w, "| %s | %s | %s | %s |\n", finding.Advisory.ID, sev, fixed, summary)
+		}
+		fmt.Fprintln(w)
+	}
+
+	fmt.Fprintf(w, "---\n\n*%d components scanned, %d vulnerable, %d findings*\n",
+		result.TotalComponents, len(order), len(result.Findings))
+
+	return nil
+}
+
 func (f *markdownFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	fmt.Fprintf(w, "## Cache Statistics\n\n")
 	fmt.Fprintf(w, "| Metric | Value |\n")

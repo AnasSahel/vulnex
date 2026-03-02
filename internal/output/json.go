@@ -89,6 +89,16 @@ func (jf *jsonFormatter) FormatAdvisories(w io.Writer, advisories []model.Adviso
 	return err
 }
 
+// FormatSBOMResult renders SBOM check results as JSON.
+func (jf *jsonFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult) error {
+	data, err := jf.marshal(result)
+	if err != nil {
+		return fmt.Errorf("marshaling SBOM result to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
 // FormatCacheStats renders cache statistics as JSON.
 func (jf *jsonFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	data, err := jf.marshal(stats)

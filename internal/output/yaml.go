@@ -120,6 +120,10 @@ func (f *yamlFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisor
 	return toYAML(w, advisories)
 }
 
+func (f *yamlFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult) error {
+	return toYAML(w, result)
+}
+
 func (f *yamlFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	return toYAML(w, stats)
 }

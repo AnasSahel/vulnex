@@ -275,6 +275,34 @@ func (cf *csvFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisor
 	return nil
 }
 
+// FormatSBOMResult renders SBOM check results as flattened CSV rows.
+func (cf *csvFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult) error {
+	headers := []string{"ecosystem", "name", "version", "fixed", "id", "severity", "summary"}
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	if err := writer.Write(headers); err != nil {
+		return fmt.Errorf("writing CSV header: %w", err)
+	}
+
+	for _, f := range result.Findings {
+		row := []string{
+			f.Ecosystem,
+			f.Name,
+			f.Version,
+			f.Fixed,
+			f.Advisory.ID,
+			f.Advisory.Severity,
+			f.Advisory.Summary,
+		}
+		if err := writer.Write(row); err != nil {
+			return fmt.Errorf("writing CSV row: %w", err)
+		}
+	}
+
+	return nil
+}
+
 // FormatCacheStats renders cache statistics as CSV.
 func (cf *csvFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	writer := csv.NewWriter(w)

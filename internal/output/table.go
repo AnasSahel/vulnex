@@ -477,6 +477,98 @@ func (tf *tableFormatter) FormatAdvisories(w io.Writer, advisories []model.Advis
 	return nil
 }
 
+// FormatSBOMResult renders SBOM check results grouped by component.
+func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult) error {
+	if len(result.Findings) == 0 {
+		return nil
+	}
+
+	// Group findings by component key (ecosystem/name@version)
+	type componentKey struct {
+		ecosystem, name, version string
+	}
+	var order []componentKey
+	groups := make(map[componentKey][]model.SBOMFinding)
+	for _, f := range result.Findings {
+		key := componentKey{f.Ecosystem, f.Name, f.Version}
+		if _, exists := groups[key]; !exists {
+			order = append(order, key)
+		}
+		groups[key] = append(groups[key], f)
+	}
+
+	// Severity counts
+	severityCounts := map[string]int{}
+	for _, f := range result.Findings {
+		sev := strings.ToUpper(f.Advisory.Severity)
+		if sev == "" {
+			sev = "UNKNOWN"
+		}
+		severityCounts[sev]++
+	}
+
+	// Render each component group using plain formatted text
+	vulnerableComponents := len(order)
+	for _, key := range order {
+		findings := groups[key]
+		header := fmt.Sprintf("%s %s (%s)", key.name, key.version, key.ecosystem)
+		fmt.Fprintf(w, "\n%s\n", tf.headerStyle.Render(header))
+
+		// Print column headers
+		fmt.Fprintf(w, "  %-26s%-10s%-9s%s\n",
+			tf.headerStyle.Render("ID"),
+			tf.headerStyle.Render("Severity"),
+			tf.headerStyle.Render("Fixed"),
+			tf.headerStyle.Render("Summary"))
+
+		for _, f := range findings {
+			sev := strings.ToUpper(f.Advisory.Severity)
+			if sev == "" {
+				sev = "UNKNOWN"
+			}
+			style := tf.severityStyle(sev)
+
+			fixed := f.Fixed
+			if fixed == "" {
+				fixed = "-"
+			}
+			if len(fixed) > 8 {
+				fixed = fixed[:7] + "~"
+			}
+
+			summary := f.Advisory.Summary
+			if !tf.long {
+				summary = truncate(summary, 50)
+			}
+
+			fmt.Fprintf(w, "  %-26s%-10s%-9s%s\n",
+				f.Advisory.ID,
+				style.Render(sev),
+				fixed,
+				summary)
+		}
+	}
+
+	// Summary footer
+	fmt.Fprintf(w, "\nSummary: %d components scanned, %d vulnerable, %d findings\n",
+		result.TotalComponents, vulnerableComponents, len(result.Findings))
+
+	// Severity breakdown
+	sevOrder := []string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"}
+	parts := make([]string, 0)
+	for _, sev := range sevOrder {
+		if count, ok := severityCounts[sev]; ok {
+			style := tf.severityStyle(sev)
+			parts = append(parts, fmt.Sprintf("%s: %d", style.Render(sev), count))
+		}
+	}
+	if len(parts) > 0 {
+		fmt.Fprintf(w, "  %s\n", strings.Join(parts, "  "))
+	}
+
+	return nil
+}
+
 // FormatCacheStats renders cache statistics in a simple key-value format.
 func (tf *tableFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("Total Entries:"), stats.TotalEntries)

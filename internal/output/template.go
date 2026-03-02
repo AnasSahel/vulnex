@@ -91,6 +91,14 @@ func (f *templateFormatter) FormatAdvisories(w io.Writer, advisories []model.Adv
 	return nil
 }
 
+func (f *templateFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult) error {
+	tmpl, err := template.New("sbom").Parse(f.tmplStr)
+	if err != nil {
+		return err
+	}
+	return tmpl.Execute(w, result)
+}
+
 func (f *templateFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	tmpl, err := template.New("stats").Parse(f.tmplStr)
 	if err != nil {

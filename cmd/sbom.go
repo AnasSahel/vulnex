@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/trustin-tech/vulnex/internal/api/osv"
 	"github.com/trustin-tech/vulnex/internal/model"
 	"github.com/trustin-tech/vulnex/internal/sbom"
 )
@@ -68,7 +69,7 @@ by default, or as a VEX document with the --vex flag.`,
 		}
 
 		// Query OSV for each component and collect results
-		var allAdvisories []model.Advisory
+		var findings []model.SBOMFinding
 		vulnResults := make(map[string]*model.EnrichedCVE)
 
 		for _, comp := range components {
@@ -106,21 +107,36 @@ by default, or as a VEX document with the --vex flag.`,
 			)
 
 			for _, v := range vulns {
-				// Build advisory from OSV result
-				severity := ""
-				for _, s := range v.Severity {
-					severity = s.Score
-					break
+				severity := osv.ExtractSeverity(v)
+
+				// Extract first fixed version for this component
+				fixed := ""
+				for _, a := range v.Affected {
+					if strings.EqualFold(a.Package.Ecosystem, ecosystem) && a.Package.Name == name {
+						for _, r := range a.Ranges {
+							for _, evt := range r.Events {
+								if evt.Fixed != "" && fixed == "" {
+									fixed = evt.Fixed
+								}
+							}
+						}
+					}
 				}
 
-				advisory := model.Advisory{
-					ID:       v.ID,
-					Source:   "osv",
-					URL:      "https://osv.dev/vulnerability/" + v.ID,
-					Severity: severity,
-					Summary:  v.Summary,
+				finding := model.SBOMFinding{
+					Ecosystem: ecosystem,
+					Name:      name,
+					Version:   version,
+					Fixed:     fixed,
+					Advisory: model.Advisory{
+						ID:       v.ID,
+						Source:   "osv",
+						URL:      "https://osv.dev/vulnerability/" + v.ID,
+						Severity: severity,
+						Summary:  v.Summary,
+					},
 				}
-				allAdvisories = append(allAdvisories, advisory)
+				findings = append(findings, finding)
 
 				// Build a minimal EnrichedCVE for VEX generation
 				if _, exists := vulnResults[v.ID]; !exists {
@@ -129,7 +145,6 @@ by default, or as a VEX document with the --vex flag.`,
 						DataSources: []string{"osv"},
 					}
 
-					// Extract affected packages
 					for _, a := range v.Affected {
 						pkg := model.AffectedPkg{
 							Ecosystem: a.Package.Ecosystem,
@@ -137,15 +152,15 @@ by default, or as a VEX document with the --vex flag.`,
 							Versions:  a.Versions,
 						}
 						for _, r := range a.Ranges {
-							var introduced, fixed, lastAffected string
+							var introduced, fixedVer, lastAffected string
 							for _, evt := range r.Events {
 								if evt.Introduced != "" {
 									introduced = evt.Introduced
 								}
 								if evt.Fixed != "" {
-									fixed = evt.Fixed
+									fixedVer = evt.Fixed
 									if pkg.Fixed == "" {
-										pkg.Fixed = fixed
+										pkg.Fixed = fixedVer
 									}
 								}
 								if evt.LastAffected != "" {
@@ -155,7 +170,7 @@ by default, or as a VEX document with the --vex flag.`,
 							pkg.Ranges = append(pkg.Ranges, model.Range{
 								Type:         r.Type,
 								Introduced:   introduced,
-								Fixed:        fixed,
+								Fixed:        fixedVer,
 								LastAffected: lastAffected,
 							})
 						}
@@ -167,19 +182,19 @@ by default, or as a VEX document with the --vex flag.`,
 			}
 		}
 
-		// Apply severity filter to advisories
+		// Apply severity filter
 		if severityFilter != "" {
-			filtered := make([]model.Advisory, 0)
-			for _, a := range allAdvisories {
-				if strings.EqualFold(a.Severity, severityFilter) {
-					filtered = append(filtered, a)
+			filtered := make([]model.SBOMFinding, 0)
+			for _, f := range findings {
+				if strings.EqualFold(f.Advisory.Severity, severityFilter) {
+					filtered = append(filtered, f)
 				}
 			}
-			allAdvisories = filtered
+			findings = filtered
 		}
 
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Found %d vulnerabilities\n", len(allAdvisories))
+			fmt.Fprintf(os.Stderr, "Found %d vulnerabilities\n", len(findings))
 		}
 
 		// Output results
@@ -194,14 +209,25 @@ by default, or as a VEX document with the --vex flag.`,
 			return encoder.Encode(vexDoc)
 		}
 
-		if len(allAdvisories) == 0 {
+		result := &model.SBOMResult{
+			File:            filePath,
+			TotalComponents: len(components),
+			Findings:        findings,
+		}
+
+		if len(findings) == 0 {
 			if !quiet {
 				fmt.Fprintln(os.Stderr, "No vulnerabilities found for SBOM components")
 			}
 			return nil
 		}
 
-		return app.Formatter.FormatAdvisories(os.Stdout, allAdvisories)
+		if err := app.Formatter.FormatSBOMResult(os.Stdout, result); err != nil {
+			return err
+		}
+
+		os.Exit(1)
+		return nil
 	},
 }
 

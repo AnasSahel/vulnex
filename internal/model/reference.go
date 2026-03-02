@@ -37,6 +37,22 @@ type EnrichedAdvisory struct {
 	WithdrawnAt string        `json:"withdrawn_at,omitempty"`
 }
 
+// SBOMFinding represents a single vulnerability finding for a component in an SBOM.
+type SBOMFinding struct {
+	Ecosystem string   `json:"ecosystem"`
+	Name      string   `json:"name"`
+	Version   string   `json:"version"`
+	Fixed     string   `json:"fixed,omitempty"`
+	Advisory  Advisory `json:"advisory"`
+}
+
+// SBOMResult holds the complete results of an SBOM vulnerability check.
+type SBOMResult struct {
+	File            string        `json:"file"`
+	TotalComponents int           `json:"total_components"`
+	Findings        []SBOMFinding `json:"findings"`
+}
+
 // CPEMatch represents a CPE (Common Platform Enumeration) match configuration.
 type CPEMatch struct {
 	CPE23URI           string `json:"cpe23_uri"`

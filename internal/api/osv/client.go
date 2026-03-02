@@ -195,7 +195,7 @@ func (c *Client) doQuery(ctx context.Context, req QueryRequest) ([]OSVVulnerabil
 func convertToAdvisories(vulns []OSVVulnerability) []model.Advisory {
 	advisories := make([]model.Advisory, 0, len(vulns))
 	for _, v := range vulns {
-		severity := extractSeverity(v)
+		severity := ExtractSeverity(v)
 		url := buildOSVURL(v.ID)
 
 		advisories = append(advisories, model.Advisory{
@@ -253,23 +253,27 @@ func convertToAffectedPkgs(vulns []OSVVulnerability) []model.AffectedPkg {
 	return pkgs
 }
 
-// extractSeverity returns a normalized severity string from an OSV vulnerability.
+// ExtractSeverity returns a normalized severity string from an OSV vulnerability.
 // It prefers CVSS_V3 scores and falls back to CVSS_V2 or database-specific data.
-func extractSeverity(v OSVVulnerability) string {
+func ExtractSeverity(v OSVVulnerability) string {
 	for _, s := range v.Severity {
 		if strings.EqualFold(s.Type, "CVSS_V3") || strings.EqualFold(s.Type, "CVSS_V4") {
-			return normalizeCVSSSeverity(s.Score)
+			if sev := normalizeCVSSSeverity(s.Score); sev != "" {
+				return sev
+			}
 		}
 	}
 	for _, s := range v.Severity {
 		if strings.EqualFold(s.Type, "CVSS_V2") {
-			return normalizeCVSSSeverity(s.Score)
+			if sev := normalizeCVSSSeverity(s.Score); sev != "" {
+				return sev
+			}
 		}
 	}
 	// Check database_specific for a severity hint.
 	if sev, ok := v.DatabaseSpecific["severity"]; ok {
 		if str, ok := sev.(string); ok {
-			return strings.ToLower(str)
+			return normalizeCVSSSeverity(str)
 		}
 	}
 	return ""
@@ -284,12 +288,11 @@ func normalizeCVSSSeverity(score string) string {
 		return ""
 	}
 
-	// If the score is a CVSS vector string, it may not directly contain the
-	// severity label. Return the raw score for the caller to interpret.
-	// Common vector prefixes: "CVSS:3.1/", "CVSS:3.0/", "CVSS:4.0/"
+	// If the score is a CVSS vector string, it does not contain a severity
+	// label. Return empty so the caller falls through to database_specific.
 	lower := strings.ToLower(score)
 	if strings.HasPrefix(lower, "cvss:") {
-		return score
+		return ""
 	}
 
 	// Try to map well-known severity labels.

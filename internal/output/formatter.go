@@ -16,6 +16,7 @@ type Formatter interface {
 	FormatEPSSScores(w io.Writer, scores map[string]*model.EPSSScore) error
 	FormatAdvisory(w io.Writer, advisory *model.EnrichedAdvisory) error
 	FormatAdvisories(w io.Writer, advisories []model.Advisory) error
+	FormatSBOMResult(w io.Writer, result *model.SBOMResult) error
 	FormatCacheStats(w io.Writer, stats *cache.Stats) error
 }
 
