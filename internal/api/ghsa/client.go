@@ -170,8 +170,8 @@ func convertToAffectedPkgs(ghsa *GHSAdvisory) []model.AffectedPkg {
 
 		// Derive the fixed version from FirstPatchedVersion if available,
 		// falling back to the PatchedVersions string.
-		if vuln.FirstPatchedVersion != nil && vuln.FirstPatchedVersion.Identifier != "" {
-			pkg.Fixed = vuln.FirstPatchedVersion.Identifier
+		if vuln.FirstPatchedVersion != nil && *vuln.FirstPatchedVersion != "" {
+			pkg.Fixed = *vuln.FirstPatchedVersion
 		} else if vuln.PatchedVersions != "" {
 			pkg.Fixed = vuln.PatchedVersions
 		}

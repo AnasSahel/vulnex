@@ -24,16 +24,11 @@ type GHSAdvisory struct {
 
 // GHSAVulnerability represents a vulnerable package entry within an advisory.
 type GHSAVulnerability struct {
-	Package               GHSAPackage `json:"package"`
-	VulnerableVersionRange string     `json:"vulnerable_version_range"`
-	PatchedVersions       string      `json:"patched_versions"`
-	FirstPatchedVersion   *GHSAFirstPatchedVersion `json:"first_patched_version"`
-	VulnerableFunctions   []string    `json:"vulnerable_functions"`
-}
-
-// GHSAFirstPatchedVersion represents the first patched version identifier.
-type GHSAFirstPatchedVersion struct {
-	Identifier string `json:"identifier"`
+	Package                GHSAPackage `json:"package"`
+	VulnerableVersionRange string      `json:"vulnerable_version_range"`
+	PatchedVersions        string      `json:"patched_versions"`
+	FirstPatchedVersion    *string     `json:"first_patched_version"`
+	VulnerableFunctions    []string    `json:"vulnerable_functions"`
 }
 
 // GHSAPackage identifies the affected package ecosystem and name.
