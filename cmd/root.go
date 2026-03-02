@@ -62,7 +62,7 @@ This product uses the NVD API but is not endorsed or certified by the NVD.`,
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Skip bootstrap for completion and version commands
-		if cmd.Name() == "completion" || cmd.Name() == "version" || cmd.Name() == "__complete" {
+		if cmd.Name() == "completion" || cmd.Name() == "version" || cmd.Name() == "__complete" || cmd.Name() == "serve" {
 			return nil
 		}
 		return bootstrap(cmd)
