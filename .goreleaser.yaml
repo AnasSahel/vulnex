@@ -35,8 +35,8 @@ changelog:
 
 brews:
   - repository:
-      owner: trustin-tech
+      owner: AnasSahel
       name: homebrew-tap
-    homepage: "https://github.com/trustin-tech/vulnex"
+    homepage: "https://github.com/AnasSahel/vulnex"
     description: "Multi-source vulnerability intelligence CLI"
     install: bin.install "vulnex"
