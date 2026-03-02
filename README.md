@@ -1,8 +1,36 @@
 # vulnex
 
+[![Release](https://img.shields.io/github/v/release/AnasSahel/vulnex)](https://github.com/AnasSahel/vulnex/releases)
+[![Go](https://img.shields.io/github/go-mod/go-version/AnasSahel/vulnex)](https://go.dev/)
+[![CI](https://github.com/AnasSahel/vulnex/actions/workflows/ci.yml/badge.svg)](https://github.com/AnasSahel/vulnex/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 An open-source, offline-capable, multi-source vulnerability intelligence CLI.
 
 vulnex aggregates data from **NVD**, **CISA KEV**, **EPSS**, **GitHub Advisory Database**, and **OSV.dev** into a unified command-line experience with local SQLite caching, composite risk scoring, and pipe-friendly output.
+
+### Demo
+
+```
+$ vulnex enrich CVE-2021-44228
+
+ CVE-2021-44228 — Apache Log4j2 JNDI features do not protect against attacker controlled LDAP and other JNDI related endpoints
+
+ Severity    CRITICAL (10.0)
+ Vector      NETWORK / LOW / NONE / CHANGED
+ Priority    P0 — Critical: actively exploited, high EPSS
+
+ EPSS        0.97185 (97.2%) — percentile: 99.99%
+ KEV         Yes — due 2021-12-24
+ Published   2021-12-10
+ Modified    2023-11-06
+
+ Sources     NVD · KEV · EPSS · GHSA · OSV
+
+ References
+  • https://logging.apache.org/log4j/2.x/security.html
+  • https://www.cisa.gov/known-exploited-vulnerabilities-catalog
+```
 
 ## Features
 
