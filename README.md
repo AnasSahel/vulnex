@@ -9,11 +9,18 @@ vulnex aggregates data from **NVD**, **CISA KEV**, **EPSS**, **GitHub Advisory D
 - **Multi-source enrichment** — Combine NVD, KEV, EPSS, GHSA, and OSV data in a single query
 - **Composite risk scoring** — P0–P4 priority matrix blending CVSS, EPSS, and KEV signals
 - **Offline mode** — Local SQLite cache with configurable TTLs; work without network access
-- **SBOM scanning** — Parse CycloneDX/SPDX SBOMs and generate OpenVEX documents
+- **SBOM scanning** — Parse CycloneDX/SPDX SBOMs, find vulnerabilities grouped by component, and generate OpenVEX documents
+- **CI/CD gating** — `sbom check` exits with code 1 when vulnerabilities are found; filter by `--severity` to control thresholds
 - **Pipe-friendly** — stdin support, multiple output formats, and composable commands
 - **Zero CGO** — Pure Go with no C dependencies; single static binary
 
 ## Installation
+
+### Homebrew
+
+```bash
+brew install AnasSahel/tap/vulnex
+```
 
 ### From source
 
@@ -24,15 +31,9 @@ go install github.com/trustin-tech/vulnex@latest
 ### Build from source
 
 ```bash
-git clone https://github.com/trustin-tech/vulnex.git
+git clone https://github.com/AnasSahel/vulnex.git
 cd vulnex
 make build
-```
-
-### Homebrew (after release)
-
-```bash
-brew install trustin-tech/tap/vulnex
 ```
 
 ## Quick Start
@@ -52,6 +53,9 @@ vulnex cve search "apache log4j" --severity critical
 
 # Scan an SBOM for vulnerabilities
 vulnex sbom check bom.json
+
+# Fail CI if critical vulnerabilities exist
+vulnex sbom check bom.json --severity critical
 ```
 
 ## Configuration
@@ -86,6 +90,7 @@ These flags apply to all commands:
 | Flag | Description |
 |------|-------------|
 | `-o, --output <format>` | Output format: `table`, `json`, `csv`, `markdown`, `yaml` (default: `table`) |
+| `-l, --long` | Show full descriptions instead of truncated |
 | `--no-color` | Disable colored output |
 | `--api-key <key>` | NVD API key |
 | `--cache-dir <path>` | Custom cache directory |
@@ -260,20 +265,40 @@ vulnex advisory affected django --ecosystem pip --output json
 
 #### `sbom check` — Scan SBOM for vulnerabilities
 
-Parses CycloneDX or SPDX JSON files and queries each component against OSV.
+Parses CycloneDX or SPDX JSON files and queries each component against OSV. Results are grouped by component showing advisory ID, severity, fixed version, and summary. Exits with code 1 when vulnerabilities are found, making it suitable for CI/CD pipelines.
 
 ```bash
 vulnex sbom check bom.json
 vulnex sbom check bom.json --vex                     # output as OpenVEX document
-vulnex sbom check sbom-spdx.json --ecosystem npm --severity HIGH
-vulnex sbom check bom.json --output json
+vulnex sbom check sbom-spdx.json --ecosystem npm     # filter by ecosystem
+vulnex sbom check bom.json --severity critical        # only critical findings
+vulnex sbom check bom.json --output json              # structured JSON output
+```
+
+Example table output:
+
+```
+Parsed 3 components from bom.json
+Found 6 vulnerabilities
+
+django 3.2.0 (PyPI)
+  ID                        Severity  Fixed    Summary
+  GHSA-2gwj-7jmv-h26r       CRITICAL  2.2.28   SQL Injection in Django
+  GHSA-xpfp-f569-q3p2       CRITICAL  3.2.5    SQL Injection in Django
+
+lodash 4.17.20 (npm)
+  ID                        Severity  Fixed    Summary
+  GHSA-35jh-r3h4-6jhm       HIGH      4.17.21  Command Injection in lodash
+
+Summary: 3 components scanned, 2 vulnerable, 3 findings
+  CRITICAL: 2  HIGH: 1
 ```
 
 | Flag | Description |
 |------|-------------|
 | `--vex` | Output an OpenVEX document instead of a table |
 | `--ecosystem` | Filter components by ecosystem |
-| `--severity` | Filter results by severity |
+| `--severity` | Filter results by severity (exits 0 if no matches) |
 
 ### `vulnex stats` — Vulnerability statistics
 
