@@ -31,7 +31,11 @@ func ParseFile(path string) ([]Component, error) {
 	if err != nil {
 		return nil, fmt.Errorf("reading SBOM file: %w", err)
 	}
+	return ParseBytes(data)
+}
 
+// ParseBytes detects the SBOM format and parses components from raw bytes.
+func ParseBytes(data []byte) ([]Component, error) {
 	format, err := detectFormat(data)
 	if err != nil {
 		return nil, err

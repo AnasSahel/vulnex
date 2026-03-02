@@ -3,12 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/trustin-tech/vulnex/internal/api/osv"
 	"github.com/trustin-tech/vulnex/internal/model"
 	"github.com/trustin-tech/vulnex/internal/sbom"
 )
@@ -47,20 +44,6 @@ by default, or as a VEX document with the --vex flag.`,
 			fmt.Fprintf(os.Stderr, "Parsed %d components from %s\n", len(components), filePath)
 		}
 
-		// Apply ecosystem filter
-		if ecosystemFilter != "" {
-			filtered := make([]sbom.Component, 0)
-			for _, c := range components {
-				if strings.EqualFold(c.Ecosystem, ecosystemFilter) {
-					filtered = append(filtered, c)
-				}
-			}
-			components = filtered
-			if !quiet {
-				fmt.Fprintf(os.Stderr, "Filtered to %d %s components\n", len(components), ecosystemFilter)
-			}
-		}
-
 		if len(components) == 0 {
 			if !quiet {
 				fmt.Fprintln(os.Stderr, "No components to check")
@@ -68,138 +51,22 @@ by default, or as a VEX document with the --vex flag.`,
 			return nil
 		}
 
-		// Query OSV for each component and collect results
-		var findings []model.SBOMFinding
-		vulnResults := make(map[string]*model.EnrichedCVE)
-
-		for _, comp := range components {
-			if comp.PURL == "" && (comp.Ecosystem == "" || comp.Name == "") {
-				slog.Debug("skipping component without PURL or ecosystem/name", "name", comp.Name)
-				continue
-			}
-
-			ecosystem := comp.Ecosystem
-			name := comp.Name
-			version := comp.Version
-
-			// Map PURL ecosystem types to OSV ecosystem names
-			ecosystem = mapEcosystemToOSV(ecosystem)
-
-			vulns, err := app.OSV.QueryByPackage(cmd.Context(), ecosystem, name, version)
-			if err != nil {
-				slog.Warn("querying OSV for component",
-					"ecosystem", ecosystem,
-					"name", name,
-					"version", version,
-					"error", err,
-				)
-				continue
-			}
-
-			if len(vulns) == 0 {
-				continue
-			}
-
-			slog.Debug("found vulnerabilities",
-				"component", name,
-				"version", version,
-				"count", len(vulns),
-			)
-
-			for _, v := range vulns {
-				severity := osv.ExtractSeverity(v)
-
-				// Extract first fixed version for this component
-				fixed := ""
-				for _, a := range v.Affected {
-					if strings.EqualFold(a.Package.Ecosystem, ecosystem) && a.Package.Name == name {
-						for _, r := range a.Ranges {
-							for _, evt := range r.Events {
-								if evt.Fixed != "" && fixed == "" {
-									fixed = evt.Fixed
-								}
-							}
-						}
-					}
-				}
-
-				finding := model.SBOMFinding{
-					Ecosystem: ecosystem,
-					Name:      name,
-					Version:   version,
-					Fixed:     fixed,
-					Advisory: model.Advisory{
-						ID:       v.ID,
-						Source:   "osv",
-						URL:      "https://osv.dev/vulnerability/" + v.ID,
-						Severity: severity,
-						Summary:  v.Summary,
-					},
-				}
-				findings = append(findings, finding)
-
-				// Build a minimal EnrichedCVE for VEX generation
-				if _, exists := vulnResults[v.ID]; !exists {
-					enriched := &model.EnrichedCVE{
-						ID:          v.ID,
-						DataSources: []string{"osv"},
-					}
-
-					for _, a := range v.Affected {
-						pkg := model.AffectedPkg{
-							Ecosystem: a.Package.Ecosystem,
-							Name:      a.Package.Name,
-							Versions:  a.Versions,
-						}
-						for _, r := range a.Ranges {
-							var introduced, fixedVer, lastAffected string
-							for _, evt := range r.Events {
-								if evt.Introduced != "" {
-									introduced = evt.Introduced
-								}
-								if evt.Fixed != "" {
-									fixedVer = evt.Fixed
-									if pkg.Fixed == "" {
-										pkg.Fixed = fixedVer
-									}
-								}
-								if evt.LastAffected != "" {
-									lastAffected = evt.LastAffected
-								}
-							}
-							pkg.Ranges = append(pkg.Ranges, model.Range{
-								Type:         r.Type,
-								Introduced:   introduced,
-								Fixed:        fixedVer,
-								LastAffected: lastAffected,
-							})
-						}
-						enriched.AffectedPkgs = append(enriched.AffectedPkgs, pkg)
-					}
-
-					vulnResults[v.ID] = enriched
-				}
-			}
-		}
-
-		// Apply severity filter
-		if severityFilter != "" {
-			filtered := make([]model.SBOMFinding, 0)
-			for _, f := range findings {
-				if strings.EqualFold(f.Advisory.Severity, severityFilter) {
-					filtered = append(filtered, f)
-				}
-			}
-			findings = filtered
+		// Run the vulnerability check
+		checkResult, err := sbom.CheckComponents(cmd.Context(), app.OSV, components, sbom.CheckOptions{
+			EcosystemFilter: ecosystemFilter,
+			SeverityFilter:  severityFilter,
+		})
+		if err != nil {
+			return fmt.Errorf("checking components: %w", err)
 		}
 
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Found %d vulnerabilities\n", len(findings))
+			fmt.Fprintf(os.Stderr, "Found %d vulnerabilities\n", len(checkResult.Findings))
 		}
 
 		// Output results
 		if vexOutput {
-			vexDoc, err := sbom.GenerateVEX(components, vulnResults)
+			vexDoc, err := sbom.GenerateVEX(components, checkResult.VulnDetails)
 			if err != nil {
 				return fmt.Errorf("generating VEX document: %w", err)
 			}
@@ -211,11 +78,11 @@ by default, or as a VEX document with the --vex flag.`,
 
 		result := &model.SBOMResult{
 			File:            filePath,
-			TotalComponents: len(components),
-			Findings:        findings,
+			TotalComponents: checkResult.TotalComponents,
+			Findings:        checkResult.Findings,
 		}
 
-		if len(findings) == 0 {
+		if len(checkResult.Findings) == 0 {
 			if !quiet {
 				fmt.Fprintln(os.Stderr, "No vulnerabilities found for SBOM components")
 			}
@@ -229,36 +96,6 @@ by default, or as a VEX document with the --vex flag.`,
 		os.Exit(1)
 		return nil
 	},
-}
-
-// mapEcosystemToOSV converts PURL ecosystem type strings to OSV ecosystem names.
-func mapEcosystemToOSV(ecosystem string) string {
-	switch strings.ToLower(ecosystem) {
-	case "npm":
-		return "npm"
-	case "pypi", "pip":
-		return "PyPI"
-	case "maven":
-		return "Maven"
-	case "go", "golang":
-		return "Go"
-	case "cargo":
-		return "crates.io"
-	case "nuget":
-		return "NuGet"
-	case "gem", "rubygems":
-		return "RubyGems"
-	case "composer":
-		return "Packagist"
-	case "hex":
-		return "Hex"
-	case "pub":
-		return "Pub"
-	case "swift":
-		return "SwiftURL"
-	default:
-		return ecosystem
-	}
 }
 
 func init() {
