@@ -147,6 +147,65 @@ func (tf *tableFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("CWEs:"), tf.valueStyle.Render(strings.Join(cweIDs, ", ")))
 	}
 
+	// --- Enrichment sections (only shown when data is present) ---
+
+	// Risk Score
+	risk := model.ComputeRisk(cve)
+	if risk.CVSSScore > 0 || risk.EPSSScore > 0 || risk.InKEV {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s %s (score: %.0f/100)\n", tf.labelStyle.Render("Risk Priority:"), tf.severityStyle(string(risk.Priority)).Render(string(risk.Priority)), risk.Score)
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Rationale:"), tf.valueStyle.Render(risk.Rationale))
+		if risk.Disagreement != "" {
+			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Signal Conflict:"), tf.mediumStyle.Render(risk.Disagreement))
+		}
+	}
+
+	// KEV details
+	if cve.KEV != nil {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("KEV Details"))
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Vendor:"), tf.valueStyle.Render(cve.KEV.VendorProject))
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Product:"), tf.valueStyle.Render(cve.KEV.Product))
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Date Added:"), tf.valueStyle.Render(cve.KEV.DateAdded))
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Due Date:"), tf.valueStyle.Render(cve.KEV.DueDate))
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Required Action:"), tf.valueStyle.Render(cve.KEV.RequiredAction))
+		if cve.KEV.KnownRansomwareCampaign != "" {
+			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Ransomware:"), tf.valueStyle.Render(cve.KEV.KnownRansomwareCampaign))
+		}
+	}
+
+	// Advisories
+	if len(cve.Advisories) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("Advisories"))
+		for _, adv := range cve.Advisories {
+			sev := strings.ToUpper(adv.Severity)
+			fmt.Fprintf(w, "  %s [%s] %s\n", tf.headerStyle.Render(adv.ID), tf.severityStyle(sev).Render(sev), adv.Summary)
+			if adv.URL != "" {
+				fmt.Fprintf(w, "    %s\n", tf.noneStyle.Render(adv.URL))
+			}
+		}
+	}
+
+	// Affected Packages
+	if len(cve.AffectedPkgs) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("Affected Packages"))
+		for _, pkg := range cve.AffectedPkgs {
+			fix := pkg.Fixed
+			if fix == "" {
+				fix = "no fix available"
+			}
+			fmt.Fprintf(w, "  %s/%s (fixed: %s)\n", tf.valueStyle.Render(pkg.Ecosystem), tf.headerStyle.Render(pkg.Name), fix)
+		}
+	}
+
+	// Data Sources
+	if len(cve.DataSources) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Sources:"), tf.noneStyle.Render(strings.Join(cve.DataSources, ", ")))
+	}
+
 	return nil
 }
 

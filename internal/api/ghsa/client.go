@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -13,6 +14,26 @@ import (
 	"github.com/trustin-tech/vulnex/internal/api"
 	"github.com/trustin-tech/vulnex/internal/model"
 )
+
+// ghErrorResponse represents the JSON error body returned by GitHub's API.
+type ghErrorResponse struct {
+	Message string `json:"message"`
+}
+
+// ghAPIError reads the response body and returns a descriptive error.
+// For 403 rate-limit errors it adds a hint about authentication.
+func ghAPIError(resp *http.Response, context string) error {
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+	var ghErr ghErrorResponse
+	if json.Unmarshal(body, &ghErr) == nil && ghErr.Message != "" {
+		msg := fmt.Sprintf("GitHub API %s: %s (HTTP %d)", context, ghErr.Message, resp.StatusCode)
+		if resp.StatusCode == http.StatusForbidden {
+			msg += "\nhint: set a GitHub token with 'vulnex config set api_keys.github <token>' to raise the rate limit"
+		}
+		return fmt.Errorf("%s", msg)
+	}
+	return fmt.Errorf("GitHub API %s: HTTP %d", context, resp.StatusCode)
+}
 
 const baseURL = "https://api.github.com/advisories"
 
@@ -37,37 +58,29 @@ type SearchParams struct {
 }
 
 // Search queries the GitHub Advisory Database with the given parameters.
-// It returns all advisories matching the search criteria.
+// PerPage acts as the total result limit — only one page is fetched.
 func (c *Client) Search(ctx context.Context, params SearchParams) ([]GHSAdvisory, error) {
 	reqURL, err := buildSearchURL(params)
 	if err != nil {
 		return nil, fmt.Errorf("building search URL: %w", err)
 	}
 
-	var all []GHSAdvisory
-	currentURL := reqURL
+	resp, err := c.httpClient.Get(ctx, reqURL)
+	if err != nil {
+		return nil, fmt.Errorf("fetching advisories: %w", err)
+	}
+	defer resp.Body.Close()
 
-	for currentURL != "" {
-		resp, err := c.httpClient.Get(ctx, currentURL)
-		if err != nil {
-			return nil, fmt.Errorf("fetching advisories: %w", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("GitHub Advisory API returned status %d for %s", resp.StatusCode, currentURL)
-		}
-
-		var page []GHSAdvisory
-		if err := json.NewDecoder(resp.Body).Decode(&page); err != nil {
-			return nil, fmt.Errorf("decoding advisory response: %w", err)
-		}
-
-		all = append(all, page...)
-		currentURL = parseNextLink(resp.Header.Get("Link"))
+	if resp.StatusCode != http.StatusOK {
+		return nil, ghAPIError(resp, "search")
 	}
 
-	return all, nil
+	var results []GHSAdvisory
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return nil, fmt.Errorf("decoding advisory response: %w", err)
+	}
+
+	return results, nil
 }
 
 // GetAdvisory retrieves a single advisory by its GHSA ID (e.g. "GHSA-xxxx-xxxx-xxxx").
@@ -84,7 +97,7 @@ func (c *Client) GetAdvisory(ctx context.Context, ghsaID string) (*GHSAdvisory, 
 		return nil, fmt.Errorf("advisory %s not found", ghsaID)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GitHub Advisory API returned status %d for %s", resp.StatusCode, ghsaID)
+		return nil, ghAPIError(resp, fmt.Sprintf("get advisory %s", ghsaID))
 	}
 
 	var advisory GHSAdvisory
@@ -131,7 +144,7 @@ func (c *Client) FindByPackage(ctx context.Context, ecosystem, pkg string) ([]GH
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("GitHub Advisory API returned status %d for package %s/%s", resp.StatusCode, ecosystem, pkg)
+			return nil, ghAPIError(resp, fmt.Sprintf("find package %s/%s", ecosystem, pkg))
 		}
 
 		var page []GHSAdvisory

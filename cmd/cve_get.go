@@ -7,12 +7,14 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/trustin-tech/vulnex/internal/model"
 )
 
 var cveGetCmd = &cobra.Command{
 	Use:   "get <CVE-ID...>",
-	Short: "Get enriched CVE details",
-	Long:  "Fetch one or more CVEs with full enrichment from all data sources.",
+	Short: "Get CVE details from NVD",
+	Long: `Fetch one or more CVEs from NVD only (no enrichment from other sources).
+Use 'vulnex enrich' to get the full multi-source view.`,
 	Example: `  vulnex cve get CVE-2021-44228
   vulnex cve get CVE-2024-3094 CVE-2023-44228 --output json
   echo "CVE-2024-3094" | vulnex cve get --stdin`,
@@ -40,17 +42,23 @@ var cveGetCmd = &cobra.Command{
 		ctx := cmd.Context()
 
 		if len(ids) == 1 {
-			cve, err := app.Enricher.Enrich(ctx, ids[0])
+			cve, err := app.NVD.GetCVE(ctx, ids[0])
 			if err != nil {
 				return err
 			}
 			return app.Formatter.FormatCVE(os.Stdout, cve)
 		}
 
-		cves, err := app.Enricher.EnrichBatch(ctx, ids)
-		if err != nil {
-			return err
+		var cves []*model.EnrichedCVE
+		for _, id := range ids {
+			cve, err := app.NVD.GetCVE(ctx, id)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: %s: %v\n", id, err)
+				continue
+			}
+			cves = append(cves, cve)
 		}
+
 		return app.Formatter.FormatCVEList(os.Stdout, cves)
 	},
 }
