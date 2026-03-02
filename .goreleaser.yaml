@@ -38,6 +38,7 @@ brews:
       owner: AnasSahel
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
     homepage: "https://github.com/AnasSahel/vulnex"
     description: "Multi-source vulnerability intelligence CLI"
     install: bin.install "vulnex"
