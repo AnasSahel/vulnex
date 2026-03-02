@@ -3,7 +3,6 @@ package config
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"time"
 
 	"github.com/spf13/viper"
@@ -92,28 +91,23 @@ func DefaultConfig() *Config {
 	}
 }
 
-// ConfigDir returns the configuration directory path following XDG conventions.
-func ConfigDir() string {
-	if dir := os.Getenv("XDG_CONFIG_HOME"); dir != "" {
-		return filepath.Join(dir, "vulnex")
+// baseDir returns the base directory (~/.vulnex), respecting VULNEX_HOME if set.
+func baseDir() string {
+	if dir := os.Getenv("VULNEX_HOME"); dir != "" {
+		return dir
 	}
 	home, _ := os.UserHomeDir()
-	if runtime.GOOS == "darwin" {
-		return filepath.Join(home, "Library", "Application Support", "vulnex")
-	}
-	return filepath.Join(home, ".config", "vulnex")
+	return filepath.Join(home, ".vulnex")
 }
 
-// CacheDir returns the cache directory path following XDG conventions.
+// ConfigDir returns the configuration directory path (~/.vulnex).
+func ConfigDir() string {
+	return baseDir()
+}
+
+// CacheDir returns the cache directory path (~/.vulnex/cache).
 func CacheDir() string {
-	if dir := os.Getenv("XDG_CACHE_HOME"); dir != "" {
-		return filepath.Join(dir, "vulnex")
-	}
-	home, _ := os.UserHomeDir()
-	if runtime.GOOS == "darwin" {
-		return filepath.Join(home, "Library", "Caches", "vulnex")
-	}
-	return filepath.Join(home, ".cache", "vulnex")
+	return filepath.Join(baseDir(), "cache")
 }
 
 // ConfigFilePath returns the path to the configuration file.
