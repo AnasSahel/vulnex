@@ -1,0 +1,90 @@
+package output
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+
+	"github.com/trustin-tech/vulnex/internal/cache"
+	"github.com/trustin-tech/vulnex/internal/model"
+)
+
+// jsonFormatter renders data as JSON output.
+type jsonFormatter struct {
+	compact bool
+}
+
+func newJSONFormatter(opts *formatterOpts) *jsonFormatter {
+	return &jsonFormatter{
+		compact: opts.Compact,
+	}
+}
+
+// marshal encodes a value as JSON, using indentation for pretty-print
+// unless compact mode is enabled.
+func (jf *jsonFormatter) marshal(v interface{}) ([]byte, error) {
+	if jf.compact {
+		return json.Marshal(v)
+	}
+	return json.MarshalIndent(v, "", "  ")
+}
+
+// FormatCVE renders a single enriched CVE as JSON.
+func (jf *jsonFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
+	data, err := jf.marshal(cve)
+	if err != nil {
+		return fmt.Errorf("marshaling CVE to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
+// FormatCVEList renders a list of enriched CVEs as a JSON array.
+func (jf *jsonFormatter) FormatCVEList(w io.Writer, cves []*model.EnrichedCVE) error {
+	data, err := jf.marshal(cves)
+	if err != nil {
+		return fmt.Errorf("marshaling CVE list to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
+// FormatKEVList renders a list of KEV entries as a JSON array.
+func (jf *jsonFormatter) FormatKEVList(w io.Writer, entries []model.KEVEntry) error {
+	data, err := jf.marshal(entries)
+	if err != nil {
+		return fmt.Errorf("marshaling KEV list to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
+// FormatEPSSScores renders EPSS scores as a JSON object keyed by CVE ID.
+func (jf *jsonFormatter) FormatEPSSScores(w io.Writer, scores map[string]*model.EPSSScore) error {
+	data, err := jf.marshal(scores)
+	if err != nil {
+		return fmt.Errorf("marshaling EPSS scores to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
+// FormatAdvisories renders advisory data as a JSON array.
+func (jf *jsonFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisory) error {
+	data, err := jf.marshal(advisories)
+	if err != nil {
+		return fmt.Errorf("marshaling advisories to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
+// FormatCacheStats renders cache statistics as JSON.
+func (jf *jsonFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
+	data, err := jf.marshal(stats)
+	if err != nil {
+		return fmt.Errorf("marshaling cache stats to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
