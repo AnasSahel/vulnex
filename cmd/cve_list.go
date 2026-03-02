@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/spf13/cobra"
 	"github.com/trustin-tech/vulnex/internal/api/nvd"
@@ -40,6 +41,11 @@ var cveListCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		// Sort newest first (NVD API returns oldest first).
+		sort.Slice(result.CVEs, func(i, j int) bool {
+			return result.CVEs[i].Published.After(result.CVEs[j].Published)
+		})
 
 		quiet, _ := cmd.Flags().GetBool("quiet")
 		if !quiet {

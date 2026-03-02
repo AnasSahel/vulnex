@@ -71,6 +71,7 @@ This product uses the NVD API but is not endorsed or certified by the NVD.`,
 
 func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", "table", "Output format: table, json, csv")
+	rootCmd.PersistentFlags().BoolP("long", "l", false, "Show full descriptions instead of truncated")
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable colored output")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output")
 	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "Suppress non-essential output")
@@ -162,10 +163,14 @@ func bootstrap(cmd *cobra.Command) error {
 	// Initialize formatter
 	format, _ := cmd.Flags().GetString("output")
 	noColor, _ := cmd.Flags().GetBool("no-color")
+	long, _ := cmd.Flags().GetBool("long")
 
 	var fmtOpts []output.FormatterOption
 	if noColor {
 		fmtOpts = append(fmtOpts, output.WithNoColor())
+	}
+	if long {
+		fmtOpts = append(fmtOpts, output.WithLong())
 	}
 
 	formatter, err := output.NewFormatter(format, fmtOpts...)

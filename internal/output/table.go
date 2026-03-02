@@ -14,6 +14,7 @@ import (
 // tableFormatter renders data as styled terminal tables using lipgloss.
 type tableFormatter struct {
 	noColor bool
+	long    bool
 
 	// Severity styles
 	criticalStyle lipgloss.Style
@@ -35,6 +36,7 @@ type tableFormatter struct {
 func newTableFormatter(opts *formatterOpts) *tableFormatter {
 	tf := &tableFormatter{
 		noColor: opts.NoColor,
+		long:    opts.Long,
 	}
 
 	if opts.NoColor {
@@ -126,7 +128,10 @@ func (tf *tableFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 	}
 
 	// Description
-	desc := truncate(cve.Description(), 80)
+	desc := cve.Description()
+	if !tf.long {
+		desc = truncate(desc, 80)
+	}
 	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Description:"), tf.valueStyle.Render(desc))
 
 	// Published Date
@@ -169,7 +174,10 @@ func (tf *tableFormatter) FormatCVEList(w io.Writer, cves []*model.EnrichedCVE) 
 			kev = tf.kevYesStyle.Render("YES")
 		}
 
-		desc := truncate(cve.Description(), 50)
+		desc := cve.Description()
+		if !tf.long {
+			desc = truncate(desc, 50)
+		}
 
 		rows = append(rows, []string{
 			cve.ID,
@@ -267,11 +275,16 @@ func (tf *tableFormatter) FormatAdvisories(w io.Writer, advisories []model.Advis
 		severity := adv.Severity
 		style := tf.severityStyle(severity)
 
+		summary := adv.Summary
+		if !tf.long {
+			summary = truncate(summary, 60)
+		}
+
 		rows = append(rows, []string{
 			adv.ID,
 			adv.Source,
 			style.Render(strings.ToUpper(severity)),
-			truncate(adv.Summary, 60),
+			summary,
 		})
 	}
 

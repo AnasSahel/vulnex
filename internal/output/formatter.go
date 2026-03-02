@@ -23,6 +23,7 @@ type formatterOpts struct {
 	NoColor bool
 	Compact bool     // for JSON compact mode
 	Fields  []string // for CSV field selection
+	Long    bool     // show full descriptions instead of truncated
 }
 
 // FormatterOption is a functional option for configuring formatters.
@@ -39,6 +40,13 @@ func WithNoColor() FormatterOption {
 func WithCompact() FormatterOption {
 	return func(o *formatterOpts) {
 		o.Compact = true
+	}
+}
+
+// WithLong enables full-length descriptions instead of truncated output.
+func WithLong() FormatterOption {
+	return func(o *formatterOpts) {
+		o.Long = true
 	}
 }
 
