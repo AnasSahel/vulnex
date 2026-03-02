@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -12,6 +13,9 @@ import (
 	"github.com/trustin-tech/vulnex/internal/api"
 	"github.com/trustin-tech/vulnex/internal/model"
 )
+
+// maxDateRange is the maximum date span allowed by the NVD API (120 days).
+const maxDateRange = 120 * 24 * time.Hour
 
 const baseURL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
@@ -61,6 +65,10 @@ func (c *Client) GetCVE(ctx context.Context, cveID string) (*model.EnrichedCVE, 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		if len(body) > 0 {
+			return nil, fmt.Errorf("nvd: status %d for CVE %s: %s", resp.StatusCode, cveID, string(body))
+		}
 		return nil, fmt.Errorf("nvd: unexpected status %d for CVE %s", resp.StatusCode, cveID)
 	}
 
@@ -77,7 +85,28 @@ func (c *Client) GetCVE(ctx context.Context, cveID string) (*model.EnrichedCVE, 
 }
 
 // SearchCVEs searches for CVEs using the given parameters.
+// If the date range exceeds the NVD API's 120-day limit, the request is
+// automatically split into consecutive windows and results are merged.
 func (c *Client) SearchCVEs(ctx context.Context, params SearchParams) (*SearchResult, error) {
+	windows, err := splitDateWindows(params)
+	if err != nil {
+		return nil, err
+	}
+
+	merged := &SearchResult{}
+	for _, win := range windows {
+		result, err := c.searchCVEsSingle(ctx, win)
+		if err != nil {
+			return nil, err
+		}
+		merged.TotalResults += result.TotalResults
+		merged.CVEs = append(merged.CVEs, result.CVEs...)
+	}
+	return merged, nil
+}
+
+// searchCVEsSingle performs a single NVD search request (date range must be <= 120 days).
+func (c *Client) searchCVEsSingle(ctx context.Context, params SearchParams) (*SearchResult, error) {
 	u, err := buildSearchURL(params)
 	if err != nil {
 		return nil, fmt.Errorf("nvd: building search URL: %w", err)
@@ -90,6 +119,10 @@ func (c *Client) SearchCVEs(ctx context.Context, params SearchParams) (*SearchRe
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		if len(body) > 0 {
+			return nil, fmt.Errorf("nvd: status %d: %s", resp.StatusCode, string(body))
+		}
 		return nil, fmt.Errorf("nvd: unexpected status %d for search", resp.StatusCode)
 	}
 
@@ -99,6 +132,43 @@ func (c *Client) SearchCVEs(ctx context.Context, params SearchParams) (*SearchRe
 	}
 
 	return convertResponse(&cveResp), nil
+}
+
+// splitDateWindows breaks a SearchParams into multiple requests if the
+// publication or last-modified date range exceeds 120 days.
+func splitDateWindows(p SearchParams) ([]SearchParams, error) {
+	// Only split if both start and end dates are provided for publication dates.
+	if p.PubStartDate == "" || p.PubEndDate == "" {
+		return []SearchParams{p}, nil
+	}
+
+	start, err := time.Parse(nvdTimeFormat, p.PubStartDate)
+	if err != nil {
+		return nil, fmt.Errorf("nvd: invalid pubStartDate %q: %w", p.PubStartDate, err)
+	}
+	end, err := time.Parse(nvdTimeFormat, p.PubEndDate)
+	if err != nil {
+		return nil, fmt.Errorf("nvd: invalid pubEndDate %q: %w", p.PubEndDate, err)
+	}
+
+	if end.Sub(start) <= maxDateRange {
+		return []SearchParams{p}, nil
+	}
+
+	var windows []SearchParams
+	cursor := start
+	for cursor.Before(end) {
+		winEnd := cursor.Add(maxDateRange)
+		if winEnd.After(end) {
+			winEnd = end
+		}
+		win := p
+		win.PubStartDate = cursor.Format(nvdTimeFormat)
+		win.PubEndDate = winEnd.Format(nvdTimeFormat)
+		windows = append(windows, win)
+		cursor = winEnd.Add(time.Second) // avoid overlap
+	}
+	return windows, nil
 }
 
 // ListCVEs returns a paginated list of all CVEs.
@@ -118,6 +188,10 @@ func (c *Client) ListCVEs(ctx context.Context, startIndex, resultsPerPage int) (
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		if len(body) > 0 {
+			return nil, fmt.Errorf("nvd: status %d for list: %s", resp.StatusCode, string(body))
+		}
 		return nil, fmt.Errorf("nvd: unexpected status %d for list", resp.StatusCode)
 	}
 
