@@ -16,6 +16,27 @@ type Advisory struct {
 	Summary  string `json:"summary"`
 }
 
+// EnrichedAdvisory represents a fully detailed security advisory with all available data.
+type EnrichedAdvisory struct {
+	ID          string        `json:"id"`
+	CVEID       string        `json:"cve_id,omitempty"`
+	Source      string        `json:"source"`
+	URL         string        `json:"url"`
+	Severity    string        `json:"severity"`
+	Summary     string        `json:"summary"`
+	Description string        `json:"description,omitempty"`
+	CVSSScore   float64       `json:"cvss_score,omitempty"`
+	CVSSVector  string        `json:"cvss_vector,omitempty"`
+	EPSSScore   float64       `json:"epss_score,omitempty"`
+	EPSSPctile  float64       `json:"epss_percentile,omitempty"`
+	CWEs        []CWEEntry    `json:"cwes,omitempty"`
+	Packages    []AffectedPkg `json:"affected_packages,omitempty"`
+	References  []string      `json:"references,omitempty"`
+	PublishedAt string        `json:"published_at,omitempty"`
+	UpdatedAt   string        `json:"updated_at,omitempty"`
+	WithdrawnAt string        `json:"withdrawn_at,omitempty"`
+}
+
 // CPEMatch represents a CPE (Common Platform Enumeration) match configuration.
 type CPEMatch struct {
 	CPE23URI           string `json:"cpe23_uri"`

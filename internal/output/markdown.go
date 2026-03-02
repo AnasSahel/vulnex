@@ -166,6 +166,79 @@ func (f *markdownFormatter) FormatEPSSScores(w io.Writer, scores map[string]*mod
 	return nil
 }
 
+func (f *markdownFormatter) FormatAdvisory(w io.Writer, adv *model.EnrichedAdvisory) error {
+	fmt.Fprintf(w, "# %s\n\n", adv.ID)
+
+	if adv.CVEID != "" {
+		fmt.Fprintf(w, "**CVE:** %s  \n", adv.CVEID)
+	}
+	fmt.Fprintf(w, "**Severity:** %s  \n", strings.ToUpper(adv.Severity))
+	if adv.CVSSScore > 0 {
+		fmt.Fprintf(w, "**CVSS Score:** %.1f  \n", adv.CVSSScore)
+	}
+	if adv.EPSSScore > 0 {
+		fmt.Fprintf(w, "**EPSS Score:** %.5f (percentile: %.4f)  \n", adv.EPSSScore, adv.EPSSPctile)
+	}
+	if adv.PublishedAt != "" {
+		published := adv.PublishedAt
+		if len(published) >= 10 {
+			published = published[:10]
+		}
+		fmt.Fprintf(w, "**Published:** %s  \n", published)
+	}
+	if adv.URL != "" {
+		fmt.Fprintf(w, "**URL:** %s  \n", adv.URL)
+	}
+	fmt.Fprintln(w)
+
+	// Summary
+	fmt.Fprintf(w, "## Summary\n\n%s\n\n", adv.Summary)
+
+	// Description
+	if adv.Description != "" {
+		fmt.Fprintf(w, "## Description\n\n%s\n\n", adv.Description)
+	}
+
+	// CWEs
+	if len(adv.CWEs) > 0 {
+		fmt.Fprintf(w, "## Weaknesses (CWE)\n\n")
+		for _, c := range adv.CWEs {
+			if c.Description != "" {
+				fmt.Fprintf(w, "- %s: %s\n", c.ID, c.Description)
+			} else {
+				fmt.Fprintf(w, "- %s\n", c.ID)
+			}
+		}
+		fmt.Fprintln(w)
+	}
+
+	// Affected packages
+	if len(adv.Packages) > 0 {
+		fmt.Fprintf(w, "## Affected Packages\n\n")
+		fmt.Fprintf(w, "| Ecosystem | Package | Fixed Version |\n")
+		fmt.Fprintf(w, "|-----------|---------|---------------|\n")
+		for _, p := range adv.Packages {
+			fixed := p.Fixed
+			if fixed == "" {
+				fixed = "-"
+			}
+			fmt.Fprintf(w, "| %s | %s | %s |\n", p.Ecosystem, p.Name, fixed)
+		}
+		fmt.Fprintln(w)
+	}
+
+	// References
+	if len(adv.References) > 0 {
+		fmt.Fprintf(w, "## References\n\n")
+		for _, r := range adv.References {
+			fmt.Fprintf(w, "- %s\n", r)
+		}
+		fmt.Fprintln(w)
+	}
+
+	return nil
+}
+
 func (f *markdownFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisory) error {
 	fmt.Fprintf(w, "| ID | Source | Severity | Summary |\n")
 	fmt.Fprintf(w, "|----|--------|----------|---------|\n")

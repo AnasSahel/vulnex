@@ -211,6 +211,42 @@ func epssFieldValue(cveID string, score *model.EPSSScore, field string) string {
 	}
 }
 
+// FormatAdvisory renders a single enriched advisory as CSV.
+func (cf *csvFormatter) FormatAdvisory(w io.Writer, advisory *model.EnrichedAdvisory) error {
+	headers := []string{"id", "cve_id", "severity", "cvss_score", "epss_score", "published", "url", "summary"}
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	if err := writer.Write(headers); err != nil {
+		return fmt.Errorf("writing CSV header: %w", err)
+	}
+
+	cvss := ""
+	if advisory.CVSSScore > 0 {
+		cvss = fmt.Sprintf("%.1f", advisory.CVSSScore)
+	}
+	epss := ""
+	if advisory.EPSSScore > 0 {
+		epss = fmt.Sprintf("%.5f", advisory.EPSSScore)
+	}
+	published := advisory.PublishedAt
+	if len(published) >= 10 {
+		published = published[:10]
+	}
+
+	row := []string{
+		advisory.ID,
+		advisory.CVEID,
+		advisory.Severity,
+		cvss,
+		epss,
+		published,
+		advisory.URL,
+		advisory.Summary,
+	}
+	return writer.Write(row)
+}
+
 // FormatAdvisories renders advisory data as CSV.
 func (cf *csvFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisory) error {
 	headers := []string{"id", "source", "severity", "url", "summary"}

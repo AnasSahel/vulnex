@@ -70,6 +70,14 @@ func (f *templateFormatter) FormatEPSSScores(w io.Writer, scores map[string]*mod
 	return nil
 }
 
+func (f *templateFormatter) FormatAdvisory(w io.Writer, advisory *model.EnrichedAdvisory) error {
+	tmpl, err := template.New("advisory").Parse(f.tmplStr)
+	if err != nil {
+		return err
+	}
+	return tmpl.Execute(w, advisory)
+}
+
 func (f *templateFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisory) error {
 	tmpl, err := template.New("advisory").Parse(f.tmplStr)
 	if err != nil {

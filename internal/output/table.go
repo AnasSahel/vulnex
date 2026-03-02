@@ -325,6 +325,122 @@ func (tf *tableFormatter) FormatEPSSScores(w io.Writer, scores map[string]*model
 	return nil
 }
 
+// FormatAdvisory renders a single enriched advisory in a detailed key-value display.
+func (tf *tableFormatter) FormatAdvisory(w io.Writer, adv *model.EnrichedAdvisory) error {
+	severityStr := strings.ToUpper(adv.Severity)
+	style := tf.severityStyle(severityStr)
+
+	// Advisory ID
+	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Advisory:"), tf.headerStyle.Render(adv.ID))
+
+	// CVE ID
+	if adv.CVEID != "" {
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("CVE:"), tf.valueStyle.Render(adv.CVEID))
+	}
+
+	// Severity
+	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Severity:"), style.Render(severityStr))
+
+	// CVSS Score
+	if adv.CVSSScore > 0 {
+		cvssStr := fmt.Sprintf("%.1f", adv.CVSSScore)
+		if adv.CVSSVector != "" {
+			cvssStr += fmt.Sprintf(" (%s)", adv.CVSSVector)
+		}
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("CVSS Score:"), style.Render(cvssStr))
+	}
+
+	// EPSS Score
+	if adv.EPSSScore > 0 {
+		epssStr := fmt.Sprintf("%.5f (percentile: %.4f)", adv.EPSSScore, adv.EPSSPctile)
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("EPSS Score:"), tf.valueStyle.Render(epssStr))
+	}
+
+	// Published
+	if adv.PublishedAt != "" {
+		published := adv.PublishedAt
+		if len(published) >= 10 {
+			published = published[:10]
+		}
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Published:"), tf.valueStyle.Render(published))
+	}
+
+	// Updated
+	if adv.UpdatedAt != "" && adv.UpdatedAt != adv.PublishedAt {
+		updated := adv.UpdatedAt
+		if len(updated) >= 10 {
+			updated = updated[:10]
+		}
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Updated:"), tf.valueStyle.Render(updated))
+	}
+
+	// Withdrawn
+	if adv.WithdrawnAt != "" {
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Withdrawn:"), tf.criticalStyle.Render(adv.WithdrawnAt[:10]))
+	}
+
+	// URL
+	if adv.URL != "" {
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("URL:"), tf.noneStyle.Render(adv.URL))
+	}
+
+	// Summary
+	fmt.Fprintln(w)
+	fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("Summary"))
+	fmt.Fprintf(w, "  %s\n", tf.valueStyle.Render(adv.Summary))
+
+	// Description
+	if adv.Description != "" {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("Description"))
+		desc := adv.Description
+		if !tf.long && len(desc) > 300 {
+			desc = desc[:297] + "..."
+		}
+		// Wrap lines for readability
+		for _, line := range strings.Split(desc, "\n") {
+			fmt.Fprintf(w, "  %s\n", tf.valueStyle.Render(line))
+		}
+	}
+
+	// CWEs
+	if len(adv.CWEs) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("Weaknesses (CWE)"))
+		for _, cwe := range adv.CWEs {
+			if cwe.Description != "" {
+				fmt.Fprintf(w, "  %s: %s\n", tf.headerStyle.Render(cwe.ID), tf.valueStyle.Render(cwe.Description))
+			} else {
+				fmt.Fprintf(w, "  %s\n", tf.headerStyle.Render(cwe.ID))
+			}
+		}
+	}
+
+	// Affected Packages
+	if len(adv.Packages) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("Affected Packages"))
+		for _, pkg := range adv.Packages {
+			fix := pkg.Fixed
+			if fix == "" {
+				fix = "no fix available"
+			}
+			fmt.Fprintf(w, "  %s/%s (fixed: %s)\n", tf.valueStyle.Render(pkg.Ecosystem), tf.headerStyle.Render(pkg.Name), fix)
+		}
+	}
+
+	// References
+	if len(adv.References) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("References"))
+		for _, ref := range adv.References {
+			fmt.Fprintf(w, "  %s\n", tf.noneStyle.Render(ref))
+		}
+	}
+
+	return nil
+}
+
 // FormatAdvisories renders advisory data as a table.
 func (tf *tableFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisory) error {
 	headers := []string{"ID", "Source", "Severity", "Summary"}

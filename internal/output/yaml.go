@@ -112,6 +112,10 @@ func (f *yamlFormatter) FormatEPSSScores(w io.Writer, scores map[string]*model.E
 	return toYAML(w, scores)
 }
 
+func (f *yamlFormatter) FormatAdvisory(w io.Writer, advisory *model.EnrichedAdvisory) error {
+	return toYAML(w, advisory)
+}
+
 func (f *yamlFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisory) error {
 	return toYAML(w, advisories)
 }

@@ -69,6 +69,16 @@ func (jf *jsonFormatter) FormatEPSSScores(w io.Writer, scores map[string]*model.
 	return err
 }
 
+// FormatAdvisory renders a single enriched advisory as JSON.
+func (jf *jsonFormatter) FormatAdvisory(w io.Writer, advisory *model.EnrichedAdvisory) error {
+	data, err := jf.marshal(advisory)
+	if err != nil {
+		return fmt.Errorf("marshaling advisory to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
 // FormatAdvisories renders advisory data as a JSON array.
 func (jf *jsonFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisory) error {
 	data, err := jf.marshal(advisories)
