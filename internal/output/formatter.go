@@ -18,6 +18,8 @@ type Formatter interface {
 	FormatAdvisories(w io.Writer, advisories []model.Advisory) error
 	FormatSBOMResult(w io.Writer, result *model.SBOMResult) error
 	FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error
+	FormatExploitResult(w io.Writer, result *model.ExploitResult) error
+	FormatExploitResults(w io.Writer, results []*model.ExploitResult) error
 	FormatCacheStats(w io.Writer, stats *cache.Stats) error
 }
 

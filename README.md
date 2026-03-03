@@ -392,6 +392,37 @@ suppressions:
 - Expired entries (past the `expires` date) are automatically ignored — the finding becomes active again
 - In `sbom diff`, only **added** findings are eligible for suppression (removed/unchanged don't gate CI)
 
+### `vulnex exploit` — Exploit intelligence
+
+#### `exploit check` — Check exploit availability
+
+Cross-references CVE IDs against four exploit intelligence sources — GitHub PoCs, Nuclei templates, Metasploit modules, and ExploitDB — and presents a unified view.
+
+```bash
+vulnex exploit check CVE-2021-44228
+vulnex exploit check CVE-2021-44228 CVE-2017-0144 -o json
+echo "CVE-2024-3094" | vulnex exploit check --stdin
+```
+
+Example output:
+
+```
+CVE-2021-44228 — 8 known exploit(s)
+
+  SOURCE       NAME                                          URL
+  github       kozmer/log4j-shell-poc (1.2k)                 https://github.com/kozmer/log4j-shell-poc
+  github       fullhunt/log4j-scan (3.1k)                    https://github.com/fullhunt/log4j-scan
+  metasploit   exploit/multi/http/log4shell_header_injection  https://github.com/rapid7/...
+  nuclei       http/cves/2021/cve-2021-44228.yaml            https://github.com/projectdiscovery/...
+  exploitdb    50592                                          https://www.exploit-db.com/exploits/50592
+
+Sources: GitHub (5) · Metasploit (2) · Nuclei (1) · ExploitDB (1)
+```
+
+| Flag | Description |
+|------|-------------|
+| `--stdin` | Read CVE IDs from stdin |
+
 ### `vulnex stats` — Vulnerability statistics
 
 ```bash
