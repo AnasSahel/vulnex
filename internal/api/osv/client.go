@@ -13,7 +13,8 @@ import (
 	"github.com/trustin-tech/vulnex/internal/model"
 )
 
-const (
+// OSV.dev API endpoint base URLs, overridable in tests.
+var (
 	// queryURL is the OSV.dev single-query endpoint.
 	queryURL = "https://api.osv.dev/v1/query"
 
@@ -39,39 +40,47 @@ func NewClient(httpClient *api.Client) *Client {
 
 // QueryByCVE queries OSV.dev for vulnerabilities matching the given CVE alias
 // and converts the results to the internal model types.
+//
+// It first attempts a direct lookup via /v1/vulns/{cveID}, which supports
+// alias resolution for CVE IDs. If that returns a record whose primary ID
+// differs from the queried CVE (i.e. the CVE was an alias), it also fetches
+// any sibling aliases referenced in the result to provide complete coverage.
 func (c *Client) QueryByCVE(ctx context.Context, cveID string) ([]model.Advisory, []model.AffectedPkg, error) {
-	// OSV supports querying by alias — we search for the CVE ID across all
-	// ecosystems by posting a query with just the version field left empty
-	// and no package. The API will match on aliases.
-	// However, the OSV query endpoint does not accept a bare alias field.
-	// Instead, we query by commit/version with an empty package, which
-	// won't work. The proper approach is to use the batch endpoint or
-	// iterate. The simplest method: query with the CVE ID treated as an
-	// OSV vulnerability ID (many OSV IDs are aliases), then fall back to
-	// a general query.
-
-	// First, try fetching the CVE ID directly as a vulnerability ID.
+	// Try fetching the CVE ID directly as a vulnerability ID.
+	// OSV's /v1/vulns/ endpoint supports alias resolution for CVE IDs.
 	vuln, err := c.GetVulnerability(ctx, cveID)
-	if err == nil && vuln != nil {
-		advisories := convertToAdvisories([]OSVVulnerability{*vuln})
-		affected := convertToAffectedPkgs([]OSVVulnerability{*vuln})
-		return advisories, affected, nil
+	if err != nil {
+		// Transport/API errors are propagated so callers can distinguish
+		// between "not found" and "service unavailable".
+		return nil, nil, fmt.Errorf("querying OSV for %s: %w", cveID, err)
+	}
+	if vuln == nil {
+		// True 404 — no OSV record references this CVE.
+		return nil, nil, nil
 	}
 
-	// The CVE ID is not a direct OSV ID. Query the OSV API by posting
-	// a query — OSV treats unknown fields gracefully. We leverage the
-	// fact that the query endpoint matches on aliases when the request
-	// contains a version/commit that the server resolves via aliases.
-	// In practice the best way is to use the batch endpoint with a
-	// commit-less, version-less query that carries the CVE as a pseudo
-	// package identifier. OSV does not officially support alias-only
-	// queries through /v1/query, so we perform a GET on
-	// /v1/vulns/{cveID} which works when the CVE has a corresponding
-	// OSV record.
-	//
-	// If the direct lookup failed, return empty results with no error
-	// so the caller can try other data sources.
-	return nil, nil, nil
+	// Collect the primary result.
+	vulns := []OSVVulnerability{*vuln}
+
+	// If the returned record's ID differs from the queried CVE, the
+	// endpoint resolved an alias. Fetch sibling aliases to provide
+	// complete coverage (e.g. a CVE may map to both a GHSA and a PYSEC).
+	if vuln.ID != cveID {
+		for _, alias := range vuln.Aliases {
+			if alias == cveID || alias == vuln.ID {
+				continue
+			}
+			sibling, err := c.GetVulnerability(ctx, alias)
+			if err != nil || sibling == nil {
+				continue
+			}
+			vulns = append(vulns, *sibling)
+		}
+	}
+
+	advisories := convertToAdvisories(vulns)
+	affected := convertToAffectedPkgs(vulns)
+	return advisories, affected, nil
 }
 
 // QueryByPackage queries OSV.dev for vulnerabilities affecting the given
