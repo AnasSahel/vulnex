@@ -15,12 +15,21 @@ import (
 )
 
 const (
-	// kevFeedURL is the CISA KEV JSON feed endpoint.
-	kevFeedURL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+	// defaultKEVFeedURL is the CISA KEV JSON feed endpoint.
+	defaultKEVFeedURL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
 	// kevCacheTTL is the duration the KEV catalog is considered fresh.
 	kevCacheTTL = 6 * time.Hour
 )
+
+// kevFeedURL is the active feed URL, overridable in tests.
+var kevFeedURL = defaultKEVFeedURL
+
+// setKEVFeedURL overrides the feed URL (used in tests).
+func setKEVFeedURL(url string) { kevFeedURL = url }
+
+// restoreKEVFeedURL restores the feed URL to its original value.
+func restoreKEVFeedURL(orig string) { kevFeedURL = orig }
 
 // CatalogStats holds aggregate statistics about the KEV catalog.
 type CatalogStats struct {
@@ -48,14 +57,18 @@ func NewClient(httpClient *api.Client, c cache.Cache) *Client {
 // available and still fresh; otherwise it fetches a new copy from CISA,
 // honouring ETag-based conditional requests.
 func (c *Client) FetchCatalog(ctx context.Context) (*Catalog, error) {
-	// Try the cache first.
-	entry, err := c.cache.GetKEV(ctx)
-	if err == nil && entry != nil && time.Now().Before(entry.ExpiresAt) {
-		var cat Catalog
-		if err := json.Unmarshal(entry.Data, &cat); err == nil {
-			return &cat, nil
+	// Try the cache first (when available).
+	var entry *cache.Entry
+	if c.cache != nil {
+		var err error
+		entry, err = c.cache.GetKEV(ctx)
+		if err == nil && entry != nil && time.Now().Before(entry.ExpiresAt) {
+			var cat Catalog
+			if err := json.Unmarshal(entry.Data, &cat); err == nil {
+				return &cat, nil
+			}
+			// Corrupted cache data – fall through to a fresh download.
 		}
-		// Corrupted cache data – fall through to a fresh download.
 	}
 
 	// Determine any previously stored ETag for conditional fetch.
@@ -77,7 +90,9 @@ func (c *Client) FetchCatalog(ctx context.Context) (*Catalog, error) {
 			return nil, fmt.Errorf("decoding cached KEV catalog: %w", err)
 		}
 		// Refresh the cache TTL so we don't hit the server again too soon.
-		_ = c.cache.SetKEV(ctx, entry.Data, cat.CatalogVersion, etag, kevCacheTTL)
+		if c.cache != nil {
+			_ = c.cache.SetKEV(ctx, entry.Data, cat.CatalogVersion, etag, kevCacheTTL)
+		}
 		return &cat, nil
 	}
 
@@ -95,9 +110,11 @@ func (c *Client) FetchCatalog(ctx context.Context) (*Catalog, error) {
 		return nil, fmt.Errorf("decoding KEV catalog: %w", err)
 	}
 
-	// Store in cache for future requests.
-	newETag := resp.Header.Get("ETag")
-	_ = c.cache.SetKEV(ctx, body, cat.CatalogVersion, newETag, kevCacheTTL)
+	// Store in cache for future requests (when available).
+	if c.cache != nil {
+		newETag := resp.Header.Get("ETag")
+		_ = c.cache.SetKEV(ctx, body, cat.CatalogVersion, newETag, kevCacheTTL)
+	}
 
 	return &cat, nil
 }
