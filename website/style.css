@@ -424,6 +424,7 @@ section {
   color: var(--text);
   line-height: 1.6;
   white-space: pre;
+  overflow-x: auto;
 }
 
 /* ── CI/CD ───────────────────────────────────────── */
