@@ -218,7 +218,9 @@
         <div id="brew" class="install-panel active"><pre>brew install AnasSahel/tap/vulnex</pre></div>
         <div id="go" class="install-panel"><pre>go install github.com/trustin-tech/vulnex@latest</pre></div>
         <div id="binary" class="install-panel"><pre><span class="t-dim"># Download from GitHub Releases</span>
-curl -sL https://github.com/AnasSahel/vulnex/releases/latest/download/vulnex_linux_amd64.tar.gz | tar xz
+curl -sL \
+  https://github.com/AnasSahel/vulnex/releases/latest/download/vulnex_linux_amd64.tar.gz \
+  | tar xz
 sudo mv vulnex /usr/local/bin/</pre></div>
         <div id="source" class="install-panel"><pre>git clone https://github.com/AnasSahel/vulnex.git
 cd vulnex
