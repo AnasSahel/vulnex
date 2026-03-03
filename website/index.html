@@ -90,6 +90,11 @@
         <p>Parse CycloneDX/SPDX SBOMs, find vulnerable components, and generate OpenVEX documents.</p>
       </div>
       <div class="feature-card">
+        <span class="feature-icon">&#x1F504;</span>
+        <h3>SBOM Diffing</h3>
+        <p>Compare two SBOMs and see which vulnerabilities a dependency change introduces or fixes. CI gate built in.</p>
+      </div>
+      <div class="feature-card">
         <span class="feature-icon">&#x1F4BB;</span>
         <h3>Offline &amp; Pipe-Friendly</h3>
         <p>Local SQLite cache with configurable TTLs. Stdin support, multiple output formats, composable commands.</p>
@@ -106,6 +111,30 @@
     <p class="section-desc">From SBOM audits to composable pipelines — vulnex fits right into your terminal workflow.</p>
 
     <div class="showcase-grid">
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="terminal-dot red"></div>
+          <div class="terminal-dot yellow"></div>
+          <div class="terminal-dot green"></div>
+          <span class="terminal-title">sbom diff</span>
+        </div>
+        <div class="terminal-body"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">old-bom.json new-bom.json</span>
+
+<span class="t-critical">+ ADDED (8 vulnerabilities)</span>
+  <span class="t-accent">flask 0.12.0</span> <span class="t-dim">(PyPI)</span>
+    GHSA-562c-5r94-xh97   <span class="t-high">HIGH</span>      0.12.3
+    GHSA-5wv5-4vpf-pj6m   <span class="t-high">HIGH</span>      1.0
+
+<span class="t-green">- REMOVED (3 vulnerabilities)</span>
+  <span class="t-accent">lodash 4.17.20</span> <span class="t-dim">(npm)</span>
+    GHSA-35jh-r3h4-6jhm   <span class="t-high">HIGH</span>      4.17.21
+
+<span class="t-dim">= UNCHANGED (55 vulnerabilities)</span>
+
+<span class="t-dim">Summary: old=3 (58 vulns), new=4 (63 vulns)</span>
+  <span class="t-critical">+8 added</span>  <span class="t-green">-3 removed</span></pre></div>
+      </div>
+
       <div class="terminal">
         <div class="terminal-header">
           <div class="terminal-dot red"></div>
@@ -205,11 +234,35 @@ make build</pre></div>
   <div class="container">
     <span class="section-label">CI/CD</span>
     <h2 class="section-title">Gate your pipeline on vulnerabilities</h2>
-    <p class="section-desc"><code>vulnex sbom check</code> exits with code 1 when vulnerabilities are found — drop it straight into GitHub Actions.</p>
+    <p class="section-desc"><code>sbom check</code> catches existing vulns. <code>sbom diff</code> catches <em>new</em> vulns a PR introduces. Both exit 1 on failure.</p>
 
-    <div class="ci-block" style="max-width:680px">
-      <div class="ci-block-header">.github/workflows/security.yml</div>
-      <pre><span class="y-key">name:</span> <span class="y-str">Security Gate</span>
+    <div class="ci-blocks" style="max-width:680px;display:flex;flex-direction:column;gap:24px">
+      <div class="ci-block">
+        <div class="ci-block-header">.github/workflows/security.yml — block new vulnerabilities</div>
+        <pre><span class="y-key">name:</span> <span class="y-str">Vulnerability Diff Gate</span>
+<span class="y-key">on:</span> <span class="y-str">[pull_request]</span>
+
+<span class="y-key">jobs:</span>
+  <span class="y-key">vuln-diff:</span>
+    <span class="y-key">runs-on:</span> <span class="y-str">ubuntu-latest</span>
+    <span class="y-key">steps:</span>
+      - <span class="y-key">uses:</span> <span class="y-str">actions/checkout@v4</span>
+      - <span class="y-key">name:</span> <span class="y-str">Install vulnex</span>
+        <span class="y-key">run:</span> <span class="y-str">go install github.com/trustin-tech/vulnex@latest</span>
+
+      - <span class="y-key">name:</span> <span class="y-str">Generate SBOMs</span>
+        <span class="y-key">run:</span> |
+          <span class="y-str">git stash && cyclonedx-gomod app > old-bom.json</span>
+          <span class="y-str">git stash pop && cyclonedx-gomod app > new-bom.json</span>
+
+      - <span class="y-key">name:</span> <span class="y-str">Diff for new vulnerabilities</span>
+        <span class="y-key">run:</span> <span class="y-str">vulnex sbom diff old-bom.json new-bom.json</span>
+        <span class="y-comment"># Exits 1 if new vulns introduced → blocks the PR</span></pre>
+      </div>
+
+      <div class="ci-block">
+        <div class="ci-block-header">.github/workflows/security.yml — full vulnerability check</div>
+        <pre><span class="y-key">name:</span> <span class="y-str">Security Gate</span>
 <span class="y-key">on:</span> <span class="y-str">[push, pull_request]</span>
 
 <span class="y-key">jobs:</span>
@@ -226,6 +279,7 @@ make build</pre></div>
       - <span class="y-key">name:</span> <span class="y-str">Check for vulnerabilities</span>
         <span class="y-key">run:</span> <span class="y-str">vulnex sbom check bom.json --severity critical</span>
         <span class="y-comment"># Exits 1 if critical vulns found → fails the job</span></pre>
+      </div>
     </div>
   </div>
 </section>

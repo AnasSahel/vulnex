@@ -327,6 +327,12 @@ section {
   }
 }
 
+@media (min-width: 1200px) {
+  .showcase-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
 .showcase-grid .terminal {
   max-width: none;
 }

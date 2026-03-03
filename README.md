@@ -38,7 +38,8 @@ $ vulnex enrich CVE-2021-44228
 - **Composite risk scoring** — P0–P4 priority matrix blending CVSS, EPSS, and KEV signals
 - **Offline mode** — Local SQLite cache with configurable TTLs; work without network access
 - **SBOM scanning** — Parse CycloneDX/SPDX SBOMs, find vulnerabilities grouped by component, and generate OpenVEX documents
-- **CI/CD gating** — `sbom check` exits with code 1 when vulnerabilities are found; filter by `--severity` to control thresholds
+- **SBOM diffing** — Compare two SBOMs and see which vulnerabilities a dependency change introduces or fixes
+- **CI/CD gating** — `sbom check` exits 1 on vulns found, `sbom diff` exits 1 on new vulns introduced; filter by `--severity` to control thresholds
 - **Pipe-friendly** — stdin support, multiple output formats, and composable commands
 - **Zero CGO** — Pure Go with no C dependencies; single static binary
 
@@ -81,6 +82,9 @@ vulnex cve search "apache log4j" --severity critical
 
 # Scan an SBOM for vulnerabilities
 vulnex sbom check bom.json
+
+# Diff two SBOMs — what vulns did this change introduce?
+vulnex sbom diff old-bom.json new-bom.json
 
 # Fail CI if critical vulnerabilities exist
 vulnex sbom check bom.json --severity critical
@@ -327,6 +331,40 @@ Summary: 3 components scanned, 2 vulnerable, 3 findings
 | `--vex` | Output an OpenVEX document instead of a table |
 | `--ecosystem` | Filter components by ecosystem |
 | `--severity` | Filter results by severity (exits 0 if no matches) |
+
+#### `sbom diff` — Compare two SBOMs for vulnerability changes
+
+Compares two CycloneDX or SPDX JSON SBOM files and reports which vulnerabilities were added, removed, or unchanged. Exits with code 1 when new vulnerabilities are introduced — use it as a CI gate to block risky dependency changes.
+
+```bash
+vulnex sbom diff old-bom.json new-bom.json
+vulnex sbom diff old.json new.json --severity critical    # only critical changes
+vulnex sbom diff old.json new.json --ecosystem npm        # filter by ecosystem
+vulnex sbom diff old.json new.json -o json                # structured JSON output
+```
+
+Example table output:
+
+```
++ ADDED (2 vulnerabilities)
+  flask 0.12.0 (PyPI)
+    GHSA-562c-5r94-xh97       HIGH      0.12.3   Flask is vulnerable to Denial of...
+
+- REMOVED (3 vulnerabilities)
+  lodash 4.17.20 (npm)
+    GHSA-35jh-r3h4-6jhm       HIGH      4.17.21  Command Injection in lodash
+
+= UNCHANGED (55 vulnerabilities)
+  django 3.2.0 (PyPI)
+    GHSA-2gwj-7jmv-h26r       CRITICAL  2.2.28   SQL Injection in Django
+
+Summary: old=3 components (58 vulns), new=4 components (63 vulns), +8 added, -3 removed
+```
+
+| Flag | Description |
+|------|-------------|
+| `--ecosystem` | Filter components by ecosystem |
+| `--severity` | Filter results by severity |
 
 ### `vulnex stats` — Vulnerability statistics
 
