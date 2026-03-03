@@ -302,6 +302,10 @@ func (f *markdownFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResu
 	fmt.Fprintf(w, "---\n\n*%d components scanned, %d vulnerable, %d findings*\n",
 		result.TotalComponents, len(order), len(result.Findings))
 
+	if len(result.Suppressed) > 0 {
+		fmt.Fprintf(w, "\n> **Note:** %d finding(s) suppressed via `.vulnexignore`. Use `--strict` to show all.\n", len(result.Suppressed))
+	}
+
 	return nil
 }
 
@@ -351,6 +355,10 @@ func (f *markdownFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOM
 		result.OldComponents, len(result.Removed)+len(result.Unchanged),
 		result.NewComponents, len(result.Added)+len(result.Unchanged),
 		len(result.Added), len(result.Removed))
+
+	if len(result.Suppressed) > 0 {
+		fmt.Fprintf(w, "\n> **Note:** %d added finding(s) suppressed via `.vulnexignore`. Use `--strict` to show all.\n", len(result.Suppressed))
+	}
 
 	return nil
 }

@@ -51,6 +51,7 @@ type SBOMResult struct {
 	File            string        `json:"file"`
 	TotalComponents int           `json:"total_components"`
 	Findings        []SBOMFinding `json:"findings"`
+	Suppressed      []SBOMFinding `json:"suppressed,omitempty"`
 }
 
 // SBOMDiffResult holds the diff between two SBOM vulnerability checks.
@@ -62,6 +63,7 @@ type SBOMDiffResult struct {
 	Added         []SBOMFinding `json:"added"`
 	Removed       []SBOMFinding `json:"removed"`
 	Unchanged     []SBOMFinding `json:"unchanged"`
+	Suppressed    []SBOMFinding `json:"suppressed,omitempty"`
 }
 
 // CPEMatch represents a CPE (Common Platform Enumeration) match configuration.

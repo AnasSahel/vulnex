@@ -331,6 +331,8 @@ Summary: 3 components scanned, 2 vulnerable, 3 findings
 | `--vex` | Output an OpenVEX document instead of a table |
 | `--ecosystem` | Filter components by ecosystem |
 | `--severity` | Filter results by severity (exits 0 if no matches) |
+| `--ignore-file` | Path to suppression file (default: `.vulnexignore`) |
+| `--strict` | Ignore suppression file and report all findings |
 
 #### `sbom diff` — Compare two SBOMs for vulnerability changes
 
@@ -366,6 +368,28 @@ Summary: old=3 components (56 vulns), new=4 components (57 vulns), +2 added, -1 
 |------|-------------|
 | `--ecosystem` | Filter components by ecosystem |
 | `--severity` | Filter results by severity |
+| `--ignore-file` | Path to suppression file (default: `.vulnexignore`) |
+| `--strict` | Ignore suppression file and report all findings |
+
+### `.vulnexignore` — Suppressing accepted risks
+
+Create a `.vulnexignore` file in your project root to suppress known false positives or accepted risks. Suppressed findings are excluded from the exit code calculation, allowing your CI gate to stay on while managing noise.
+
+```yaml
+suppressions:
+  - id: GHSA-2gwj-7jmv-h26r          # required: advisory ID
+    package: django                    # optional: scope to package
+    reason: "Transitive dep, mitigated at WAF"  # required: justification
+    expires: "2026-06-01"              # optional: auto-unsuppress after date
+    approved_by: security-team         # optional: who approved
+```
+
+**Behavior:**
+- `sbom check` and `sbom diff` automatically load `.vulnexignore` from the current directory
+- Use `--ignore-file <path>` to specify a different file
+- Use `--strict` to skip suppression and report all findings
+- Expired entries (past the `expires` date) are automatically ignored — the finding becomes active again
+- In `sbom diff`, only **added** findings are eligible for suppression (removed/unchanged don't gate CI)
 
 ### `vulnex stats` — Vulnerability statistics
 

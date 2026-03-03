@@ -7,9 +7,11 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/trustin-tech/vulnex/internal/api/osv"
+	"github.com/trustin-tech/vulnex/internal/ignore"
 	"github.com/trustin-tech/vulnex/internal/model"
 	"github.com/trustin-tech/vulnex/internal/sbom"
 )
@@ -54,6 +56,21 @@ by default, or as a VEX document with the --vex flag.`,
 			findings = filtered
 		}
 
+		// Apply suppressions from .vulnexignore
+		strict, _ := cmd.Flags().GetBool("strict")
+		var suppressedFindings []model.SBOMFinding
+		if !strict {
+			ignoreFile, _ := cmd.Flags().GetString("ignore-file")
+			igf, err := ignore.Load(resolveIgnoreFile(ignoreFile))
+			if err != nil {
+				return fmt.Errorf("loading ignore file: %w", err)
+			}
+			findings, suppressedFindings = igf.Apply(findings, time.Now())
+			if !quiet && len(suppressedFindings) > 0 {
+				fmt.Fprintf(os.Stderr, "Suppressed %d findings via .vulnexignore\n", len(suppressedFindings))
+			}
+		}
+
 		if !quiet {
 			fmt.Fprintf(os.Stderr, "Found %d vulnerabilities\n", len(findings))
 		}
@@ -74,6 +91,7 @@ by default, or as a VEX document with the --vex flag.`,
 			File:            filePath,
 			TotalComponents: len(components),
 			Findings:        findings,
+			Suppressed:      suppressedFindings,
 		}
 
 		if len(findings) == 0 {
@@ -160,6 +178,21 @@ Exit code 1 means at least one new vulnerability was added (CI gate failure).`,
 			unchanged = filterBySeverity(unchanged, severityFilter)
 		}
 
+		// Apply suppressions to added findings only
+		strict, _ := cmd.Flags().GetBool("strict")
+		var suppressedFindings []model.SBOMFinding
+		if !strict {
+			ignoreFile, _ := cmd.Flags().GetString("ignore-file")
+			igf, err := ignore.Load(resolveIgnoreFile(ignoreFile))
+			if err != nil {
+				return fmt.Errorf("loading ignore file: %w", err)
+			}
+			added, suppressedFindings = igf.Apply(added, time.Now())
+			if !quiet && len(suppressedFindings) > 0 {
+				fmt.Fprintf(os.Stderr, "Suppressed %d added findings via .vulnexignore\n", len(suppressedFindings))
+			}
+		}
+
 		result := &model.SBOMDiffResult{
 			OldFile:       oldFile,
 			NewFile:       newFile,
@@ -168,6 +201,7 @@ Exit code 1 means at least one new vulnerability was added (CI gate failure).`,
 			Added:         added,
 			Removed:       removed,
 			Unchanged:     unchanged,
+			Suppressed:    suppressedFindings,
 		}
 
 		if !quiet {
@@ -336,6 +370,14 @@ func scanSBOM(ctx context.Context, filePath, ecosystemFilter string, quiet bool)
 	return components, findings, vulnResults, nil
 }
 
+// resolveIgnoreFile returns the flag value if non-empty, else the default ".vulnexignore".
+func resolveIgnoreFile(flagValue string) string {
+	if flagValue != "" {
+		return flagValue
+	}
+	return ".vulnexignore"
+}
+
 // filterBySeverity filters findings to only those matching the given severity.
 func filterBySeverity(findings []model.SBOMFinding, severity string) []model.SBOMFinding {
 	filtered := make([]model.SBOMFinding, 0)
@@ -381,9 +423,13 @@ func init() {
 	sbomCheckCmd.Flags().Bool("vex", false, "Output an OpenVEX document instead of a table")
 	sbomCheckCmd.Flags().String("ecosystem", "", "Filter components by ecosystem (npm, pip, maven, go, etc.)")
 	sbomCheckCmd.Flags().String("severity", "", "Filter results by severity (critical, high, medium, low)")
+	sbomCheckCmd.Flags().String("ignore-file", "", "Path to suppression file (default: .vulnexignore)")
+	sbomCheckCmd.Flags().Bool("strict", false, "Ignore suppression file and report all findings")
 
 	sbomDiffCmd.Flags().String("ecosystem", "", "Filter components by ecosystem (npm, pip, maven, go, etc.)")
 	sbomDiffCmd.Flags().String("severity", "", "Filter results by severity (critical, high, medium, low)")
+	sbomDiffCmd.Flags().String("ignore-file", "", "Path to suppression file (default: .vulnexignore)")
+	sbomDiffCmd.Flags().Bool("strict", false, "Ignore suppression file and report all findings")
 
 	sbomCmd.AddCommand(sbomCheckCmd)
 	sbomCmd.AddCommand(sbomDiffCmd)
