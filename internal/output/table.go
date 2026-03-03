@@ -566,6 +566,10 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 		fmt.Fprintf(w, "  %s\n", strings.Join(parts, "  "))
 	}
 
+	if len(result.Suppressed) > 0 {
+		fmt.Fprintf(w, "  Suppressed: %d (use --strict to show all)\n", len(result.Suppressed))
+	}
+
 	return nil
 }
 
@@ -642,6 +646,10 @@ func (tf *tableFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDi
 		result.OldComponents, len(result.Removed)+len(result.Unchanged),
 		result.NewComponents, len(result.Added)+len(result.Unchanged),
 		len(result.Added), len(result.Removed))
+
+	if len(result.Suppressed) > 0 {
+		fmt.Fprintf(w, "  Suppressed: %d (use --strict to show all)\n", len(result.Suppressed))
+	}
 
 	return nil
 }
