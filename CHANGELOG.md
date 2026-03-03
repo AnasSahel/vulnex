@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/AnasSahel/vulnex/compare/v1.1.0...v1.2.0) (2026-03-03)
+
+
+### Features
+
+* **sbom:** add diff command to compare SBOM vulnerability changes ([950d9cb](https://github.com/AnasSahel/vulnex/commit/950d9cb510eee22dc6a259907e2a88ffa1bcd40e))
+
 ## [1.1.0](https://github.com/AnasSahel/vulnex/compare/v1.0.0...v1.1.0) (2026-03-02)
 
 
