@@ -17,6 +17,7 @@ type Formatter interface {
 	FormatAdvisory(w io.Writer, advisory *model.EnrichedAdvisory) error
 	FormatAdvisories(w io.Writer, advisories []model.Advisory) error
 	FormatSBOMResult(w io.Writer, result *model.SBOMResult) error
+	FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error
 	FormatCacheStats(w io.Writer, stats *cache.Stats) error
 }
 

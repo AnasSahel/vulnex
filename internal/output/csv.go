@@ -303,6 +303,44 @@ func (cf *csvFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult) 
 	return nil
 }
 
+// FormatSBOMDiffResult renders SBOM diff results as flattened CSV rows with a status column.
+func (cf *csvFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error {
+	headers := []string{"status", "ecosystem", "name", "version", "fixed", "id", "severity", "summary"}
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	if err := writer.Write(headers); err != nil {
+		return fmt.Errorf("writing CSV header: %w", err)
+	}
+
+	writeFindings := func(status string, findings []model.SBOMFinding) error {
+		for _, f := range findings {
+			row := []string{
+				status,
+				f.Ecosystem,
+				f.Name,
+				f.Version,
+				f.Fixed,
+				f.Advisory.ID,
+				f.Advisory.Severity,
+				f.Advisory.Summary,
+			}
+			if err := writer.Write(row); err != nil {
+				return fmt.Errorf("writing CSV row: %w", err)
+			}
+		}
+		return nil
+	}
+
+	if err := writeFindings("added", result.Added); err != nil {
+		return err
+	}
+	if err := writeFindings("removed", result.Removed); err != nil {
+		return err
+	}
+	return writeFindings("unchanged", result.Unchanged)
+}
+
 // FormatCacheStats renders cache statistics as CSV.
 func (cf *csvFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	writer := csv.NewWriter(w)

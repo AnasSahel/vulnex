@@ -305,6 +305,56 @@ func (f *markdownFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResu
 	return nil
 }
 
+func (f *markdownFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error {
+	fmt.Fprintf(w, "# SBOM Vulnerability Diff\n\n")
+	fmt.Fprintf(w, "**Old:** %s (%d components)  \n", result.OldFile, result.OldComponents)
+	fmt.Fprintf(w, "**New:** %s (%d components)  \n\n", result.NewFile, result.NewComponents)
+
+	sections := []struct {
+		title    string
+		findings []model.SBOMFinding
+	}{
+		{"Added", result.Added},
+		{"Removed", result.Removed},
+		{"Unchanged", result.Unchanged},
+	}
+
+	for _, sec := range sections {
+		if len(sec.findings) == 0 {
+			continue
+		}
+
+		fmt.Fprintf(w, "## %s (%d vulnerabilities)\n\n", sec.title, len(sec.findings))
+		fmt.Fprintf(w, "| Ecosystem | Name | Version | ID | Severity | Fixed | Summary |\n")
+		fmt.Fprintf(w, "|-----------|------|---------|----|----------|-------|---------|\n")
+		for _, finding := range sec.findings {
+			sev := strings.ToUpper(finding.Advisory.Severity)
+			if sev == "" {
+				sev = "UNKNOWN"
+			}
+			fixed := finding.Fixed
+			if fixed == "" {
+				fixed = "-"
+			}
+			summary := finding.Advisory.Summary
+			if len(summary) > 60 {
+				summary = summary[:57] + "..."
+			}
+			fmt.Fprintf(w, "| %s | %s | %s | %s | %s | %s | %s |\n",
+				finding.Ecosystem, finding.Name, finding.Version,
+				finding.Advisory.ID, sev, fixed, summary)
+		}
+		fmt.Fprintln(w)
+	}
+
+	fmt.Fprintf(w, "---\n\n*old=%d components (%d vulns), new=%d components (%d vulns), +%d added, -%d removed*\n",
+		result.OldComponents, len(result.Removed)+len(result.Unchanged),
+		result.NewComponents, len(result.Added)+len(result.Unchanged),
+		len(result.Added), len(result.Removed))
+
+	return nil
+}
+
 func (f *markdownFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	fmt.Fprintf(w, "## Cache Statistics\n\n")
 	fmt.Fprintf(w, "| Metric | Value |\n")

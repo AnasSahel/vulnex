@@ -53,6 +53,17 @@ type SBOMResult struct {
 	Findings        []SBOMFinding `json:"findings"`
 }
 
+// SBOMDiffResult holds the diff between two SBOM vulnerability checks.
+type SBOMDiffResult struct {
+	OldFile       string        `json:"old_file"`
+	NewFile       string        `json:"new_file"`
+	OldComponents int           `json:"old_components"`
+	NewComponents int           `json:"new_components"`
+	Added         []SBOMFinding `json:"added"`
+	Removed       []SBOMFinding `json:"removed"`
+	Unchanged     []SBOMFinding `json:"unchanged"`
+}
+
 // CPEMatch represents a CPE (Common Platform Enumeration) match configuration.
 type CPEMatch struct {
 	CPE23URI           string `json:"cpe23_uri"`

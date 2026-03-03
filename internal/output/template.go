@@ -99,6 +99,14 @@ func (f *templateFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResu
 	return tmpl.Execute(w, result)
 }
 
+func (f *templateFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error {
+	tmpl, err := template.New("sbom-diff").Parse(f.tmplStr)
+	if err != nil {
+		return err
+	}
+	return tmpl.Execute(w, result)
+}
+
 func (f *templateFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	tmpl, err := template.New("stats").Parse(f.tmplStr)
 	if err != nil {

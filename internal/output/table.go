@@ -569,6 +569,83 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 	return nil
 }
 
+// FormatSBOMDiffResult renders the diff between two SBOM scans grouped by status.
+func (tf *tableFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error {
+	sections := []struct {
+		prefix   string
+		label    string
+		findings []model.SBOMFinding
+	}{
+		{"+", "ADDED", result.Added},
+		{"-", "REMOVED", result.Removed},
+		{"=", "UNCHANGED", result.Unchanged},
+	}
+
+	for _, sec := range sections {
+		if len(sec.findings) == 0 {
+			continue
+		}
+
+		sectionHeader := fmt.Sprintf("%s %s (%d vulnerabilities)", sec.prefix, sec.label, len(sec.findings))
+		fmt.Fprintf(w, "\n%s\n", tf.headerStyle.Render(sectionHeader))
+
+		// Group findings by component
+		type componentKey struct {
+			ecosystem, name, version string
+		}
+		var order []componentKey
+		groups := make(map[componentKey][]model.SBOMFinding)
+		for _, f := range sec.findings {
+			key := componentKey{f.Ecosystem, f.Name, f.Version}
+			if _, exists := groups[key]; !exists {
+				order = append(order, key)
+			}
+			groups[key] = append(groups[key], f)
+		}
+
+		for _, key := range order {
+			findings := groups[key]
+			header := fmt.Sprintf("  %s %s (%s)", key.name, key.version, key.ecosystem)
+			fmt.Fprintf(w, "%s\n", tf.headerStyle.Render(header))
+
+			for _, f := range findings {
+				sev := strings.ToUpper(f.Advisory.Severity)
+				if sev == "" {
+					sev = "UNKNOWN"
+				}
+				style := tf.severityStyle(sev)
+
+				fixed := f.Fixed
+				if fixed == "" {
+					fixed = "-"
+				}
+				if len(fixed) > 8 {
+					fixed = fixed[:7] + "~"
+				}
+
+				summary := f.Advisory.Summary
+				if !tf.long {
+					summary = truncate(summary, 50)
+				}
+
+				fmt.Fprintf(w, "    %-26s%-10s%-9s%s\n",
+					f.Advisory.ID,
+					style.Render(sev),
+					fixed,
+					summary)
+			}
+		}
+	}
+
+	// Summary footer
+	fmt.Fprintf(w, "\nSummary: old=%d components (%d vulns), new=%d components (%d vulns), +%d added, -%d removed\n",
+		result.OldComponents, len(result.Removed)+len(result.Unchanged),
+		result.NewComponents, len(result.Added)+len(result.Unchanged),
+		len(result.Added), len(result.Removed))
+
+	return nil
+}
+
 // FormatCacheStats renders cache statistics in a simple key-value format.
 func (tf *tableFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("Total Entries:"), stats.TotalEntries)

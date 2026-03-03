@@ -124,6 +124,10 @@ func (f *yamlFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult) 
 	return toYAML(w, result)
 }
 
+func (f *yamlFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error {
+	return toYAML(w, result)
+}
+
 func (f *yamlFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	return toYAML(w, stats)
 }

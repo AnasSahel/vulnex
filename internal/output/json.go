@@ -99,6 +99,16 @@ func (jf *jsonFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult)
 	return err
 }
 
+// FormatSBOMDiffResult renders SBOM diff results as JSON.
+func (jf *jsonFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error {
+	data, err := jf.marshal(result)
+	if err != nil {
+		return fmt.Errorf("marshaling SBOM diff result to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
 // FormatCacheStats renders cache statistics as JSON.
 func (jf *jsonFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	data, err := jf.marshal(stats)
