@@ -40,6 +40,7 @@ $ vulnex enrich CVE-2021-44228
 - **SBOM scanning** — Parse CycloneDX/SPDX SBOMs, find vulnerabilities grouped by component, and generate OpenVEX documents
 - **SBOM diffing** — Compare two SBOMs and see which vulnerabilities a dependency change introduces or fixes
 - **CI/CD gating** — `sbom check` exits 1 on vulns found, `sbom diff` exits 1 on new vulns introduced; filter by `--severity` to control thresholds
+- **Suppression file** — `.vulnexignore` lets teams suppress accepted risks with package scoping, expiry dates, and audit trails
 - **Pipe-friendly** — stdin support, multiple output formats, and composable commands
 - **Zero CGO** — Pure Go with no C dependencies; single static binary
 
