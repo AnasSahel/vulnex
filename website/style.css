@@ -407,6 +407,7 @@ section {
   border: 1px solid var(--border);
   border-top: none;
   border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
 }
 
 .install-panel {
