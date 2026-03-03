@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/AnasSahel/vulnex/compare/v1.2.0...v1.2.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* **kev:** guard cache calls to prevent nil-pointer panic with --no-cache ([6fc6cc9](https://github.com/AnasSahel/vulnex/commit/6fc6cc9baa33202cdfbda01e44e11fe1b987c3dc))
+* **osv:** propagate errors and fetch sibling aliases in QueryByCVE ([6b152e4](https://github.com/AnasSahel/vulnex/commit/6b152e439dc0177a910ebe730fec8b0663c70748))
+
 ## [1.2.0](https://github.com/AnasSahel/vulnex/compare/v1.1.0...v1.2.0) (2026-03-03)
 
 
