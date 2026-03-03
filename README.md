@@ -96,7 +96,7 @@ Initialize a default config file:
 
 ```bash
 vulnex config init
-# Creates ~/.config/vulnex/config.yaml
+# Creates ~/.vulnex/config.yaml
 ```
 
 Manage settings:

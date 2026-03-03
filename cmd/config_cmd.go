@@ -55,7 +55,7 @@ var configSetCmd = &cobra.Command{
 Available keys:
   api_keys.nvd          NVD API key
   api_keys.github       GitHub personal access token
-  output.format         Default output format (table, json, csv)
+  output.format         Default output format (table, json, csv, markdown, yaml)
   output.color          Color mode (auto, always, never)
   cache.enabled         Enable/disable cache (true/false)
   cache.ttl.cve         CVE cache TTL (e.g., 2h, 30m)
