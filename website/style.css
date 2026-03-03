@@ -319,24 +319,7 @@ section {
   display: grid;
   grid-template-columns: 1fr;
   gap: 32px;
-}
-
-@media (min-width: 800px) {
-  .showcase-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1200px) {
-  .showcase-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.showcase-grid .terminal {
-  max-width: none;
-  min-width: 0;
-  margin: 0;
+  max-width: 720px;
 }
 
 /* ── Data Sources ────────────────────────────────── */
