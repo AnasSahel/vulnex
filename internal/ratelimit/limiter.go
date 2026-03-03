@@ -10,10 +10,12 @@ import (
 
 // Default rate limits per host (requests per second).
 var defaultLimits = map[string]rate.Limit{
-	"services.nvd.nist.gov": rate.Every(600 * time.Millisecond),  // ~1.6/sec with key
-	"api.first.org":         rate.Every(1 * time.Second),          // 1/sec conservative
-	"api.github.com":        rate.Every(720 * time.Millisecond),   // ~1.4/sec
-	"api.osv.dev":           rate.Every(500 * time.Millisecond),   // 2/sec conservative
+	"services.nvd.nist.gov":          rate.Every(600 * time.Millisecond),  // ~1.6/sec with key
+	"api.first.org":                  rate.Every(1 * time.Second),          // 1/sec conservative
+	"api.github.com":                 rate.Every(720 * time.Millisecond),   // ~1.4/sec
+	"api.osv.dev":                    rate.Every(500 * time.Millisecond),   // 2/sec conservative
+	"raw.githubusercontent.com":      rate.Every(500 * time.Millisecond),   // 2/sec
+	"gitlab.com":                     rate.Every(1 * time.Second),          // 1/sec conservative
 }
 
 // Limiter manages per-host token bucket rate limiters.

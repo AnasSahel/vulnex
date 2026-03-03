@@ -341,6 +341,46 @@ func (cf *csvFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiff
 	return writeFindings("unchanged", result.Unchanged)
 }
 
+// FormatExploitResult renders a single exploit result as CSV.
+func (cf *csvFormatter) FormatExploitResult(w io.Writer, result *model.ExploitResult) error {
+	if result == nil {
+		return nil
+	}
+	return cf.FormatExploitResults(w, []*model.ExploitResult{result})
+}
+
+// FormatExploitResults renders multiple exploit results as CSV.
+func (cf *csvFormatter) FormatExploitResults(w io.Writer, results []*model.ExploitResult) error {
+	headers := []string{"cve_id", "source", "id", "name", "url", "description"}
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	if err := writer.Write(headers); err != nil {
+		return fmt.Errorf("writing CSV header: %w", err)
+	}
+
+	for _, result := range results {
+		if result == nil {
+			continue
+		}
+		for _, ref := range result.Exploits {
+			row := []string{
+				result.CVEID,
+				ref.Source,
+				ref.ID,
+				ref.Name,
+				ref.URL,
+				ref.Description,
+			}
+			if err := writer.Write(row); err != nil {
+				return fmt.Errorf("writing CSV row: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // FormatCacheStats renders cache statistics as CSV.
 func (cf *csvFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	writer := csv.NewWriter(w)

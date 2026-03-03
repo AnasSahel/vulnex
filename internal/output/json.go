@@ -109,6 +109,26 @@ func (jf *jsonFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDif
 	return err
 }
 
+// FormatExploitResult renders a single exploit result as JSON.
+func (jf *jsonFormatter) FormatExploitResult(w io.Writer, result *model.ExploitResult) error {
+	data, err := jf.marshal(result)
+	if err != nil {
+		return fmt.Errorf("marshaling exploit result to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
+// FormatExploitResults renders multiple exploit results as a JSON array.
+func (jf *jsonFormatter) FormatExploitResults(w io.Writer, results []*model.ExploitResult) error {
+	data, err := jf.marshal(results)
+	if err != nil {
+		return fmt.Errorf("marshaling exploit results to JSON: %w", err)
+	}
+	_, err = fmt.Fprintln(w, string(data))
+	return err
+}
+
 // FormatCacheStats renders cache statistics as JSON.
 func (jf *jsonFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	data, err := jf.marshal(stats)

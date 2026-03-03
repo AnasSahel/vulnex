@@ -10,6 +10,7 @@ import (
 
 	"github.com/trustin-tech/vulnex/internal/api"
 	"github.com/trustin-tech/vulnex/internal/api/epss"
+	"github.com/trustin-tech/vulnex/internal/api/exploit"
 	"github.com/trustin-tech/vulnex/internal/api/ghsa"
 	"github.com/trustin-tech/vulnex/internal/api/kev"
 	"github.com/trustin-tech/vulnex/internal/api/nvd"
@@ -46,6 +47,7 @@ type AppContext struct {
 	EPSS      *epss.Client
 	GHSA      *ghsa.Client
 	OSV       *osv.Client
+	Exploit   *exploit.Client
 }
 
 var app AppContext
@@ -156,6 +158,7 @@ func bootstrap(cmd *cobra.Command) error {
 	app.EPSS = epss.NewClient(httpClient)
 	app.GHSA = ghsa.NewClient(httpClient)
 	app.OSV = osv.NewClient(httpClient)
+	app.Exploit = exploit.NewClient(httpClient)
 
 	// Initialize enricher
 	app.Enricher = enricher.New(app.NVD, app.KEV, app.EPSS, app.GHSA, app.OSV)

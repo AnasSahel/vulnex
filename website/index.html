@@ -95,9 +95,19 @@
         <p>Compare two SBOMs and see which vulnerabilities a dependency change introduces or fixes. CI gate built in.</p>
       </div>
       <div class="feature-card">
+        <span class="feature-icon">&#x1F6E1;</span>
+        <h3>Suppression File</h3>
+        <p>Suppress accepted risks via <code>.vulnexignore</code> with package scoping, expiry dates, and audit trails. Keep CI gates on.</p>
+      </div>
+      <div class="feature-card">
         <span class="feature-icon">&#x1F4BB;</span>
         <h3>Offline &amp; Pipe-Friendly</h3>
         <p>Local SQLite cache with configurable TTLs. Stdin support, multiple output formats, composable commands.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x1F4A3;</span>
+        <h3>Exploit Tracking</h3>
+        <p>Cross-reference CVEs against GitHub PoCs, Nuclei templates, Metasploit modules, and ExploitDB in one query.</p>
       </div>
     </div>
   </div>
@@ -114,6 +124,8 @@
       <div class="install-tabs">
         <button class="install-tab active" onclick="switchTab(event, 'sc-diff')">SBOM Diff</button>
         <button class="install-tab" onclick="switchTab(event, 'sc-check')">SBOM Check</button>
+        <button class="install-tab" onclick="switchTab(event, 'sc-ignore')">Suppress</button>
+        <button class="install-tab" onclick="switchTab(event, 'sc-exploit')">Exploit Check</button>
         <button class="install-tab" onclick="switchTab(event, 'sc-pipe')">Piping</button>
       </div>
       <div class="terminal" style="border-radius: 0 0 var(--radius) var(--radius)">
@@ -147,6 +159,38 @@
 
 <span class="t-dim">Summary: 3 components scanned, 2 vulnerable, 3 findings</span>
   <span class="t-critical">CRITICAL: 2</span>  <span class="t-high">HIGH: 1</span></pre></div>
+
+        <div id="sc-ignore" class="terminal-body install-panel"><pre><span class="t-dim"># .vulnexignore — suppress accepted risks</span>
+<span class="t-prompt">$</span> cat <span class="t-value">.vulnexignore</span>
+<span class="y-key">suppressions:</span>
+  - <span class="y-key">id:</span> <span class="y-str">GHSA-2gwj-7jmv-h26r</span>
+    <span class="y-key">package:</span> <span class="y-str">django</span>
+    <span class="y-key">reason:</span> <span class="y-str">"Transitive dep, mitigated at WAF"</span>
+    <span class="y-key">expires:</span> <span class="y-str">"2026-06-01"</span>
+
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span>
+<span class="t-dim">Suppressed 1 findings via .vulnexignore</span>
+<span class="t-dim">Found 2 vulnerabilities</span>
+
+<span class="t-accent">lodash 4.17.20</span> <span class="t-dim">(npm)</span>
+  GHSA-35jh-r3h4-6jhm      <span class="t-high">HIGH</span>      4.17.21  Command Injection in ...
+
+<span class="t-dim">Summary: 3 components scanned, 1 vulnerable, 2 findings</span>
+  <span class="t-high">HIGH: 2</span>
+  Suppressed: 1 (use --strict to show all)</pre></div>
+
+        <div id="sc-exploit" class="terminal-body install-panel"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex exploit check</span> <span class="t-cve">CVE-2021-44228</span>
+
+<span class="t-accent">CVE-2021-44228</span> — 8 known exploit(s)
+
+  <span class="t-dim">SOURCE       NAME                                          URL</span>
+  github       kozmer/log4j-shell-poc <span class="t-dim">(1.2k)</span>                 <span class="t-dim">https://github.com/kozmer/log4j-shell-poc</span>
+  github       fullhunt/log4j-scan <span class="t-dim">(3.1k)</span>                    <span class="t-dim">https://github.com/fullhunt/log4j-scan</span>
+  metasploit   exploit/multi/http/log4shell_header_injection  <span class="t-dim">https://github.com/rapid7/...</span>
+  nuclei       http/cves/2021/cve-2021-44228.yaml            <span class="t-dim">https://github.com/projectdiscovery/...</span>
+  exploitdb    50592                                          <span class="t-dim">https://www.exploit-db.com/exploits/50592</span>
+
+<span class="t-dim">Sources:</span> GitHub (5) · Metasploit (2) · Nuclei (1) · ExploitDB (1)</pre></div>
 
         <div id="sc-pipe" class="terminal-body install-panel"><pre><span class="t-dim"># Recent KEV entries → enrich → JSON</span>
 <span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span> <span class="t-flag">--days 7 -o csv</span> \
@@ -218,7 +262,7 @@ make build</pre></div>
   <div class="container">
     <span class="section-label">CI/CD</span>
     <h2 class="section-title">Gate your pipeline on vulnerabilities</h2>
-    <p class="section-desc"><code>sbom check</code> catches existing vulns. <code>sbom diff</code> catches <em>new</em> vulns a PR introduces. Both exit 1 on failure.</p>
+    <p class="section-desc"><code>sbom check</code> catches existing vulns. <code>sbom diff</code> catches <em>new</em> vulns a PR introduces. Both exit 1 on failure. Commit a <code>.vulnexignore</code> to suppress accepted risks without disabling the gate.</p>
 
     <div class="ci-blocks" style="max-width:680px;display:flex;flex-direction:column;gap:24px">
       <div class="ci-block">
@@ -241,7 +285,8 @@ make build</pre></div>
 
       - <span class="y-key">name:</span> <span class="y-str">Diff for new vulnerabilities</span>
         <span class="y-key">run:</span> <span class="y-str">vulnex sbom diff old-bom.json new-bom.json</span>
-        <span class="y-comment"># Exits 1 if new vulns introduced → blocks the PR</span></pre>
+        <span class="y-comment"># Exits 1 if new vulns introduced → blocks the PR</span>
+        <span class="y-comment"># Commit .vulnexignore to suppress accepted risks</span></pre>
       </div>
 
       <div class="ci-block">
@@ -262,7 +307,8 @@ make build</pre></div>
 
       - <span class="y-key">name:</span> <span class="y-str">Check for vulnerabilities</span>
         <span class="y-key">run:</span> <span class="y-str">vulnex sbom check bom.json --severity critical</span>
-        <span class="y-comment"># Exits 1 if critical vulns found → fails the job</span></pre>
+        <span class="y-comment"># Exits 1 if critical vulns found → fails the job</span>
+        <span class="y-comment"># Reads .vulnexignore automatically; --strict to skip</span></pre>
       </div>
     </div>
   </div>

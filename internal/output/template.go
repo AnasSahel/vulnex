@@ -107,6 +107,30 @@ func (f *templateFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOM
 	return tmpl.Execute(w, result)
 }
 
+func (f *templateFormatter) FormatExploitResult(w io.Writer, result *model.ExploitResult) error {
+	tmpl, err := template.New("exploit").Parse(f.tmplStr)
+	if err != nil {
+		return err
+	}
+	return tmpl.Execute(w, result)
+}
+
+func (f *templateFormatter) FormatExploitResults(w io.Writer, results []*model.ExploitResult) error {
+	tmpl, err := template.New("exploits").Parse(f.tmplStr)
+	if err != nil {
+		return err
+	}
+	for _, result := range results {
+		if result == nil {
+			continue
+		}
+		if err := tmpl.Execute(w, result); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (f *templateFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	tmpl, err := template.New("stats").Parse(f.tmplStr)
 	if err != nil {

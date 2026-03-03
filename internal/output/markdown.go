@@ -363,6 +363,41 @@ func (f *markdownFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOM
 	return nil
 }
 
+func (f *markdownFormatter) FormatExploitResult(w io.Writer, result *model.ExploitResult) error {
+	if result == nil {
+		return nil
+	}
+
+	fmt.Fprintf(w, "## %s\n\n", result.CVEID)
+
+	if len(result.Exploits) == 0 {
+		fmt.Fprintf(w, "No known exploits found.\n\n")
+		return nil
+	}
+
+	fmt.Fprintf(w, "| Source | Name | URL |\n")
+	fmt.Fprintf(w, "|--------|------|-----|\n")
+	for _, ref := range result.Exploits {
+		fmt.Fprintf(w, "| %s | %s | %s |\n", ref.Source, ref.Name, ref.URL)
+	}
+	fmt.Fprintln(w)
+
+	return nil
+}
+
+func (f *markdownFormatter) FormatExploitResults(w io.Writer, results []*model.ExploitResult) error {
+	fmt.Fprintf(w, "# Exploit Check Results\n\n")
+	for _, result := range results {
+		if result == nil {
+			continue
+		}
+		if err := f.FormatExploitResult(w, result); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (f *markdownFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	fmt.Fprintf(w, "## Cache Statistics\n\n")
 	fmt.Fprintf(w, "| Metric | Value |\n")

@@ -654,6 +654,71 @@ func (tf *tableFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDi
 	return nil
 }
 
+// FormatExploitResult renders a single exploit check result as a styled table.
+func (tf *tableFormatter) FormatExploitResult(w io.Writer, result *model.ExploitResult) error {
+	if result == nil {
+		return nil
+	}
+
+	// Header
+	header := fmt.Sprintf("%s — %d known exploit(s)", result.CVEID, len(result.Exploits))
+	fmt.Fprintf(w, "\n%s\n\n", tf.headerStyle.Render(header))
+
+	if len(result.Exploits) == 0 {
+		fmt.Fprintf(w, "  No known exploits found.\n")
+		return nil
+	}
+
+	// Column headers
+	fmt.Fprintf(w, "  %-13s%-50s%s\n",
+		tf.headerStyle.Render("SOURCE"),
+		tf.headerStyle.Render("NAME"),
+		tf.headerStyle.Render("URL"))
+
+	for _, ref := range result.Exploits {
+		name := ref.Name
+		if !tf.long {
+			name = truncate(name, 47)
+		}
+		fmt.Fprintf(w, "  %-13s%-50s%s\n", ref.Source, name, ref.URL)
+	}
+
+	// Source breakdown footer
+	counts := make(map[string]int)
+	for _, ref := range result.Exploits {
+		counts[ref.Source]++
+	}
+	order := []string{"github", "metasploit", "nuclei", "exploitdb"}
+	names := map[string]string{
+		"github": "GitHub", "metasploit": "Metasploit",
+		"nuclei": "Nuclei", "exploitdb": "ExploitDB",
+	}
+	var parts []string
+	for _, src := range order {
+		if count, ok := counts[src]; ok {
+			parts = append(parts, fmt.Sprintf("%s (%d)", names[src], count))
+		}
+	}
+	if len(parts) > 0 {
+		fmt.Fprintf(w, "\n%s %s\n", tf.labelStyle.Render("Sources:"), tf.noneStyle.Render(strings.Join(parts, " \u00b7 ")))
+	}
+
+	return nil
+}
+
+// FormatExploitResults renders multiple exploit check results.
+func (tf *tableFormatter) FormatExploitResults(w io.Writer, results []*model.ExploitResult) error {
+	for _, result := range results {
+		if result == nil {
+			continue
+		}
+		if err := tf.FormatExploitResult(w, result); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // FormatCacheStats renders cache statistics in a simple key-value format.
 func (tf *tableFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("Total Entries:"), stats.TotalEntries)
