@@ -349,8 +349,9 @@ Example table output:
 + ADDED (2 vulnerabilities)
   flask 0.12.0 (PyPI)
     GHSA-562c-5r94-xh97       HIGH      0.12.3   Flask is vulnerable to Denial of...
+    GHSA-5wv5-4vpf-pj6m       HIGH      1.0      Directory traversal in Flask
 
-- REMOVED (3 vulnerabilities)
+- REMOVED (1 vulnerability)
   lodash 4.17.20 (npm)
     GHSA-35jh-r3h4-6jhm       HIGH      4.17.21  Command Injection in lodash
 
@@ -358,7 +359,7 @@ Example table output:
   django 3.2.0 (PyPI)
     GHSA-2gwj-7jmv-h26r       CRITICAL  2.2.28   SQL Injection in Django
 
-Summary: old=3 components (58 vulns), new=4 components (63 vulns), +8 added, -3 removed
+Summary: old=3 components (56 vulns), new=4 components (57 vulns), +2 added, -1 removed
 ```
 
 | Flag | Description |

@@ -120,19 +120,21 @@
         </div>
         <div class="terminal-body"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">old-bom.json new-bom.json</span>
 
-<span class="t-critical">+ ADDED (8 vulnerabilities)</span>
+<span class="t-critical">+ ADDED (2 vulnerabilities)</span>
   <span class="t-accent">flask 0.12.0</span> <span class="t-dim">(PyPI)</span>
-    GHSA-562c-5r94-xh97   <span class="t-high">HIGH</span>      0.12.3
-    GHSA-5wv5-4vpf-pj6m   <span class="t-high">HIGH</span>      1.0
+    GHSA-562c-5r94-xh97   <span class="t-high">HIGH</span>      0.12.3   Flask is vulnerable to...
+    GHSA-5wv5-4vpf-pj6m   <span class="t-high">HIGH</span>      1.0      Directory traversal i...
 
-<span class="t-green">- REMOVED (3 vulnerabilities)</span>
+<span class="t-green">- REMOVED (1 vulnerability)</span>
   <span class="t-accent">lodash 4.17.20</span> <span class="t-dim">(npm)</span>
-    GHSA-35jh-r3h4-6jhm   <span class="t-high">HIGH</span>      4.17.21
+    GHSA-35jh-r3h4-6jhm   <span class="t-high">HIGH</span>      4.17.21  Command Injection in ...
 
 <span class="t-dim">= UNCHANGED (55 vulnerabilities)</span>
+  <span class="t-accent">django 3.2.0</span> <span class="t-dim">(PyPI)</span>
+    GHSA-2gwj-7jmv-h26r   <span class="t-critical">CRITICAL</span>  2.2.28   SQL Injection in Django
 
-<span class="t-dim">Summary: old=3 (58 vulns), new=4 (63 vulns)</span>
-  <span class="t-critical">+8 added</span>  <span class="t-green">-3 removed</span></pre></div>
+<span class="t-dim">Summary: old=3 components (56 vulns), new=4 components (57 vulns)</span>
+  <span class="t-critical">+2 added</span>  <span class="t-green">-1 removed</span></pre></div>
       </div>
 
       <div class="terminal">
@@ -144,18 +146,15 @@
         </div>
         <div class="terminal-body"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span>
 
-Parsed 3 components from bom.json
-Found 6 vulnerabilities
-
 <span class="t-accent">django 3.2.0</span> <span class="t-dim">(PyPI)</span>
-  <span class="t-dim">ID                     Severity  Fixed</span>
-  GHSA-2gwj-7jmv-h26r   <span class="t-critical">CRIT</span>      2.2.28
-  GHSA-xpfp-f569-q3p2   <span class="t-critical">CRIT</span>      3.2.5
+  <span class="t-dim">ID                        Severity  Fixed    Summary</span>
+  GHSA-2gwj-7jmv-h26r      <span class="t-critical">CRITICAL</span>  2.2.28   SQL Injection in Django
+  GHSA-xpfp-f569-q3p2      <span class="t-critical">CRITICAL</span>  3.2.5    SQL Injection in Django
 
 <span class="t-accent">lodash 4.17.20</span> <span class="t-dim">(npm)</span>
-  GHSA-35jh-r3h4-6jhm   <span class="t-high">HIGH</span>      4.17.21
+  GHSA-35jh-r3h4-6jhm      <span class="t-high">HIGH</span>      4.17.21  Command Injection in ...
 
-<span class="t-dim">Summary: 3 scanned, 2 vulnerable</span>
+<span class="t-dim">Summary: 3 components scanned, 2 vulnerable, 3 findings</span>
   <span class="t-critical">CRITICAL: 2</span>  <span class="t-high">HIGH: 1</span></pre></div>
       </div>
 
