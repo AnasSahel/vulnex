@@ -110,15 +110,14 @@
     <h2 class="section-title">See it in your workflow</h2>
     <p class="section-desc">From SBOM audits to composable pipelines — vulnex fits right into your terminal workflow.</p>
 
-    <div class="showcase-grid">
-      <div class="terminal">
-        <div class="terminal-header">
-          <div class="terminal-dot red"></div>
-          <div class="terminal-dot yellow"></div>
-          <div class="terminal-dot green"></div>
-          <span class="terminal-title">sbom diff</span>
-        </div>
-        <div class="terminal-body"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">old-bom.json new-bom.json</span>
+    <div class="showcase-terminal">
+      <div class="install-tabs">
+        <button class="install-tab active" onclick="switchTab(event, 'sc-diff')">SBOM Diff</button>
+        <button class="install-tab" onclick="switchTab(event, 'sc-check')">SBOM Check</button>
+        <button class="install-tab" onclick="switchTab(event, 'sc-pipe')">Piping</button>
+      </div>
+      <div class="terminal" style="border-radius: 0 0 var(--radius) var(--radius)">
+        <div id="sc-diff" class="terminal-body install-panel active"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">old-bom.json new-bom.json</span>
 
 <span class="t-critical">+ ADDED (2 vulnerabilities)</span>
   <span class="t-accent">flask 0.12.0</span> <span class="t-dim">(PyPI)</span>
@@ -135,16 +134,8 @@
 
 <span class="t-dim">Summary: old=3 components (56 vulns), new=4 components (57 vulns)</span>
   <span class="t-critical">+2 added</span>  <span class="t-green">-1 removed</span></pre></div>
-      </div>
 
-      <div class="terminal">
-        <div class="terminal-header">
-          <div class="terminal-dot red"></div>
-          <div class="terminal-dot yellow"></div>
-          <div class="terminal-dot green"></div>
-          <span class="terminal-title">sbom check</span>
-        </div>
-        <div class="terminal-body"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span>
+        <div id="sc-check" class="terminal-body install-panel"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span>
 
 <span class="t-accent">django 3.2.0</span> <span class="t-dim">(PyPI)</span>
   <span class="t-dim">ID                        Severity  Fixed    Summary</span>
@@ -156,16 +147,8 @@
 
 <span class="t-dim">Summary: 3 components scanned, 2 vulnerable, 3 findings</span>
   <span class="t-critical">CRITICAL: 2</span>  <span class="t-high">HIGH: 1</span></pre></div>
-      </div>
 
-      <div class="terminal">
-        <div class="terminal-header">
-          <div class="terminal-dot red"></div>
-          <div class="terminal-dot yellow"></div>
-          <div class="terminal-dot green"></div>
-          <span class="terminal-title">piping</span>
-        </div>
-        <div class="terminal-body"><pre><span class="t-dim"># Recent KEV entries → enrich → JSON</span>
+        <div id="sc-pipe" class="terminal-body install-panel"><pre><span class="t-dim"># Recent KEV entries → enrich → JSON</span>
 <span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span> <span class="t-flag">--days 7 -o csv</span> \
     | cut -d, -f1 \
     | <span class="t-cmd">vulnex enrich</span> <span class="t-flag">--stdin -o json</span>
@@ -299,8 +282,9 @@ make build</pre></div>
 
 <script>
 function switchTab(e, id) {
-  document.querySelectorAll('.install-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.install-panel').forEach(p => p.classList.remove('active'));
+  var wrapper = e.target.closest('.install-tabs').parentElement;
+  wrapper.querySelectorAll('.install-tab').forEach(function(t) { t.classList.remove('active'); });
+  wrapper.querySelectorAll('.install-panel').forEach(function(p) { p.classList.remove('active'); });
   e.target.classList.add('active');
   document.getElementById(id).classList.add('active');
 }

@@ -315,11 +315,12 @@ section {
 
 /* ── Showcase ────────────────────────────────────── */
 
-.showcase-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
+.showcase-terminal {
   max-width: 720px;
+}
+
+.showcase-terminal .terminal-body {
+  min-height: 280px;
 }
 
 /* ── Data Sources ────────────────────────────────── */
