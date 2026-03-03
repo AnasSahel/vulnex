@@ -336,6 +336,7 @@ section {
 .showcase-grid .terminal {
   max-width: none;
   min-width: 0;
+  margin: 0;
 }
 
 /* ── Data Sources ────────────────────────────────── */
