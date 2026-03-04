@@ -72,7 +72,7 @@ This product uses the NVD API but is not endorsed or certified by the NVD.`,
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringP("output", "o", "table", "Output format: table, json, csv, markdown, yaml")
+	rootCmd.PersistentFlags().StringP("output", "o", "table", "Output format: table, json, csv, markdown, yaml, sarif")
 	rootCmd.PersistentFlags().BoolP("long", "l", false, "Show full descriptions instead of truncated")
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable colored output")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output")
@@ -169,6 +169,7 @@ func bootstrap(cmd *cobra.Command) error {
 	long, _ := cmd.Flags().GetBool("long")
 
 	var fmtOpts []output.FormatterOption
+	fmtOpts = append(fmtOpts, output.WithVersion(versionStr))
 	if noColor {
 		fmtOpts = append(fmtOpts, output.WithNoColor())
 	}

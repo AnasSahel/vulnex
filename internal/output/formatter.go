@@ -29,6 +29,7 @@ type formatterOpts struct {
 	Compact bool     // for JSON compact mode
 	Fields  []string // for CSV field selection
 	Long    bool     // show full descriptions instead of truncated
+	Version string   // tool version (used by SARIF)
 }
 
 // FormatterOption is a functional option for configuring formatters.
@@ -62,6 +63,13 @@ func WithFields(fields []string) FormatterOption {
 	}
 }
 
+// WithVersion sets the tool version string (used by SARIF output).
+func WithVersion(version string) FormatterOption {
+	return func(o *formatterOpts) {
+		o.Version = version
+	}
+}
+
 // NewFormatter creates a new Formatter for the given format string.
 // Supported formats: "table", "json", "csv", "markdown", "yaml".
 func NewFormatter(format string, opts ...FormatterOption) (Formatter, error) {
@@ -81,8 +89,10 @@ func NewFormatter(format string, opts ...FormatterOption) (Formatter, error) {
 		return &markdownFormatter{}, nil
 	case "yaml":
 		return &yamlFormatter{}, nil
+	case "sarif":
+		return newSARIFFormatter(o.Version), nil
 	default:
-		return nil, fmt.Errorf("unknown output format: %q (supported: table, json, csv, markdown, yaml)", format)
+		return nil, fmt.Errorf("unknown output format: %q (supported: table, json, csv, markdown, yaml, sarif)", format)
 	}
 }
 

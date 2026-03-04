@@ -122,7 +122,7 @@ These flags apply to all commands:
 
 | Flag | Description |
 |------|-------------|
-| `-o, --output <format>` | Output format: `table`, `json`, `csv`, `markdown`, `yaml` (default: `table`) |
+| `-o, --output <format>` | Output format: `table`, `json`, `csv`, `markdown`, `yaml`, `sarif` (default: `table`) |
 | `-l, --long` | Show full descriptions instead of truncated |
 | `--no-color` | Disable colored output |
 | `--api-key <key>` | NVD API key |
@@ -491,6 +491,25 @@ Use `-o` / `--output` to switch formats:
 | `csv` | Comma-separated values |
 | `markdown` | Markdown tables |
 | `yaml` | YAML |
+| `sarif` | [SARIF v2.1.0](https://sarifweb.azurewebsites.net/) for GitHub Code Scanning, Azure DevOps, IDE viewers |
+
+### SARIF Output & GitHub Code Scanning
+
+Generate SARIF v2.1.0 output for integration with GitHub Code Scanning, Azure DevOps, and SARIF-compatible IDE viewers:
+
+```bash
+vulnex sbom check bom.json -o sarif > results.sarif
+```
+
+Upload to GitHub Code Scanning in CI:
+
+```yaml
+- run: vulnex sbom check bom.json -o sarif > results.sarif
+  continue-on-error: true
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: results.sarif
+```
 
 ## Data Sources
 
