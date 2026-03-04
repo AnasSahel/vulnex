@@ -59,6 +59,17 @@ func (f *markdownFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error
 		fmt.Fprintf(w, "- **Required Action:** %s\n\n", cve.KEV.RequiredAction)
 	}
 
+	// Score conflicts
+	if len(cve.ScoreConflicts) > 0 {
+		fmt.Fprintf(w, "## CVSS Score Conflicts\n\n")
+		fmt.Fprintf(w, "| Version | NVD Score | CNA Score | Delta | Significance |\n")
+		fmt.Fprintf(w, "|---------|-----------|-----------|-------|--------------|\n")
+		for _, c := range cve.ScoreConflicts {
+			fmt.Fprintf(w, "| %s | %.1f | %.1f | %.1f | %s |\n", c.Version, c.NVDScore, c.CNAScore, c.Delta, c.Significance)
+		}
+		fmt.Fprintln(w)
+	}
+
 	// Risk assessment
 	risk := model.ComputeRisk(cve)
 	fmt.Fprintf(w, "## Risk Assessment\n\n")

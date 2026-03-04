@@ -1,24 +1,14 @@
 package cmd
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
 	"github.com/trustin-tech/vulnex/internal/api/epss"
 )
-
-// TimeSeriesEntry represents a single EPSS score data point in a time series.
-type TimeSeriesEntry struct {
-	Date       string  `json:"date"`
-	Score      float64 `json:"score"`
-	Percentile float64 `json:"percentile"`
-}
 
 var epssTrendCmd = &cobra.Command{
 	Use:   "trend <CVE-ID>",
@@ -37,7 +27,7 @@ historical score data.`,
 		days, _ := cmd.Flags().GetInt("days")
 		outputFmt, _ := cmd.Flags().GetString("output")
 
-		entries, err := fetchTimeSeries(cmd.Context(), cveID, days)
+		entries, err := app.EPSS.GetTimeSeries(cmd.Context(), cveID, days)
 		if err != nil {
 			return err
 		}
@@ -61,53 +51,8 @@ func init() {
 	epssCmd.AddCommand(epssTrendCmd)
 }
 
-// fetchTimeSeries calls the EPSS API with scope=time-series to retrieve
-// historical EPSS scores for the given CVE ID.
-func fetchTimeSeries(ctx context.Context, cveID string, days int) ([]TimeSeriesEntry, error) {
-	url := fmt.Sprintf("https://api.first.org/data/v1/epss?cve=%s&scope=time-series", cveID)
-
-	resp, err := app.EPSS.HTTPClient().Get(ctx, url)
-	if err != nil {
-		return nil, fmt.Errorf("fetching EPSS time-series for %s: %w", cveID, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("EPSS API returned status %d for time-series request", resp.StatusCode)
-	}
-
-	var apiResp epss.Response
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return nil, fmt.Errorf("decoding EPSS time-series response: %w", err)
-	}
-
-	entries := make([]TimeSeriesEntry, 0, len(apiResp.Data))
-	for _, d := range apiResp.Data {
-		score, err := strconv.ParseFloat(d.EPSS, 64)
-		if err != nil {
-			continue
-		}
-		percentile, err := strconv.ParseFloat(d.Percentile, 64)
-		if err != nil {
-			continue
-		}
-		entries = append(entries, TimeSeriesEntry{
-			Date:       d.Date,
-			Score:      score,
-			Percentile: percentile,
-		})
-	}
-
-	// Limit to most recent N days if requested.
-	if days > 0 && len(entries) > days {
-		entries = entries[len(entries)-days:]
-	}
-
-	return entries, nil
-}
-
 // renderTimeSeriesTable prints the time-series data as a formatted table.
-func renderTimeSeriesTable(w *os.File, cveID string, entries []TimeSeriesEntry) error {
+func renderTimeSeriesTable(w *os.File, cveID string, entries []epss.TimeSeriesEntry) error {
 	fmt.Fprintf(w, "EPSS Score History: %s (%d data points)\n\n", cveID, len(entries))
 	fmt.Fprintf(w, "%-12s  %10s  %10s\n", "DATE", "SCORE", "PERCENTILE")
 	fmt.Fprintf(w, "%-12s  %10s  %10s\n", "----", "-----", "----------")
@@ -120,11 +65,11 @@ func renderTimeSeriesTable(w *os.File, cveID string, entries []TimeSeriesEntry) 
 }
 
 // renderTimeSeriesJSON prints the time-series data as JSON.
-func renderTimeSeriesJSON(w *os.File, cveID string, entries []TimeSeriesEntry) error {
+func renderTimeSeriesJSON(w *os.File, cveID string, entries []epss.TimeSeriesEntry) error {
 	output := struct {
-		CVEID   string            `json:"cve_id"`
-		Count   int               `json:"count"`
-		Entries []TimeSeriesEntry `json:"entries"`
+		CVEID   string                `json:"cve_id"`
+		Count   int                   `json:"count"`
+		Entries []epss.TimeSeriesEntry `json:"entries"`
 	}{
 		CVEID:   cveID,
 		Count:   len(entries),

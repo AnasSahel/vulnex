@@ -19,9 +19,8 @@ type Config struct {
 
 // APIKeys holds API keys for various data sources.
 type APIKeys struct {
-	NVD        string `mapstructure:"nvd"`
-	GitHub     string `mapstructure:"github"`
-	VulnCheck  string `mapstructure:"vulncheck"`
+	NVD    string `mapstructure:"nvd"`
+	GitHub string `mapstructure:"github"`
 }
 
 // Output holds output format configuration.

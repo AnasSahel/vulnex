@@ -7,16 +7,6 @@ import (
 	"github.com/trustin-tech/vulnex/internal/model"
 )
 
-// ScoreConflict describes a disagreement between CVSS scores from different
-// sources (e.g., NVD "Primary" vs CNA "Secondary") for the same CVSS version.
-type ScoreConflict struct {
-	Version      string  `json:"version"`      // CVSS version: "3.1", "3.0", "4.0"
-	NVDScore     float64 `json:"nvd_score"`     // Score from the Primary source
-	CNAScore     float64 `json:"cna_score"`     // Score from the Secondary source
-	Delta        float64 `json:"delta"`         // Absolute difference between scores
-	Significance string  `json:"significance"`  // "low", "medium", "high"
-}
-
 // significanceThresholdMedium is the delta above which a conflict is considered medium.
 const significanceThresholdMedium = 1.0
 
@@ -26,11 +16,7 @@ const significanceThresholdHigh = 2.0
 // ReconcileScores compares CVSS scores from different sources (Primary vs Secondary)
 // within the same CVSS version. It returns a list of conflicts where the delta
 // exceeds the significance threshold (>1.0 points).
-//
-// A "Primary" score typically comes from NVD analysts, while a "Secondary" score
-// comes from the CNA (CVE Numbering Authority). Large disagreements may indicate
-// that one assessment is outdated or that the vulnerability scope is disputed.
-func ReconcileScores(cve *model.EnrichedCVE) []ScoreConflict {
+func ReconcileScores(cve *model.EnrichedCVE) []model.ScoreConflict {
 	if cve == nil || len(cve.CVSS) < 2 {
 		return nil
 	}
@@ -47,7 +33,7 @@ func ReconcileScores(cve *model.EnrichedCVE) []ScoreConflict {
 	}
 
 	// For each version, compare Primary vs Secondary scores.
-	var conflicts []ScoreConflict
+	var conflicts []model.ScoreConflict
 
 	versions := []string{"4.0", "3.1", "3.0", "2.0"}
 	for _, ver := range versions {
@@ -58,7 +44,6 @@ func ReconcileScores(cve *model.EnrichedCVE) []ScoreConflict {
 			continue
 		}
 
-		// Use the highest score from each group for comparison.
 		primary := highestScore(primaries)
 		secondary := highestScore(secondaries)
 		delta := math.Abs(primary.BaseScore - secondary.BaseScore)
@@ -69,7 +54,7 @@ func ReconcileScores(cve *model.EnrichedCVE) []ScoreConflict {
 
 		significance := classifySignificance(delta)
 
-		conflicts = append(conflicts, ScoreConflict{
+		conflicts = append(conflicts, model.ScoreConflict{
 			Version:      ver,
 			NVDScore:     primary.BaseScore,
 			CNAScore:     secondary.BaseScore,
@@ -105,7 +90,7 @@ func highestScore(scores []model.CVSSScore) model.CVSSScore {
 }
 
 // FormatConflicts returns a human-readable summary of score conflicts.
-func FormatConflicts(conflicts []ScoreConflict) string {
+func FormatConflicts(conflicts []model.ScoreConflict) string {
 	if len(conflicts) == 0 {
 		return "No CVSS score conflicts detected"
 	}

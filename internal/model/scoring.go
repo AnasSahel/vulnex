@@ -44,6 +44,16 @@ func SeverityFocusedProfile() ScoringProfile {
 	}
 }
 
+// ScoreConflict describes a disagreement between CVSS scores from different
+// sources (e.g., NVD "Primary" vs CNA "Secondary") for the same CVSS version.
+type ScoreConflict struct {
+	Version      string  `json:"version"`
+	NVDScore     float64 `json:"nvd_score"`
+	CNAScore     float64 `json:"cna_score"`
+	Delta        float64 `json:"delta"`
+	Significance string  `json:"significance"` // "low", "medium", "high"
+}
+
 // ComputeWeightedScore calculates a weighted composite score (0-100) from an
 // EnrichedCVE using the provided ScoringProfile.
 //

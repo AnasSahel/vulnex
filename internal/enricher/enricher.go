@@ -195,6 +195,11 @@ func (e *Enricher) merge(
 		result.AffectedPkgs = append(result.AffectedPkgs, osvPkgs...)
 	}
 
+	// Detect CVSS score conflicts between sources
+	if conflicts := ReconcileScores(result); len(conflicts) > 0 {
+		result.ScoreConflicts = conflicts
+	}
+
 	result.FetchedAt = time.Now()
 	return result
 }

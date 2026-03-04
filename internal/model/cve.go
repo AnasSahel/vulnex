@@ -36,6 +36,9 @@ type EnrichedCVE struct {
 	References []Reference `json:"references"`
 	Advisories []Advisory  `json:"advisories,omitempty"`
 
+	// Score conflicts (populated during enrichment)
+	ScoreConflicts []ScoreConflict `json:"score_conflicts,omitempty"`
+
 	// Metadata
 	DataSources []string  `json:"data_sources"` // which APIs contributed data
 	FetchedAt   time.Time `json:"fetched_at"`

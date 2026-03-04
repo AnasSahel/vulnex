@@ -149,6 +149,16 @@ func (tf *tableFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("CWEs:"), tf.valueStyle.Render(strings.Join(cweIDs, ", ")))
 	}
 
+	// Score conflicts
+	if len(cve.ScoreConflicts) > 0 {
+		fmt.Fprintln(w)
+		for _, c := range cve.ScoreConflicts {
+			msg := fmt.Sprintf("CVSS v%s conflict: NVD=%.1f vs CNA=%.1f (delta=%.1f, %s)",
+				c.Version, c.NVDScore, c.CNAScore, c.Delta, c.Significance)
+			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Warning:"), tf.mediumStyle.Render(msg))
+		}
+	}
+
 	// --- Enrichment sections (only shown when data is present) ---
 
 	// Risk Score
@@ -497,6 +507,9 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 		return nil
 	}
 
+	// Detect if findings have enrichment data
+	enriched := len(result.Findings) > 0 && result.Findings[0].EPSS != nil
+
 	// Group findings by component key (ecosystem/name@version)
 	type componentKey struct {
 		ecosystem, name, version string
@@ -529,11 +542,22 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 		fmt.Fprintf(w, "\n%s\n", tf.headerStyle.Render(header))
 
 		// Print column headers
-		fmt.Fprintf(w, "  %-26s%-10s%-9s%s\n",
-			tf.headerStyle.Render("ID"),
-			tf.headerStyle.Render("Severity"),
-			tf.headerStyle.Render("Fixed"),
-			tf.headerStyle.Render("Summary"))
+		if enriched {
+			fmt.Fprintf(w, "  %-26s%-10s%-7s%-8s%-5s%-12s%s\n",
+				tf.headerStyle.Render("ID"),
+				tf.headerStyle.Render("Severity"),
+				tf.headerStyle.Render("CVSS"),
+				tf.headerStyle.Render("EPSS"),
+				tf.headerStyle.Render("KEV"),
+				tf.headerStyle.Render("Priority"),
+				tf.headerStyle.Render("Fixed"))
+		} else {
+			fmt.Fprintf(w, "  %-26s%-10s%-9s%s\n",
+				tf.headerStyle.Render("ID"),
+				tf.headerStyle.Render("Severity"),
+				tf.headerStyle.Render("Fixed"),
+				tf.headerStyle.Render("Summary"))
+		}
 
 		for _, f := range findings {
 			sev := strings.ToUpper(f.Advisory.Severity)
@@ -550,16 +574,47 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 				fixed = fixed[:7] + "~"
 			}
 
-			summary := f.Advisory.Summary
-			if !tf.long {
-				summary = truncate(summary, 50)
-			}
+			if enriched {
+				cvss := "N/A"
+				if f.CVSSScore > 0 {
+					cvss = fmt.Sprintf("%.1f", f.CVSSScore)
+				}
 
-			fmt.Fprintf(w, "  %-26s%-10s%-9s%s\n",
-				f.Advisory.ID,
-				style.Render(sev),
-				fixed,
-				summary)
+				epss := "N/A"
+				if f.EPSS != nil {
+					epss = fmt.Sprintf("%.4f", f.EPSS.Score)
+				}
+
+				kevStr := "-"
+				if f.KEV != nil {
+					kevStr = tf.kevYesStyle.Render("YES")
+				}
+
+				priority := "-"
+				if f.Risk != nil {
+					priority = tf.severityStyle(string(f.Risk.Priority)).Render(string(f.Risk.Priority))
+				}
+
+				fmt.Fprintf(w, "  %-26s%-10s%-7s%-8s%-5s%-12s%s\n",
+					f.Advisory.ID,
+					style.Render(sev),
+					cvss,
+					epss,
+					kevStr,
+					priority,
+					fixed)
+			} else {
+				summary := f.Advisory.Summary
+				if !tf.long {
+					summary = truncate(summary, 50)
+				}
+
+				fmt.Fprintf(w, "  %-26s%-10s%-9s%s\n",
+					f.Advisory.ID,
+					style.Render(sev),
+					fixed,
+					summary)
+			}
 		}
 	}
 
@@ -739,6 +794,7 @@ func (tf *tableFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) erro
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("CVE Entries:"), stats.CVEEntries)
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("KEV Entries:"), stats.KEVEntries)
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("EPSS Entries:"), stats.EPSSEntries)
+	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("Advisory Entries:"), stats.AdvisoryEntries)
 	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Size:"), formatBytes(stats.SizeBytes))
 	return nil
 }

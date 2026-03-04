@@ -131,7 +131,6 @@ var configInitCmd = &cobra.Command{
 api_keys:
   nvd: ""
   github: ""
-  vulncheck: ""
 
 # Output settings
 output:
