@@ -155,11 +155,11 @@ func bootstrap(cmd *cobra.Command) error {
 	httpClient := api.NewClient(limiter, clientOpts...)
 
 	// Initialize API clients
-	app.NVD = nvd.NewClient(httpClient)
+	app.NVD = nvd.NewClient(httpClient, app.Cache)
 	app.KEV = kev.NewClient(httpClient, app.Cache)
-	app.EPSS = epss.NewClient(httpClient)
-	app.GHSA = ghsa.NewClient(httpClient)
-	app.OSV = osv.NewClient(httpClient)
+	app.EPSS = epss.NewClient(httpClient, app.Cache)
+	app.GHSA = ghsa.NewClient(httpClient, app.Cache)
+	app.OSV = osv.NewClient(httpClient, app.Cache)
 	app.Exploit = exploit.NewClient(httpClient)
 
 	// Initialize enricher

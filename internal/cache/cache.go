@@ -16,11 +16,12 @@ type Entry struct {
 
 // Stats holds cache statistics.
 type Stats struct {
-	TotalEntries int64
-	CVEEntries   int64
-	KEVEntries   int64
-	EPSSEntries  int64
-	SizeBytes    int64
+	TotalEntries    int64
+	CVEEntries      int64
+	KEVEntries      int64
+	EPSSEntries     int64
+	AdvisoryEntries int64
+	SizeBytes       int64
 }
 
 // Cache defines the interface for the local data cache.

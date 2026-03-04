@@ -247,8 +247,9 @@ func (c *SQLiteCache) Stats(ctx context.Context) (*Stats, error) {
 	_ = c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM cve_cache").Scan(&s.CVEEntries)
 	_ = c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM kev_cache").Scan(&s.KEVEntries)
 	_ = c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM epss_cache").Scan(&s.EPSSEntries)
+	_ = c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM advisory_cache").Scan(&s.AdvisoryEntries)
 
-	s.TotalEntries = s.CVEEntries + s.KEVEntries + s.EPSSEntries
+	s.TotalEntries = s.CVEEntries + s.KEVEntries + s.EPSSEntries + s.AdvisoryEntries
 
 	// Get database file size
 	var dbPath string

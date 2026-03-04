@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/trustin-tech/vulnex/internal/api"
+	"github.com/trustin-tech/vulnex/internal/cache"
 	"github.com/trustin-tech/vulnex/internal/model"
 )
 
@@ -35,16 +38,20 @@ func ghAPIError(resp *http.Response, context string) error {
 	return fmt.Errorf("GitHub API %s: HTTP %d", context, resp.StatusCode)
 }
 
-const baseURL = "https://api.github.com/advisories"
+const (
+	baseURL      = "https://api.github.com/advisories"
+	ghsaCacheTTL = 4 * time.Hour
+)
 
 // Client provides access to the GitHub Advisory Database REST API.
 type Client struct {
 	httpClient *api.Client
+	cache      cache.Cache
 }
 
-// NewClient creates a new GHSA API client backed by the given HTTP client.
-func NewClient(httpClient *api.Client) *Client {
-	return &Client{httpClient: httpClient}
+// NewClient creates a new GHSA API client backed by the given HTTP client and cache.
+func NewClient(httpClient *api.Client, c cache.Cache) *Client {
+	return &Client{httpClient: httpClient, cache: c}
 }
 
 // SearchParams configures a search query against the GitHub Advisory Database.
@@ -85,6 +92,18 @@ func (c *Client) Search(ctx context.Context, params SearchParams) ([]GHSAdvisory
 
 // GetAdvisory retrieves a single advisory by its GHSA ID (e.g. "GHSA-xxxx-xxxx-xxxx").
 func (c *Client) GetAdvisory(ctx context.Context, ghsaID string) (*GHSAdvisory, error) {
+	// Check cache first
+	if c.cache != nil {
+		entry, err := c.cache.GetAdvisory(ctx, ghsaID)
+		if err == nil && entry != nil && time.Now().Before(entry.ExpiresAt) {
+			var advisory GHSAdvisory
+			if err := json.Unmarshal(entry.Data, &advisory); err == nil {
+				slog.Debug("GHSA cache hit", "id", ghsaID)
+				return &advisory, nil
+			}
+		}
+	}
+
 	reqURL := baseURL + "/" + url.PathEscape(ghsaID)
 
 	resp, err := c.httpClient.Get(ctx, reqURL)
@@ -100,17 +119,49 @@ func (c *Client) GetAdvisory(ctx context.Context, ghsaID string) (*GHSAdvisory, 
 		return nil, ghAPIError(resp, fmt.Sprintf("get advisory %s", ghsaID))
 	}
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading advisory response %s: %w", ghsaID, err)
+	}
+
 	var advisory GHSAdvisory
-	if err := json.NewDecoder(resp.Body).Decode(&advisory); err != nil {
+	if err := json.Unmarshal(body, &advisory); err != nil {
 		return nil, fmt.Errorf("decoding advisory %s: %w", ghsaID, err)
+	}
+
+	// Store in cache
+	if c.cache != nil {
+		if err := c.cache.SetAdvisory(ctx, ghsaID, body, "ghsa", ghsaCacheTTL); err != nil {
+			slog.Debug("GHSA cache store failed", "id", ghsaID, "error", err)
+		}
 	}
 
 	return &advisory, nil
 }
 
+// ghsaFindByCVEResult is used for caching FindByCVE results.
+type ghsaFindByCVEResult struct {
+	Advisories []model.Advisory   `json:"advisories"`
+	Packages   []model.AffectedPkg `json:"packages"`
+}
+
 // FindByCVE searches for advisories associated with the given CVE ID and returns
 // the results converted to the common model types.
 func (c *Client) FindByCVE(ctx context.Context, cveID string) ([]model.Advisory, []model.AffectedPkg, error) {
+	cacheKey := "ghsa:cve:" + cveID
+
+	// Check cache first
+	if c.cache != nil {
+		entry, err := c.cache.GetAdvisory(ctx, cacheKey)
+		if err == nil && entry != nil && time.Now().Before(entry.ExpiresAt) {
+			var cached ghsaFindByCVEResult
+			if err := json.Unmarshal(entry.Data, &cached); err == nil {
+				slog.Debug("GHSA FindByCVE cache hit", "cve", cveID)
+				return cached.Advisories, cached.Packages, nil
+			}
+		}
+	}
+
 	results, err := c.Search(ctx, SearchParams{CveID: cveID})
 	if err != nil {
 		return nil, nil, fmt.Errorf("searching GHSA by CVE %s: %w", cveID, err)
@@ -122,6 +173,14 @@ func (c *Client) FindByCVE(ctx context.Context, cveID string) ([]model.Advisory,
 	for i := range results {
 		advisories = append(advisories, convertToAdvisory(&results[i]))
 		packages = append(packages, convertToAffectedPkgs(&results[i])...)
+	}
+
+	// Store in cache
+	if c.cache != nil {
+		cached := ghsaFindByCVEResult{Advisories: advisories, Packages: packages}
+		if data, err := json.Marshal(cached); err == nil {
+			_ = c.cache.SetAdvisory(ctx, cacheKey, data, "ghsa", ghsaCacheTTL)
+		}
 	}
 
 	return advisories, packages, nil

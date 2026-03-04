@@ -6,10 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/trustin-tech/vulnex/internal/api"
+	"github.com/trustin-tech/vulnex/internal/cache"
 	"github.com/trustin-tech/vulnex/internal/model"
 )
 
@@ -26,16 +29,26 @@ var (
 	batchURL = "https://api.osv.dev/v1/querybatch"
 )
 
+const osvCacheTTL = 4 * time.Hour
+
 // Client provides access to the OSV.dev vulnerability database.
 type Client struct {
-	http *api.Client
+	http  *api.Client
+	cache cache.Cache
 }
 
-// NewClient creates a new OSV.dev client backed by the given HTTP client.
-func NewClient(httpClient *api.Client) *Client {
+// NewClient creates a new OSV.dev client backed by the given HTTP client and cache.
+func NewClient(httpClient *api.Client, c cache.Cache) *Client {
 	return &Client{
-		http: httpClient,
+		http:  httpClient,
+		cache: c,
 	}
+}
+
+// osvQueryByCVEResult is used for caching QueryByCVE results.
+type osvQueryByCVEResult struct {
+	Advisories []model.Advisory    `json:"advisories"`
+	Packages   []model.AffectedPkg `json:"packages"`
 }
 
 // QueryByCVE queries OSV.dev for vulnerabilities matching the given CVE alias
@@ -46,25 +59,31 @@ func NewClient(httpClient *api.Client) *Client {
 // differs from the queried CVE (i.e. the CVE was an alias), it also fetches
 // any sibling aliases referenced in the result to provide complete coverage.
 func (c *Client) QueryByCVE(ctx context.Context, cveID string) ([]model.Advisory, []model.AffectedPkg, error) {
+	cacheKey := "osv:cve:" + cveID
+
+	// Check cache first
+	if c.cache != nil {
+		entry, err := c.cache.GetAdvisory(ctx, cacheKey)
+		if err == nil && entry != nil && time.Now().Before(entry.ExpiresAt) {
+			var cached osvQueryByCVEResult
+			if err := json.Unmarshal(entry.Data, &cached); err == nil {
+				slog.Debug("OSV QueryByCVE cache hit", "cve", cveID)
+				return cached.Advisories, cached.Packages, nil
+			}
+		}
+	}
+
 	// Try fetching the CVE ID directly as a vulnerability ID.
-	// OSV's /v1/vulns/ endpoint supports alias resolution for CVE IDs.
 	vuln, err := c.GetVulnerability(ctx, cveID)
 	if err != nil {
-		// Transport/API errors are propagated so callers can distinguish
-		// between "not found" and "service unavailable".
 		return nil, nil, fmt.Errorf("querying OSV for %s: %w", cveID, err)
 	}
 	if vuln == nil {
-		// True 404 — no OSV record references this CVE.
 		return nil, nil, nil
 	}
 
-	// Collect the primary result.
 	vulns := []OSVVulnerability{*vuln}
 
-	// If the returned record's ID differs from the queried CVE, the
-	// endpoint resolved an alias. Fetch sibling aliases to provide
-	// complete coverage (e.g. a CVE may map to both a GHSA and a PYSEC).
 	if vuln.ID != cveID {
 		for _, alias := range vuln.Aliases {
 			if alias == cveID || alias == vuln.ID {
@@ -80,6 +99,15 @@ func (c *Client) QueryByCVE(ctx context.Context, cveID string) ([]model.Advisory
 
 	advisories := convertToAdvisories(vulns)
 	affected := convertToAffectedPkgs(vulns)
+
+	// Store in cache
+	if c.cache != nil {
+		cached := osvQueryByCVEResult{Advisories: advisories, Packages: affected}
+		if data, err := json.Marshal(cached); err == nil {
+			_ = c.cache.SetAdvisory(ctx, cacheKey, data, "osv", osvCacheTTL)
+		}
+	}
+
 	return advisories, affected, nil
 }
 
@@ -104,6 +132,18 @@ func (c *Client) QueryByPackage(ctx context.Context, ecosystem, name, version st
 
 // GetVulnerability fetches a single vulnerability record by its OSV ID.
 func (c *Client) GetVulnerability(ctx context.Context, id string) (*OSVVulnerability, error) {
+	// Check cache first
+	if c.cache != nil {
+		entry, err := c.cache.GetAdvisory(ctx, id)
+		if err == nil && entry != nil && time.Now().Before(entry.ExpiresAt) {
+			var vuln OSVVulnerability
+			if err := json.Unmarshal(entry.Data, &vuln); err == nil {
+				slog.Debug("OSV cache hit", "id", id)
+				return &vuln, nil
+			}
+		}
+	}
+
 	endpoint := vulnURL + id
 
 	resp, err := c.http.Get(ctx, endpoint)
@@ -128,6 +168,13 @@ func (c *Client) GetVulnerability(ctx context.Context, id string) (*OSVVulnerabi
 	var vuln OSVVulnerability
 	if err := json.Unmarshal(body, &vuln); err != nil {
 		return nil, fmt.Errorf("decoding OSV vulnerability %s: %w", id, err)
+	}
+
+	// Store in cache
+	if c.cache != nil {
+		if err := c.cache.SetAdvisory(ctx, id, body, "osv", osvCacheTTL); err != nil {
+			slog.Debug("OSV cache store failed", "id", id, "error", err)
+		}
 	}
 
 	return &vuln, nil

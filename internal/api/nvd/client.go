@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/trustin-tech/vulnex/internal/api"
+	"github.com/trustin-tech/vulnex/internal/cache"
 	"github.com/trustin-tech/vulnex/internal/model"
 )
 
@@ -22,14 +24,17 @@ const baseURL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 // nvdTimeFormat is the timestamp layout used by the NVD API.
 const nvdTimeFormat = "2006-01-02T15:04:05.000"
 
+const nvdCacheTTL = 2 * time.Hour
+
 // Client provides access to the NVD CVE API 2.0.
 type Client struct {
-	http *api.Client
+	http  *api.Client
+	cache cache.Cache
 }
 
-// NewClient creates a new NVD API client backed by the given HTTP client.
-func NewClient(httpClient *api.Client) *Client {
-	return &Client{http: httpClient}
+// NewClient creates a new NVD API client backed by the given HTTP client and cache.
+func NewClient(httpClient *api.Client, c cache.Cache) *Client {
+	return &Client{http: httpClient, cache: c}
 }
 
 // SearchParams holds parameters for the CVE search endpoint.
@@ -56,6 +61,18 @@ type SearchResult struct {
 
 // GetCVE fetches a single CVE by its ID and returns it as an EnrichedCVE.
 func (c *Client) GetCVE(ctx context.Context, cveID string) (*model.EnrichedCVE, error) {
+	// Check cache first
+	if c.cache != nil {
+		entry, err := c.cache.GetCVE(ctx, cveID)
+		if err == nil && entry != nil && time.Now().Before(entry.ExpiresAt) {
+			var cveResp CVEResponse
+			if err := json.Unmarshal(entry.Data, &cveResp); err == nil && len(cveResp.Vulnerabilities) > 0 {
+				slog.Debug("NVD cache hit", "cve", cveID)
+				return convertCVE(&cveResp.Vulnerabilities[0].CVE), nil
+			}
+		}
+	}
+
 	u := baseURL + "?cveId=" + url.QueryEscape(cveID)
 
 	resp, err := c.http.Get(ctx, u)
@@ -72,13 +89,25 @@ func (c *Client) GetCVE(ctx context.Context, cveID string) (*model.EnrichedCVE, 
 		return nil, fmt.Errorf("nvd: unexpected status %d for CVE %s", resp.StatusCode, cveID)
 	}
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("nvd: reading response body: %w", err)
+	}
+
 	var cveResp CVEResponse
-	if err := json.NewDecoder(resp.Body).Decode(&cveResp); err != nil {
+	if err := json.Unmarshal(body, &cveResp); err != nil {
 		return nil, fmt.Errorf("nvd: decoding response: %w", err)
 	}
 
 	if len(cveResp.Vulnerabilities) == 0 {
 		return nil, fmt.Errorf("nvd: CVE %s not found", cveID)
+	}
+
+	// Store in cache
+	if c.cache != nil {
+		if err := c.cache.SetCVE(ctx, cveID, body, "nvd", nvdCacheTTL); err != nil {
+			slog.Debug("NVD cache store failed", "cve", cveID, "error", err)
+		}
 	}
 
 	return convertCVE(&cveResp.Vulnerabilities[0].CVE), nil

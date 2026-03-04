@@ -51,7 +51,7 @@ func TestQueryByCVE_DirectHit(t *testing.T) {
 	vulnURL = srv.URL + "/v1/vulns/"
 
 	httpClient := api.NewClient(ratelimit.New())
-	client := NewClient(httpClient)
+	client := NewClient(httpClient, nil)
 
 	advisories, pkgs, err := client.QueryByCVE(context.Background(), "CVE-2021-44228")
 	if err != nil {
@@ -125,7 +125,7 @@ func TestQueryByCVE_AliasHit(t *testing.T) {
 	vulnURL = srv.URL + "/v1/vulns/"
 
 	httpClient := api.NewClient(ratelimit.New())
-	client := NewClient(httpClient)
+	client := NewClient(httpClient, nil)
 
 	advisories, pkgs, err := client.QueryByCVE(context.Background(), "CVE-2023-99999")
 	if err != nil {
@@ -158,7 +158,7 @@ func TestQueryByCVE_NoMatch(t *testing.T) {
 	vulnURL = srv.URL + "/v1/vulns/"
 
 	httpClient := api.NewClient(ratelimit.New())
-	client := NewClient(httpClient)
+	client := NewClient(httpClient, nil)
 
 	advisories, pkgs, err := client.QueryByCVE(context.Background(), "CVE-9999-99999")
 	if err != nil {
@@ -183,7 +183,7 @@ func TestQueryByCVE_ServerError(t *testing.T) {
 	vulnURL = srv.URL + "/v1/vulns/"
 
 	httpClient := api.NewClient(ratelimit.New())
-	client := NewClient(httpClient)
+	client := NewClient(httpClient, nil)
 
 	_, _, err := client.QueryByCVE(context.Background(), "CVE-2021-44228")
 	if err == nil {
