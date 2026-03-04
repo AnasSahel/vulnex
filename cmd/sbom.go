@@ -275,11 +275,23 @@ func scanSBOM(ctx context.Context, filePath, ecosystemFilter string, quiet bool)
 				}
 			}
 
+			// Extract CVE IDs from the vulnerability ID and aliases
+			var cveIDs []string
+			if strings.HasPrefix(v.ID, "CVE-") {
+				cveIDs = append(cveIDs, v.ID)
+			}
+			for _, alias := range v.Aliases {
+				if strings.HasPrefix(alias, "CVE-") {
+					cveIDs = append(cveIDs, alias)
+				}
+			}
+
 			finding := model.SBOMFinding{
 				Ecosystem: qc.ecosystem,
 				Name:      qc.name,
 				Version:   qc.version,
 				Fixed:     fixed,
+				CVEIDs:    cveIDs,
 				Advisory: model.Advisory{
 					ID:       v.ID,
 					Source:   "osv",
@@ -388,11 +400,13 @@ func mapEcosystemToOSV(ecosystem string) string {
 
 func init() {
 	sbomCheckCmd.Flags().Bool("vex", false, "Output an OpenVEX document instead of a table")
+	sbomCheckCmd.Flags().Bool("enrich", false, "Enrich findings with EPSS, KEV, CVSS, and exploit data")
 	sbomCheckCmd.Flags().String("ecosystem", "", "Filter components by ecosystem (npm, pip, maven, go, etc.)")
 	sbomCheckCmd.Flags().String("severity", "", "Filter results by severity (critical, high, medium, low)")
 	sbomCheckCmd.Flags().String("ignore-file", "", "Path to suppression file (default: .vulnexignore)")
 	sbomCheckCmd.Flags().Bool("strict", false, "Ignore suppression file and report all findings")
 
+	sbomDiffCmd.Flags().Bool("enrich", false, "Enrich findings with EPSS, KEV, CVSS, and exploit data")
 	sbomDiffCmd.Flags().String("ecosystem", "", "Filter components by ecosystem (npm, pip, maven, go, etc.)")
 	sbomDiffCmd.Flags().String("severity", "", "Filter results by severity (critical, high, medium, low)")
 	sbomDiffCmd.Flags().String("ignore-file", "", "Path to suppression file (default: .vulnexignore)")

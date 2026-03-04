@@ -44,6 +44,13 @@ type SBOMFinding struct {
 	Version   string   `json:"version"`
 	Fixed     string   `json:"fixed,omitempty"`
 	Advisory  Advisory `json:"advisory"`
+	// Enrichment fields (populated when --enrich is used)
+	CVEIDs     []string   `json:"cve_ids,omitempty"`
+	EPSS       *EPSSScore `json:"epss,omitempty"`
+	KEV        *KEVEntry  `json:"kev,omitempty"`
+	CVSSScore  float64    `json:"cvss_score,omitempty"`
+	Risk       *RiskScore `json:"risk,omitempty"`
+	HasExploit bool       `json:"has_exploit,omitempty"`
 }
 
 // SBOMResult holds the complete results of an SBOM vulnerability check.
