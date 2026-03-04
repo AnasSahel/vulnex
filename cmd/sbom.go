@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -24,89 +23,22 @@ var sbomCmd = &cobra.Command{
 
 var sbomCheckCmd = &cobra.Command{
 	Use:   "check <file>",
-	Short: "Check SBOM components for vulnerabilities",
-	Long: `Parse a CycloneDX or SPDX JSON SBOM file and query each component
-against the OSV vulnerability database. Results are displayed as a table
-by default, or as a VEX document with the --vex flag.`,
+	Short: "Check SBOM or lockfile components for vulnerabilities",
+	Long: `Parse a CycloneDX/SPDX JSON SBOM or a package lockfile and query each
+component against the OSV vulnerability database. Results are displayed as
+a table by default, or as a VEX document with the --vex flag.
+
+Supported lockfiles: go.sum, package-lock.json, yarn.lock, pnpm-lock.yaml,
+Cargo.lock, Gemfile.lock, requirements.txt, poetry.lock, composer.lock.`,
 	Example: `  vulnex sbom check bom.json
   vulnex sbom check bom.json --vex
   vulnex sbom check sbom-spdx.json --ecosystem npm --severity HIGH
-  vulnex sbom check bom.json --output json`,
+  vulnex sbom check bom.json --output json
+  vulnex sbom check go.sum
+  vulnex sbom check package-lock.json`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		filePath := args[0]
-		ecosystemFilter, _ := cmd.Flags().GetString("ecosystem")
-		severityFilter, _ := cmd.Flags().GetString("severity")
-		vexOutput, _ := cmd.Flags().GetBool("vex")
-		quiet, _ := cmd.Flags().GetBool("quiet")
-
-		components, findings, vulnResults, err := scanSBOM(cmd.Context(), filePath, ecosystemFilter, quiet)
-		if err != nil {
-			return err
-		}
-
-		// Apply severity filter
-		if severityFilter != "" {
-			filtered := make([]model.SBOMFinding, 0)
-			for _, f := range findings {
-				if strings.EqualFold(f.Advisory.Severity, severityFilter) {
-					filtered = append(filtered, f)
-				}
-			}
-			findings = filtered
-		}
-
-		// Apply suppressions from .vulnexignore
-		strict, _ := cmd.Flags().GetBool("strict")
-		var suppressedFindings []model.SBOMFinding
-		if !strict {
-			ignoreFile, _ := cmd.Flags().GetString("ignore-file")
-			igf, err := ignore.Load(resolveIgnoreFile(ignoreFile))
-			if err != nil {
-				return fmt.Errorf("loading ignore file: %w", err)
-			}
-			findings, suppressedFindings = igf.Apply(findings, time.Now())
-			if !quiet && len(suppressedFindings) > 0 {
-				fmt.Fprintf(os.Stderr, "Suppressed %d findings via .vulnexignore\n", len(suppressedFindings))
-			}
-		}
-
-		if !quiet {
-			fmt.Fprintf(os.Stderr, "Found %d vulnerabilities\n", len(findings))
-		}
-
-		// Output results
-		if vexOutput {
-			vexDoc, err := sbom.GenerateVEX(components, vulnResults)
-			if err != nil {
-				return fmt.Errorf("generating VEX document: %w", err)
-			}
-
-			encoder := json.NewEncoder(os.Stdout)
-			encoder.SetIndent("", "  ")
-			return encoder.Encode(vexDoc)
-		}
-
-		result := &model.SBOMResult{
-			File:            filePath,
-			TotalComponents: len(components),
-			Findings:        findings,
-			Suppressed:      suppressedFindings,
-		}
-
-		if len(findings) == 0 {
-			if !quiet {
-				fmt.Fprintln(os.Stderr, "No vulnerabilities found for SBOM components")
-			}
-			return nil
-		}
-
-		if err := app.Formatter.FormatSBOMResult(os.Stdout, result); err != nil {
-			return err
-		}
-
-		os.Exit(1)
-		return nil
+		return runScanPipeline(cmd, args[0])
 	},
 }
 
@@ -253,41 +185,76 @@ func scanSBOM(ctx context.Context, filePath, ecosystemFilter string, quiet bool)
 		return components, nil, nil, nil
 	}
 
-	// Query OSV for each component and collect results
-	var findings []model.SBOMFinding
-	vulnResults := make(map[string]*model.EnrichedCVE)
-
+	// Build queryable components with mapped ecosystems
+	type queryComp struct {
+		ecosystem string
+		name      string
+		version   string
+	}
+	var queryComps []queryComp
 	for _, comp := range components {
 		if comp.PURL == "" && (comp.Ecosystem == "" || comp.Name == "") {
 			slog.Debug("skipping component without PURL or ecosystem/name", "name", comp.Name)
 			continue
 		}
+		queryComps = append(queryComps, queryComp{
+			ecosystem: mapEcosystemToOSV(comp.Ecosystem),
+			name:      comp.Name,
+			version:   comp.Version,
+		})
+	}
 
-		ecosystem := comp.Ecosystem
-		name := comp.Name
-		version := comp.Version
+	if !quiet {
+		fmt.Fprintf(os.Stderr, "Querying OSV for %d components...\n", len(queryComps))
+	}
 
-		// Map PURL ecosystem types to OSV ecosystem names
-		ecosystem = mapEcosystemToOSV(ecosystem)
+	// Build batch queries (OSV batch endpoint supports up to 1000 per request)
+	const batchSize = 1000
+	queries := make([]osv.QueryRequest, len(queryComps))
+	for i, qc := range queryComps {
+		queries[i] = osv.QueryRequest{
+			Version: qc.version,
+			Package: &osv.QueryPackage{
+				Name:      qc.name,
+				Ecosystem: qc.ecosystem,
+			},
+		}
+	}
 
-		vulns, err := app.OSV.QueryByPackage(ctx, ecosystem, name, version)
+	// Collect all batch results, aligned by index with queryComps
+	allResults := make([][]osv.OSVVulnerability, len(queryComps))
+	for start := 0; start < len(queries); start += batchSize {
+		end := start + batchSize
+		if end > len(queries) {
+			end = len(queries)
+		}
+		batch := queries[start:end]
+
+		batchResp, err := app.OSV.BatchQuery(ctx, batch)
 		if err != nil {
-			slog.Warn("querying OSV for component",
-				"ecosystem", ecosystem,
-				"name", name,
-				"version", version,
-				"error", err,
-			)
+			slog.Warn("OSV batch query failed", "error", err)
+			// Fall through with empty results for this batch
 			continue
 		}
 
+		for i, result := range batchResp.Results {
+			allResults[start+i] = result.Vulns
+		}
+	}
+
+	// Process results
+	var findings []model.SBOMFinding
+	vulnResults := make(map[string]*model.EnrichedCVE)
+
+	for i, qc := range queryComps {
+		vulns := allResults[i]
 		if len(vulns) == 0 {
 			continue
 		}
 
 		slog.Debug("found vulnerabilities",
-			"component", name,
-			"version", version,
+			"component", qc.name,
+			"version", qc.version,
 			"count", len(vulns),
 		)
 
@@ -297,7 +264,7 @@ func scanSBOM(ctx context.Context, filePath, ecosystemFilter string, quiet bool)
 			// Extract first fixed version for this component
 			fixed := ""
 			for _, a := range v.Affected {
-				if strings.EqualFold(a.Package.Ecosystem, ecosystem) && a.Package.Name == name {
+				if strings.EqualFold(a.Package.Ecosystem, qc.ecosystem) && a.Package.Name == qc.name {
 					for _, r := range a.Ranges {
 						for _, evt := range r.Events {
 							if evt.Fixed != "" && fixed == "" {
@@ -309,9 +276,9 @@ func scanSBOM(ctx context.Context, filePath, ecosystemFilter string, quiet bool)
 			}
 
 			finding := model.SBOMFinding{
-				Ecosystem: ecosystem,
-				Name:      name,
-				Version:   version,
+				Ecosystem: qc.ecosystem,
+				Name:      qc.name,
+				Version:   qc.version,
 				Fixed:     fixed,
 				Advisory: model.Advisory{
 					ID:       v.ID,

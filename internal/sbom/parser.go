@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+// IsLockfile returns true if the given path is a recognized lockfile.
+func IsLockfile(path string) bool {
+	return detectLockfileFormat(path) != lockfileUnknown
+}
+
 // Component represents a software component extracted from an SBOM.
 type Component struct {
 	Name      string
@@ -25,8 +30,14 @@ const (
 	formatSPDX
 )
 
-// ParseFile detects the SBOM format and parses components from a file path.
+// ParseFile detects the file format (lockfile or SBOM) and parses components.
+// Lockfiles are detected by filename before reading; SBOMs are detected by content.
 func ParseFile(path string) ([]Component, error) {
+	// Check for lockfile format first (by filename, before reading)
+	if lf := detectLockfileFormat(path); lf != lockfileUnknown {
+		return parseLockfile(path, lf)
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading SBOM file: %w", err)
