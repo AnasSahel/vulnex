@@ -7,3 +7,6 @@ vulnex-*
 
 # Content drafts
 docs/linkedin/
+
+# Vulnex ignore file
+.vulnexignore

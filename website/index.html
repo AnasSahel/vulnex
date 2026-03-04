@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>vulnex — Vulnerability intelligence from your terminal</title>
-  <meta name="description" content="Open-source CLI that aggregates NVD, CISA KEV, EPSS, GitHub Advisory, and OSV data into a single enriched view with risk scoring and SBOM scanning.">
+  <meta name="description" content="Open-source CLI that aggregates NVD, CISA KEV, EPSS, GitHub Advisory, and OSV data into a single enriched view with configurable risk scoring, lockfile scanning, and SBOM analysis.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -36,7 +36,7 @@
 <section class="hero">
   <div class="container">
     <h1 class="hero-tagline">Vulnerability intelligence<br><span class="highlight">from your terminal.</span></h1>
-    <p class="hero-sub">Aggregate NVD, CISA KEV, EPSS, GitHub Advisory &amp; OSV into a single enriched view &mdash; with risk scoring, SBOM scanning, and pipe-friendly output.</p>
+    <p class="hero-sub">Aggregate NVD, CISA KEV, EPSS, GitHub Advisory &amp; OSV into a single enriched view &mdash; with configurable risk scoring, lockfile &amp; SBOM scanning, and pipe-friendly output.</p>
 
     <div class="terminal">
       <div class="terminal-header">
@@ -82,7 +82,12 @@
       <div class="feature-card">
         <span class="feature-icon">&#x26A0;</span>
         <h3>Risk Scoring</h3>
-        <p>P0–P4 composite priority matrix blending CVSS, EPSS, and KEV signals for actionable triage.</p>
+        <p>P0–P4 composite priority matrix blending CVSS, EPSS, and KEV signals. Choose from built-in profiles or set custom weights.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#x1F512;</span>
+        <h3>Lockfile Scanning</h3>
+        <p>Scan lockfiles directly — <code>go.sum</code>, <code>package-lock.json</code>, <code>yarn.lock</code>, <code>pnpm-lock.yaml</code>, <code>Cargo.lock</code>, <code>Gemfile.lock</code>, <code>requirements.txt</code>, <code>poetry.lock</code>, <code>composer.lock</code>.</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">&#x1F4E6;</span>
@@ -128,7 +133,9 @@
     <div class="showcase-terminal">
       <div class="install-tabs">
         <button class="install-tab active" onclick="switchTab(event, 'sc-diff')">SBOM Diff</button>
+        <button class="install-tab" onclick="switchTab(event, 'sc-lockfile')">Lockfile Scan</button>
         <button class="install-tab" onclick="switchTab(event, 'sc-check')">SBOM Check</button>
+        <button class="install-tab" onclick="switchTab(event, 'sc-scoring')">Scoring</button>
         <button class="install-tab" onclick="switchTab(event, 'sc-ignore')">Suppress</button>
         <button class="install-tab" onclick="switchTab(event, 'sc-exploit')">Exploit Check</button>
         <button class="install-tab" onclick="switchTab(event, 'sc-pipe')">Piping</button>
@@ -152,6 +159,22 @@
 <span class="t-dim">Summary: old=3 components (56 vulns), new=4 components (57 vulns)</span>
   <span class="t-critical">+2 added</span>  <span class="t-green">-1 removed</span></pre></div>
 
+        <div id="sc-lockfile" class="terminal-body install-panel"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex scan</span> <span class="t-value">pnpm-lock.yaml</span>
+<span class="t-dim">Parsed 847 components from pnpm-lock.yaml</span>
+<span class="t-dim">Querying OSV for 847 components...</span>
+<span class="t-dim">Found 4 vulnerabilities</span>
+
+<span class="t-accent">postcss 8.4.14</span> <span class="t-dim">(npm)</span>
+  <span class="t-dim">ID                        Severity  Fixed    Summary</span>
+  GHSA-7fh5-64p2-3v2j      <span class="t-medium">MEDIUM</span>    8.4.31   Parsing error in PostCSS
+
+<span class="t-accent">semver 6.3.0</span> <span class="t-dim">(npm)</span>
+  GHSA-c2qf-rxjj-qqgw      <span class="t-medium">MEDIUM</span>    6.3.1    semver vuln to ReDoS
+
+<span class="t-dim">Summary: 847 components scanned, 2 vulnerable, 4 findings</span>
+  <span class="t-medium">MEDIUM: 4</span>
+<span class="t-dim">Completed in 1.203s</span></pre></div>
+
         <div id="sc-check" class="terminal-body install-panel"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span>
 
 <span class="t-accent">django 3.2.0</span> <span class="t-dim">(PyPI)</span>
@@ -164,6 +187,25 @@
 
 <span class="t-dim">Summary: 3 components scanned, 2 vulnerable, 3 findings</span>
   <span class="t-critical">CRITICAL: 2</span>  <span class="t-high">HIGH: 1</span></pre></div>
+
+        <div id="sc-scoring" class="terminal-body install-panel"><pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-24790</span> <span class="t-flag">--scoring-profile default</span>
+
+ <span class="t-label">CVE ID:</span>         <span class="t-accent">CVE-2024-24790</span>
+ <span class="t-label">Severity:</span>       <span class="t-critical">CRITICAL</span>
+ <span class="t-label">CVSS Score:</span>     <span class="t-critical">9.8 (v3.1)</span>
+ <span class="t-label">EPSS Score:</span>     <span class="t-value">0.00197 (percentile: 0.5715)</span>
+ <span class="t-label">KEV:</span>            No
+
+ <span class="t-label">Risk Priority:</span>  <span class="t-p0">P1-HIGH</span> (score: 65/100)
+ <span class="t-label">Rationale:</span>      High CVSS but low exploitation probability
+ <span class="t-label">Weighted Score:</span> <span class="t-value">30.4/100</span> <span class="t-dim">(profile: default, weights: CVSS=0.30 EPSS=0.50 KEV=0.20)</span>
+
+<span class="t-dim"># Compare with exploit-focused profile</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-24790</span> <span class="t-flag">--scoring-profile exploit-focused</span>
+ <span class="t-label">Weighted Score:</span> <span class="t-value">11.0/100</span> <span class="t-dim">(profile: exploit-focused, weights: CVSS=0.10 EPSS=0.60 KEV=0.30)</span>
+
+<span class="t-dim"># Or set custom weights</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-24790</span> <span class="t-flag">--scoring-profile default --cvss-weight 0.8</span></pre></div>
 
         <div id="sc-ignore" class="terminal-body install-panel"><pre><span class="t-dim"># .vulnexignore — suppress accepted risks</span>
 <span class="t-prompt">$</span> cat <span class="t-value">.vulnexignore</span>
@@ -267,7 +309,7 @@ make build</pre></div>
   <div class="container">
     <span class="section-label">CI/CD</span>
     <h2 class="section-title">Gate your pipeline on vulnerabilities</h2>
-    <p class="section-desc"><code>sbom check</code> catches existing vulns. <code>sbom diff</code> catches <em>new</em> vulns a PR introduces. Both exit 1 on failure. Commit a <code>.vulnexignore</code> to suppress accepted risks without disabling the gate.</p>
+    <p class="section-desc"><code>vulnex scan</code> checks lockfiles or SBOMs. <code>sbom diff</code> catches <em>new</em> vulns a PR introduces. Both exit 1 on failure. Commit a <code>.vulnexignore</code> to suppress accepted risks without disabling the gate.</p>
 
     <div class="ci-blocks" style="max-width:680px;display:flex;flex-direction:column;gap:24px">
       <div class="ci-block">
@@ -295,7 +337,7 @@ make build</pre></div>
       </div>
 
       <div class="ci-block">
-        <div class="ci-block-header">.github/workflows/security.yml — full vulnerability check</div>
+        <div class="ci-block-header">.github/workflows/security.yml — scan lockfile directly</div>
         <pre><span class="y-key">name:</span> <span class="y-str">Security Gate</span>
 <span class="y-key">on:</span> <span class="y-str">[push, pull_request]</span>
 
@@ -307,13 +349,11 @@ make build</pre></div>
       - <span class="y-key">name:</span> <span class="y-str">Install vulnex</span>
         <span class="y-key">run:</span> <span class="y-str">go install github.com/trustin-tech/vulnex@latest</span>
 
-      - <span class="y-key">name:</span> <span class="y-str">Generate SBOM</span>
-        <span class="y-key">run:</span> <span class="y-str">cyclonedx-gomod app > bom.json</span>
-
-      - <span class="y-key">name:</span> <span class="y-str">Check for vulnerabilities</span>
-        <span class="y-key">run:</span> <span class="y-str">vulnex sbom check bom.json --severity critical</span>
-        <span class="y-comment"># Exits 1 if critical vulns found → fails the job</span>
-        <span class="y-comment"># Reads .vulnexignore automatically; --strict to skip</span></pre>
+      - <span class="y-key">name:</span> <span class="y-str">Scan lockfile for vulnerabilities</span>
+        <span class="y-key">run:</span> <span class="y-str">vulnex scan go.sum --severity critical</span>
+        <span class="y-comment"># Works with any lockfile: go.sum, package-lock.json,</span>
+        <span class="y-comment"># yarn.lock, pnpm-lock.yaml, Cargo.lock, etc.</span>
+        <span class="y-comment"># Exits 1 if critical vulns found → fails the job</span></pre>
       </div>
     </div>
   </div>

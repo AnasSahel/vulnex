@@ -36,10 +36,12 @@ $ vulnex enrich CVE-2021-44228
 
 - **Multi-source enrichment** — Combine NVD, KEV, EPSS, GHSA, and OSV data in a single query
 - **Composite risk scoring** — P0–P4 priority matrix blending CVSS, EPSS, and KEV signals
+- **Configurable scoring profiles** — Choose from built-in profiles (default, exploit-focused, severity-focused) or set custom weights for CVSS, EPSS, and KEV signals
+- **Lockfile scanning** — Scan lockfiles directly for vulnerabilities: `go.sum`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Cargo.lock`, `Gemfile.lock`, `requirements.txt`, `poetry.lock`, `composer.lock`
 - **Offline mode** — Local SQLite cache with configurable TTLs; work without network access
 - **SBOM scanning** — Parse CycloneDX/SPDX SBOMs, find vulnerabilities grouped by component, and generate OpenVEX documents
 - **SBOM diffing** — Compare two SBOMs and see which vulnerabilities a dependency change introduces or fixes
-- **CI/CD gating** — `sbom check` exits 1 on vulns found, `sbom diff` exits 1 on new vulns introduced; filter by `--severity` to control thresholds
+- **CI/CD gating** — `sbom check` / `scan` exits 1 on vulns found, `sbom diff` exits 1 on new vulns introduced; filter by `--severity` to control thresholds
 - **Suppression file** — `.vulnexignore` lets teams suppress accepted risks with package scoping, expiry dates, and audit trails
 - **Pipe-friendly** — stdin support, multiple output formats, and composable commands
 - **Zero CGO** — Pure Go with no C dependencies; single static binary
@@ -81,7 +83,9 @@ vulnex epss score CVE-2024-3094
 # Search for CVEs
 vulnex cve search "apache log4j" --severity critical
 
-# Scan an SBOM for vulnerabilities
+# Scan a lockfile or SBOM for vulnerabilities
+vulnex scan go.sum
+vulnex scan package-lock.json
 vulnex sbom check bom.json
 
 # Diff two SBOMs — what vulns did this change introduce?
@@ -89,6 +93,9 @@ vulnex sbom diff old-bom.json new-bom.json
 
 # Fail CI if critical vulnerabilities exist
 vulnex sbom check bom.json --severity critical
+
+# View scoring profiles and thresholds
+vulnex scoring
 ```
 
 ## Configuration
@@ -136,6 +143,29 @@ These flags apply to all commands:
 
 ## Commands
 
+### `vulnex scan` — Scan lockfiles and SBOMs
+
+Scan a package lockfile or SBOM file for known vulnerabilities. Automatically detects the format and queries OSV. This is the fastest way to check your dependencies.
+
+```bash
+vulnex scan go.sum
+vulnex scan package-lock.json --severity HIGH
+vulnex scan Cargo.lock -o json
+vulnex scan bom.json --ecosystem npm
+```
+
+Supported lockfiles: `go.sum`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Cargo.lock`, `Gemfile.lock`, `requirements.txt`, `poetry.lock`, `composer.lock`.
+
+Supported SBOMs: CycloneDX (JSON), SPDX (JSON).
+
+| Flag | Description |
+|------|-------------|
+| `--vex` | Output an OpenVEX document instead of a table |
+| `--ecosystem` | Filter components by ecosystem |
+| `--severity` | Filter results by severity (exits 0 if no matches) |
+| `--ignore-file` | Path to suppression file (default: `.vulnexignore`) |
+| `--strict` | Ignore suppression file and report all findings |
+
 ### `vulnex enrich` — Multi-source aggregation
 
 The flagship command. Combines NVD + KEV + EPSS + GitHub Advisory + OSV into a single enriched view.
@@ -145,7 +175,20 @@ vulnex enrich CVE-2021-44228
 vulnex enrich CVE-2024-3094 CVE-2023-44228 --output json
 echo "CVE-2024-3094" | vulnex enrich --stdin --output table
 cat cves.txt | vulnex enrich --stdin --output csv > enriched.csv
+
+# With weighted scoring
+vulnex enrich CVE-2024-24790 --scoring-profile default
+vulnex enrich CVE-2024-24790 --scoring-profile exploit-focused
+vulnex enrich CVE-2024-24790 --cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2
 ```
+
+| Flag | Description |
+|------|-------------|
+| `--stdin` | Read CVE IDs from stdin |
+| `--scoring-profile` | Scoring profile: `default`, `exploit-focused`, `severity-focused` |
+| `--cvss-weight` | Custom CVSS weight (0.0-1.0), overrides profile |
+| `--epss-weight` | Custom EPSS weight (0.0-1.0), overrides profile |
+| `--kev-weight` | Custom KEV weight (0.0-1.0), overrides profile |
 
 ### `vulnex cve` — CVE operations
 
@@ -296,16 +339,20 @@ vulnex advisory affected django --ecosystem pip --output json
 
 ### `vulnex sbom` — SBOM analysis
 
-#### `sbom check` — Scan SBOM for vulnerabilities
+#### `sbom check` — Scan SBOM or lockfile for vulnerabilities
 
-Parses CycloneDX or SPDX JSON files and queries each component against OSV. Results are grouped by component showing advisory ID, severity, fixed version, and summary. Exits with code 1 when vulnerabilities are found, making it suitable for CI/CD pipelines.
+Parses CycloneDX/SPDX JSON files or package lockfiles and queries each component against OSV. Results are grouped by component showing advisory ID, severity, fixed version, and summary. Exits with code 1 when vulnerabilities are found, making it suitable for CI/CD pipelines.
+
+This is equivalent to `vulnex scan` — both commands accept lockfiles and SBOMs.
 
 ```bash
 vulnex sbom check bom.json
-vulnex sbom check bom.json --vex                     # output as OpenVEX document
-vulnex sbom check sbom-spdx.json --ecosystem npm     # filter by ecosystem
-vulnex sbom check bom.json --severity critical        # only critical findings
-vulnex sbom check bom.json --output json              # structured JSON output
+vulnex sbom check go.sum                              # lockfile support
+vulnex sbom check package-lock.json                   # lockfile support
+vulnex sbom check bom.json --vex                      # output as OpenVEX document
+vulnex sbom check sbom-spdx.json --ecosystem npm      # filter by ecosystem
+vulnex sbom check bom.json --severity critical         # only critical findings
+vulnex sbom check bom.json --output json               # structured JSON output
 ```
 
 Example table output:
@@ -422,6 +469,42 @@ Sources: GitHub (5) · Metasploit (2) · Nuclei (1) · ExploitDB (1)
 | Flag | Description |
 |------|-------------|
 | `--stdin` | Read CVE IDs from stdin |
+
+### `vulnex scoring` — Scoring profiles and thresholds
+
+Display the built-in scoring profiles and P0–P4 priority threshold matrix. No API calls needed.
+
+```bash
+vulnex scoring
+```
+
+Output:
+
+```
+Scoring Profiles
+================
+
+  default              CVSS=0.30  EPSS=0.50  KEV=0.20
+  exploit-focused      CVSS=0.10  EPSS=0.60  KEV=0.30
+  severity-focused     CVSS=0.60  EPSS=0.30  KEV=0.10
+
+Risk Priority Thresholds
+========================
+
+  P0-CRITICAL   In CISA KEV (regardless of other scores)
+  P1-HIGH       EPSS >= 0.7 OR CVSS >= 9.0
+  P2-MEDIUM     EPSS >= 0.3 OR (CVSS >= 7.0 AND EPSS >= 0.1)
+  P3-LOW        CVSS >= 7.0 but EPSS < 0.1
+  P4-MINIMAL    CVSS < 7.0 AND EPSS < 0.1
+```
+
+Use `--scoring-profile` with `enrich` or `cve get` to surface weighted scores:
+
+```bash
+vulnex enrich CVE-2024-24790 --scoring-profile default
+vulnex enrich CVE-2024-24790 --scoring-profile exploit-focused
+vulnex cve get CVE-2024-24790 --scoring-profile severity-focused
+```
 
 ### `vulnex stats` — Vulnerability statistics
 
