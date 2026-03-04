@@ -9,7 +9,9 @@ import (
 	"github.com/trustin-tech/vulnex/internal/model"
 )
 
-type markdownFormatter struct{}
+type markdownFormatter struct {
+	scoringProfile *model.ScoringProfile
+}
 
 func (f *markdownFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 	fmt.Fprintf(w, "# %s\n\n", cve.ID)
@@ -67,6 +69,15 @@ func (f *markdownFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error
 		fmt.Fprintf(w, "- **Signal Disagreement:** %s\n", risk.Disagreement)
 	}
 	fmt.Fprintln(w)
+
+	// Weighted Score
+	if f.scoringProfile != nil {
+		score := model.ComputeWeightedScore(*f.scoringProfile, cve)
+		fmt.Fprintf(w, "## Weighted Score\n\n")
+		fmt.Fprintf(w, "- **Score:** %.1f/100\n", score)
+		fmt.Fprintf(w, "- **Profile:** %s\n", f.scoringProfile.Name)
+		fmt.Fprintf(w, "- **Weights:** CVSS=%.2f EPSS=%.2f KEV=%.2f\n\n", f.scoringProfile.CVSSWeight, f.scoringProfile.EPSSWeight, f.scoringProfile.KEVWeight)
+	}
 
 	// CWEs
 	if len(cve.CWEs) > 0 {

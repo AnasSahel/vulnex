@@ -18,6 +18,7 @@ import (
 	"github.com/trustin-tech/vulnex/internal/cache"
 	"github.com/trustin-tech/vulnex/internal/config"
 	"github.com/trustin-tech/vulnex/internal/enricher"
+	"github.com/trustin-tech/vulnex/internal/model"
 	"github.com/trustin-tech/vulnex/internal/output"
 	"github.com/trustin-tech/vulnex/internal/ratelimit"
 )
@@ -38,16 +39,17 @@ func SetVersionInfo(version, commit, date string) {
 
 // AppContext holds all initialized dependencies for the CLI commands.
 type AppContext struct {
-	Config    *config.Config
-	Cache     cache.Cache
-	Enricher  *enricher.Enricher
-	Formatter output.Formatter
-	NVD       *nvd.Client
-	KEV       *kev.Client
-	EPSS      *epss.Client
-	GHSA      *ghsa.Client
-	OSV       *osv.Client
-	Exploit   *exploit.Client
+	Config         *config.Config
+	Cache          cache.Cache
+	Enricher       *enricher.Enricher
+	Formatter      output.Formatter
+	ScoringProfile *model.ScoringProfile
+	NVD            *nvd.Client
+	KEV            *kev.Client
+	EPSS           *epss.Client
+	GHSA           *ghsa.Client
+	OSV            *osv.Client
+	Exploit        *exploit.Client
 }
 
 var app AppContext
@@ -64,7 +66,7 @@ This product uses the NVD API but is not endorsed or certified by the NVD.`,
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Skip bootstrap for completion and version commands
-		if cmd.Name() == "completion" || cmd.Name() == "version" || cmd.Name() == "__complete" {
+		if cmd.Name() == "completion" || cmd.Name() == "version" || cmd.Name() == "__complete" || cmd.Name() == "scoring" {
 			return nil
 		}
 		return bootstrap(cmd)
@@ -168,6 +170,41 @@ func bootstrap(cmd *cobra.Command) error {
 	noColor, _ := cmd.Flags().GetBool("no-color")
 	long, _ := cmd.Flags().GetBool("long")
 
+	// Resolve scoring profile if the flag exists on this command
+	if f := cmd.Flags().Lookup("scoring-profile"); f != nil && f.Value.String() != "" {
+		profileName := f.Value.String()
+		var profile model.ScoringProfile
+		switch profileName {
+		case "default":
+			profile = model.DefaultProfile()
+		case "exploit-focused":
+			profile = model.ExploitFocusedProfile()
+		case "severity-focused":
+			profile = model.SeverityFocusedProfile()
+		default:
+			return fmt.Errorf("unknown scoring profile %q (supported: default, exploit-focused, severity-focused)", profileName)
+		}
+
+		// Override individual weights if explicitly set
+		if f := cmd.Flags().Lookup("cvss-weight"); f != nil && f.Changed {
+			v, _ := cmd.Flags().GetFloat64("cvss-weight")
+			profile.CVSSWeight = v
+			profile.Name = "custom"
+		}
+		if f := cmd.Flags().Lookup("epss-weight"); f != nil && f.Changed {
+			v, _ := cmd.Flags().GetFloat64("epss-weight")
+			profile.EPSSWeight = v
+			profile.Name = "custom"
+		}
+		if f := cmd.Flags().Lookup("kev-weight"); f != nil && f.Changed {
+			v, _ := cmd.Flags().GetFloat64("kev-weight")
+			profile.KEVWeight = v
+			profile.Name = "custom"
+		}
+
+		app.ScoringProfile = &profile
+	}
+
 	var fmtOpts []output.FormatterOption
 	fmtOpts = append(fmtOpts, output.WithVersion(versionStr))
 	if noColor {
@@ -175,6 +212,9 @@ func bootstrap(cmd *cobra.Command) error {
 	}
 	if long {
 		fmtOpts = append(fmtOpts, output.WithLong())
+	}
+	if app.ScoringProfile != nil {
+		fmtOpts = append(fmtOpts, output.WithScoringProfile(app.ScoringProfile))
 	}
 
 	formatter, err := output.NewFormatter(format, fmtOpts...)

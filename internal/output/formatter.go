@@ -25,11 +25,12 @@ type Formatter interface {
 
 // formatterOpts holds configuration shared across all formatters.
 type formatterOpts struct {
-	NoColor bool
-	Compact bool     // for JSON compact mode
-	Fields  []string // for CSV field selection
-	Long    bool     // show full descriptions instead of truncated
-	Version string   // tool version (used by SARIF)
+	NoColor        bool
+	Compact        bool                  // for JSON compact mode
+	Fields         []string              // for CSV field selection
+	Long           bool                  // show full descriptions instead of truncated
+	Version        string                // tool version (used by SARIF)
+	ScoringProfile *model.ScoringProfile // optional weighted scoring profile
 }
 
 // FormatterOption is a functional option for configuring formatters.
@@ -70,6 +71,13 @@ func WithVersion(version string) FormatterOption {
 	}
 }
 
+// WithScoringProfile sets the scoring profile for weighted score display.
+func WithScoringProfile(profile *model.ScoringProfile) FormatterOption {
+	return func(o *formatterOpts) {
+		o.ScoringProfile = profile
+	}
+}
+
 // NewFormatter creates a new Formatter for the given format string.
 // Supported formats: "table", "json", "csv", "markdown", "yaml".
 func NewFormatter(format string, opts ...FormatterOption) (Formatter, error) {
@@ -86,7 +94,7 @@ func NewFormatter(format string, opts ...FormatterOption) (Formatter, error) {
 	case "csv":
 		return newCSVFormatter(o), nil
 	case "markdown", "md":
-		return &markdownFormatter{}, nil
+		return &markdownFormatter{scoringProfile: o.ScoringProfile}, nil
 	case "yaml":
 		return &yamlFormatter{}, nil
 	case "sarif":

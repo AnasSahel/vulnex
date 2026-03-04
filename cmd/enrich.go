@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -22,7 +23,9 @@ vulnerability intelligence view.`,
   echo "CVE-2024-3094" | vulnex enrich --stdin --output table
   cat cves.txt | vulnex enrich --stdin --output csv > enriched.csv`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		start := time.Now()
 		stdin, _ := cmd.Flags().GetBool("stdin")
+		quiet, _ := cmd.Flags().GetBool("quiet")
 		ids := args
 
 		if stdin {
@@ -49,6 +52,9 @@ vulnerability intelligence view.`,
 			if err != nil {
 				return err
 			}
+			if !quiet {
+				fmt.Fprintf(os.Stderr, "Completed in %s\n", time.Since(start).Round(time.Millisecond))
+			}
 			return app.Formatter.FormatCVE(os.Stdout, cve)
 		}
 
@@ -56,11 +62,18 @@ vulnerability intelligence view.`,
 		if err != nil {
 			return err
 		}
+		if !quiet {
+			fmt.Fprintf(os.Stderr, "Completed in %s\n", time.Since(start).Round(time.Millisecond))
+		}
 		return app.Formatter.FormatCVEList(os.Stdout, cves)
 	},
 }
 
 func init() {
 	enrichCmd.Flags().Bool("stdin", false, "Read CVE IDs from stdin (one per line)")
+	enrichCmd.Flags().String("scoring-profile", "", "Scoring profile: default, exploit-focused, severity-focused")
+	enrichCmd.Flags().Float64("cvss-weight", 0, "Custom CVSS weight (0.0-1.0), overrides profile")
+	enrichCmd.Flags().Float64("epss-weight", 0, "Custom EPSS weight (0.0-1.0), overrides profile")
+	enrichCmd.Flags().Float64("kev-weight", 0, "Custom KEV weight (0.0-1.0), overrides profile")
 	rootCmd.AddCommand(enrichCmd)
 }

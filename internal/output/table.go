@@ -13,8 +13,9 @@ import (
 
 // tableFormatter renders data as styled terminal tables using lipgloss.
 type tableFormatter struct {
-	noColor bool
-	long    bool
+	noColor        bool
+	long           bool
+	scoringProfile *model.ScoringProfile
 
 	// Severity styles
 	criticalStyle lipgloss.Style
@@ -35,8 +36,9 @@ type tableFormatter struct {
 
 func newTableFormatter(opts *formatterOpts) *tableFormatter {
 	tf := &tableFormatter{
-		noColor: opts.NoColor,
-		long:    opts.Long,
+		noColor:        opts.NoColor,
+		long:           opts.Long,
+		scoringProfile: opts.ScoringProfile,
 	}
 
 	if opts.NoColor {
@@ -158,6 +160,18 @@ func (tf *tableFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 		if risk.Disagreement != "" {
 			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Signal Conflict:"), tf.mediumStyle.Render(risk.Disagreement))
 		}
+	}
+
+	// Weighted Score
+	if tf.scoringProfile != nil {
+		score := model.ComputeWeightedScore(*tf.scoringProfile, cve)
+		fmt.Fprintf(w, "%s %.1f/100 (profile: %s, weights: CVSS=%.2f EPSS=%.2f KEV=%.2f)\n",
+			tf.labelStyle.Render("Weighted Score:"),
+			score,
+			tf.scoringProfile.Name,
+			tf.scoringProfile.CVSSWeight,
+			tf.scoringProfile.EPSSWeight,
+			tf.scoringProfile.KEVWeight)
 	}
 
 	// KEV details
