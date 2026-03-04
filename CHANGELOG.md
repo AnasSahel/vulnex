@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.3.0](https://github.com/AnasSahel/vulnex/compare/v1.2.1...v1.3.0) (2026-03-04)
+
+
+### Features
+
+* **exploit:** add exploit check command with multi-source intelligence ([69b3312](https://github.com/AnasSahel/vulnex/commit/69b33123050bbd4a8f3fe95499781a8700817082))
+* **exploit:** add exploit check command with multi-source intelligence ([#9](https://github.com/AnasSahel/vulnex/issues/9)) ([4b92811](https://github.com/AnasSahel/vulnex/commit/4b928117e9eaff45b86c63af68bd04f9537fae88))
+* **output:** add SARIF v2.1.0 output format ([8f59f3a](https://github.com/AnasSahel/vulnex/commit/8f59f3a92ffcec4f7cb4b1814bd16b6b6fb670f5))
+* **sbom:** add .vulnexignore suppression file support ([#8](https://github.com/AnasSahel/vulnex/issues/8)) ([c78bab4](https://github.com/AnasSahel/vulnex/commit/c78bab476212b8f7132068e90385ca5cd6e197a1))
+* **sbom:** add lockfile scanning with batch OSV queries ([8d78ad1](https://github.com/AnasSahel/vulnex/commit/8d78ad10ac0fd565ff833486ae3cab57e0b1c930))
+* **scoring:** add configurable scoring profiles and weighted composite scores ([ed774d3](https://github.com/AnasSahel/vulnex/commit/ed774d36aaf68db16e9f72d57b7a1aedf799476b))
+* **website:** replace showcase grid with tabbed terminal view ([8d12af1](https://github.com/AnasSahel/vulnex/commit/8d12af1ae5116bd91e620b547db73a704a15ea0e))
+
+
+### Bug Fixes
+
+* **docs:** align website and README terminal outputs with actual CLI format ([cf8935d](https://github.com/AnasSahel/vulnex/commit/cf8935d9aa44743b76f674e91a8c3ad340a50258))
+* **website:** constrain install panel overflow ([324c0b5](https://github.com/AnasSahel/vulnex/commit/324c0b563a6cee0ad8aed9aa56562809a3e1cd9f))
+* **website:** prevent install panel command from overflowing ([d3a125a](https://github.com/AnasSahel/vulnex/commit/d3a125a33c9e36877cbc0642511d6d12d32d419c))
+* **website:** prevent showcase terminal cards from overlapping ([61680fc](https://github.com/AnasSahel/vulnex/commit/61680fc87e526f90ed9becd43197e559f863e2b8))
+* **website:** restore showcase grid gap between terminal cards ([1cc2a5b](https://github.com/AnasSahel/vulnex/commit/1cc2a5b3c8b8b36cc9741cb416ee8be3b5074eea))
+* **website:** stack showcase terminals in single column ([7c92dcf](https://github.com/AnasSahel/vulnex/commit/7c92dcf1b8a18da4a8d03509dc06a91fcb474727))
+* **website:** use minmax(0, 1fr) for showcase grid tracks ([6fd87f2](https://github.com/AnasSahel/vulnex/commit/6fd87f206f0e759471a48e407fdd015f8435e1d8))
+* **website:** wrap long curl command in binary install tab ([7c235b0](https://github.com/AnasSahel/vulnex/commit/7c235b0724e9cab4169c259143e81c64a7524e32))
+
 ## [1.2.1](https://github.com/AnasSahel/vulnex/compare/v1.2.0...v1.2.1) (2026-03-03)
 
 
