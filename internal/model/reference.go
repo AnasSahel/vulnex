@@ -51,6 +51,7 @@ type SBOMFinding struct {
 	CVSSScore  float64    `json:"cvss_score,omitempty"`
 	Risk       *RiskScore `json:"risk,omitempty"`
 	HasExploit bool       `json:"has_exploit,omitempty"`
+	EPSSTrend  *EPSSTrend `json:"epss_trend,omitempty"`
 }
 
 // SBOMResult holds the complete results of an SBOM vulnerability check.
