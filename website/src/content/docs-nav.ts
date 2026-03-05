@@ -28,6 +28,7 @@ export const docsSections: DocsSection[] = [
     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m8 8 4 4-4 4"/><line x1="14" x2="18" y1="16" y2="16"/></svg>`,
     pages: [
       { slug: "cve", title: "CVE Commands", description: "Search, list, fetch, and track CVEs from the NVD." },
+      { slug: "epss", title: "EPSS Commands", description: "Query exploit prediction scores, top exploited CVEs, and score trends." },
     ],
   },
   {
