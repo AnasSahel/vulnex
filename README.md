@@ -14,7 +14,7 @@ vulnex aggregates data from **NVD**, **CISA KEV**, **EPSS**, **GitHub Advisory D
 ### Demo
 
 ```
-$ vulnex enrich CVE-2021-44228
+$ vulnex cve get CVE-2021-44228
 
  CVE-2021-44228 — Apache Log4j2 JNDI features do not protect against attacker controlled LDAP and other JNDI related endpoints
 
@@ -74,7 +74,7 @@ make build
 
 ```bash
 # Enrich a CVE with all data sources
-vulnex enrich CVE-2021-44228
+vulnex cve get CVE-2021-44228
 
 # Check if a CVE is in CISA's Known Exploited Vulnerabilities catalog
 vulnex kev check CVE-2024-3094
@@ -169,23 +169,25 @@ Supported SBOMs: CycloneDX (JSON), SPDX (JSON).
 | `--ignore-file` | Path to suppression file (default: `.vulnexignore`) |
 | `--strict` | Show all findings, including those suppressed by `.vulnexignore` |
 
-### `vulnex enrich` — Multi-source aggregation
+### `vulnex cve` — CVE operations
+
+#### `cve get` — Fetch enriched CVE details
 
 The flagship command. Combines NVD + KEV + EPSS + GitHub Advisory + OSV into a single enriched view.
 
 ```bash
-vulnex enrich CVE-2021-44228
-vulnex enrich CVE-2024-3094 CVE-2023-44228 --output json
-echo "CVE-2024-3094" | vulnex enrich --stdin --output table
-cat cves.txt | vulnex enrich --stdin --output csv > enriched.csv
+vulnex cve get CVE-2021-44228
+vulnex cve get CVE-2024-3094 CVE-2023-44228 --output json
+echo "CVE-2024-3094" | vulnex cve get --stdin --output table
+cat cves.txt | vulnex cve get --stdin --output csv > enriched.csv
 
 # With weighted scoring
-vulnex enrich CVE-2024-24790 --scoring-profile default
-vulnex enrich CVE-2024-24790 --scoring-profile exploit-focused
-vulnex enrich CVE-2024-24790 --cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2
+vulnex cve get CVE-2024-24790 --scoring-profile default
+vulnex cve get CVE-2024-24790 --scoring-profile exploit-focused
+vulnex cve get CVE-2024-24790 --cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2
 
 # Ignore CVSS entirely, score only on real-world exploitation evidence
-vulnex enrich CVE-2024-3094 --cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3
+vulnex cve get CVE-2024-3094 --cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3
 ```
 
 | Flag | Description |
@@ -195,16 +197,6 @@ vulnex enrich CVE-2024-3094 --cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3
 | `--cvss-weight` | How much severity (CVSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight) |
 | `--epss-weight` | How much exploit probability (EPSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight) |
 | `--kev-weight` | How much known-exploited status (KEV) influences the final score, from 0.0 (ignore) to 1.0 (full weight) |
-
-### `vulnex cve` — CVE operations
-
-#### `cve get` — Fetch enriched CVE details
-
-```bash
-vulnex cve get CVE-2021-44228
-vulnex cve get CVE-2024-3094 CVE-2023-44228 --output json
-echo "CVE-2024-3094" | vulnex cve get --stdin
-```
 
 #### `cve search` — Search CVEs by keyword
 
@@ -526,11 +518,11 @@ Risk Priority Thresholds
   P4-MINIMAL    CVSS < 7.0 AND EPSS < 0.1
 ```
 
-Use `--scoring-profile` with `enrich` or `cve get` to surface weighted scores:
+Use `--scoring-profile` with `cve get` to surface weighted scores:
 
 ```bash
-vulnex enrich CVE-2024-24790 --scoring-profile default
-vulnex enrich CVE-2024-24790 --scoring-profile exploit-focused
+vulnex cve get CVE-2024-24790 --scoring-profile default
+vulnex cve get CVE-2024-24790 --scoring-profile exploit-focused
 vulnex cve get CVE-2024-24790 --scoring-profile severity-focused
 ```
 
@@ -581,14 +573,14 @@ All commands that accept CVE IDs support `--stdin` for piping:
 
 ```bash
 # Chain: get recent KEV entries, enrich them
-vulnex kev recent --days 7 -o csv | cut -d, -f1 | vulnex enrich --stdin -o json
+vulnex kev recent --days 7 -o csv | cut -d, -f1 | vulnex cve get --stdin -o json
 
 # Bulk score from a file
 cat my-cves.txt | vulnex epss score --stdin -o csv > scores.csv
 
 # Offline mode after warming the cache
-vulnex enrich CVE-2021-44228          # fetches and caches
-vulnex --offline enrich CVE-2021-44228  # reads from cache only
+vulnex cve get CVE-2021-44228            # fetches and caches
+vulnex --offline cve get CVE-2021-44228  # reads from cache only
 ```
 
 ## Output Formats

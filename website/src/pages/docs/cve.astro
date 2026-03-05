@@ -22,7 +22,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <div class="subcommand-grid">
       <a href="#cve-get" class="subcommand-card">
         <h3>cve get</h3>
-        <p>Fetch one or more CVEs by ID</p>
+        <p>Enriched CVE lookup from all sources</p>
       </a>
       <a href="#cve-search" class="subcommand-card">
         <h3>cve search</h3>
@@ -48,13 +48,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <!-- ── cve get ──────────────────────────── -->
   <section id="cve-get">
     <h2>cve get</h2>
-    <p>Fetch one or more CVEs from NVD by their ID. Returns CVSS scores, descriptions, CWEs, references, and affected products. For multi-source enrichment (EPSS, KEV, GHSA, OSV), use <code>vulnex enrich</code> instead.</p>
+    <p>Fetch one or more CVEs from NVD by their ID. Returns CVSS scores, descriptions, CWEs, references, and affected products. Includes multi-source enrichment (EPSS, KEV, GHSA, OSV) by default. Use <code>--fast</code> for NVD-only lookups.</p>
 
     <h3>Usage</h3>
     <div class="code-inline"><code>vulnex cve get &lt;CVE-ID...&gt; [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="cve get — single CVE">
+    <TerminalWindow title="cve get — enriched lookup (default)">
       <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span>
 
  <span class="t-cve"><strong>CVE-2021-44228</strong></span> — Apache Log4j2 JNDI features do not protect
@@ -62,9 +62,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
  <span class="t-label">Severity</span>       <span class="t-critical">CRITICAL (10.0)</span>
  <span class="t-label">Vector</span>         NETWORK / LOW / NONE / CHANGED
+ <span class="t-label">Priority</span>       <span class="t-p0">P0 — Critical: actively exploited, high EPSS</span>
+ <span class="t-label">EPSS</span>           <span class="t-value">0.97185 (97.2%)</span> — percentile: 99.99%
+ <span class="t-label">KEV</span>            <span class="t-critical">Yes</span> — due 2021-12-24
  <span class="t-label">Published</span>      2021-12-10
  <span class="t-label">Modified</span>       2023-11-06
- <span class="t-label">Source</span>         NVD
+ <span class="t-label">Sources</span>        <span class="t-green">NVD</span> · <span class="t-green">KEV</span> · <span class="t-green">EPSS</span> · <span class="t-green">GHSA</span> · <span class="t-green">OSV</span>
 
  <span class="t-dim">Affected Versions</span>
    <span class="t-value">apache:log4j</span>   &gt;= 2.0, &lt; 2.15.0
@@ -75,12 +78,25 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
    <span class="t-dim">(3 more...)</span></pre>
     </TerminalWindow>
 
+    <TerminalWindow title="cve get --fast — NVD only, skip enrichment">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--fast</span>
+
+ <span class="t-cve"><strong>CVE-2021-44228</strong></span> — Apache Log4j2 JNDI features do not protect
+ against attacker controlled LDAP and other JNDI related endpoints
+
+ <span class="t-label">Severity</span>       <span class="t-critical">CRITICAL (10.0)</span>
+ <span class="t-label">Vector</span>         NETWORK / LOW / NONE / CHANGED
+ <span class="t-label">Published</span>      2021-12-10
+ <span class="t-label">Modified</span>       2023-11-06
+ <span class="t-label">Source</span>         NVD</pre>
+    </TerminalWindow>
+
     <TerminalWindow title="cve get — multiple CVEs as JSON">
       <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-3094 CVE-2023-44228</span> <span class="t-flag">--output json</span></pre>
     </TerminalWindow>
 
     <TerminalWindow title="cve get — from stdin">
-      <pre><span class="t-prompt">$</span> echo <span class="t-cve">"CVE-2024-3094"</span> | <span class="t-cmd">vulnex cve get</span> <span class="t-flag">--stdin</span></pre>
+      <pre><span class="t-prompt">$</span> cat cves.txt | <span class="t-cmd">vulnex cve get</span> <span class="t-flag">--stdin --output csv</span> > enriched.csv</pre>
     </TerminalWindow>
 
     <TerminalWindow title="cve get — with scoring profile">
@@ -94,6 +110,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <table>
         <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
         <tbody>
+          <tr><td><code>--fast</code></td><td>bool</td><td>false</td><td>Only fetch from NVD, skip enrichment from other sources</td></tr>
           <tr><td><code>--stdin</code></td><td>bool</td><td>false</td><td>Read CVE IDs from stdin (one per line)</td></tr>
           <tr><td><code>--scoring-profile</code></td><td>string</td><td>—</td><td>Preset weight balance for scoring: <code>default</code> (balanced), <code>exploit-focused</code>, or <code>severity-focused</code></td></tr>
           <tr><td><code>--cvss-weight</code></td><td>float</td><td>—</td><td>How much severity (CVSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight)</td></tr>

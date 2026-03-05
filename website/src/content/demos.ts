@@ -44,8 +44,8 @@ export const demos = [
   {
     id: 'sc-scoring',
     label: 'Scoring',
-    title: 'vulnex enrich CVE-2024-24790 --scoring-profile default',
-    html: `<span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-24790</span> <span class="t-flag">--scoring-profile default</span>
+    title: 'vulnex cve get CVE-2024-24790 --scoring-profile default',
+    html: `<span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-24790</span> <span class="t-flag">--scoring-profile default</span>
 
  <span class="t-label">CVE ID:</span>         <span class="t-accent">CVE-2024-24790</span>
  <span class="t-label">Severity:</span>       <span class="t-critical">CRITICAL</span>
@@ -58,7 +58,7 @@ export const demos = [
  <span class="t-label">Weighted Score:</span> <span class="t-value">30.4/100</span> <span class="t-dim">(profile: default, weights: CVSS=0.30 EPSS=0.50 KEV=0.20)</span>
 
 <span class="t-dim"># Compare with exploit-focused profile</span>
-<span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-24790</span> <span class="t-flag">--scoring-profile exploit-focused</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-24790</span> <span class="t-flag">--scoring-profile exploit-focused</span>
  <span class="t-label">Weighted Score:</span> <span class="t-value">11.0/100</span> <span class="t-dim">(profile: exploit-focused, weights: CVSS=0.10 EPSS=0.60 KEV=0.30)</span>`,
   },
   {
@@ -105,10 +105,10 @@ export const demos = [
     id: 'sc-pipe',
     label: 'Piping',
     title: 'vulnex — piping & composition',
-    html: `<span class="t-dim"># Recent KEV entries → enrich → JSON</span>
+    html: `<span class="t-dim"># Recent KEV entries → cve get → JSON</span>
 <span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span> <span class="t-flag">--days 7 -o csv</span> \\
     | cut -d, -f1 \\
-    | <span class="t-cmd">vulnex enrich</span> <span class="t-flag">--stdin -o json</span>
+    | <span class="t-cmd">vulnex cve get</span> <span class="t-flag">--stdin -o json</span>
 
 <span class="t-dim"># Bulk EPSS scoring from a file</span>
 <span class="t-prompt">$</span> cat cves.txt \\
@@ -116,7 +116,7 @@ export const demos = [
     > scores.csv
 
 <span class="t-dim"># Offline mode after warming cache</span>
-<span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span>
-<span class="t-prompt">$</span> <span class="t-cmd">vulnex</span> <span class="t-flag">--offline</span> <span class="t-cmd">enrich</span> <span class="t-cve">CVE-2021-44228</span>`,
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex</span> <span class="t-flag">--offline</span> <span class="t-cmd">cve get</span> <span class="t-cve">CVE-2021-44228</span>`,
   },
 ];

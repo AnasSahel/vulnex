@@ -269,14 +269,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <TerminalWindow>
       <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--ransomware --limit 0 -o csv</span> \
     | cut -d, -f1 \
-    | <span class="t-cmd">vulnex enrich</span> <span class="t-flag">--stdin -o json</span></pre>
+    | <span class="t-cmd">vulnex cve get</span> <span class="t-flag">--stdin -o json</span></pre>
     </TerminalWindow>
 
     <h3>Check recent KEV additions and enrich</h3>
     <TerminalWindow>
       <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span> <span class="t-flag">--days 7 -o csv</span> \
     | cut -d, -f1 \
-    | <span class="t-cmd">vulnex enrich</span> <span class="t-flag">--stdin</span></pre>
+    | <span class="t-cmd">vulnex cve get</span> <span class="t-flag">--stdin</span></pre>
     </TerminalWindow>
 
     <h3>Page through the catalog</h3>

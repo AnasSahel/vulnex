@@ -183,7 +183,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <h3>Chain EPSS with enrichment</h3>
     <p>Find the top EPSS CVEs and enrich them with all data sources:</p>
     <TerminalWindow>
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top 20</span> <span class="t-flag">-o csv</span> | cut -d, -f1 | <span class="t-cmd">vulnex enrich</span> <span class="t-flag">--stdin</span> <span class="t-flag">-o json</span></pre>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top 20</span> <span class="t-flag">-o csv</span> | cut -d, -f1 | <span class="t-cmd">vulnex cve get</span> <span class="t-flag">--stdin</span> <span class="t-flag">-o json</span></pre>
     </TerminalWindow>
 
     <h3>Bulk score from a file</h3>

@@ -116,7 +116,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </div>
 
     <TerminalWindow title="Using a scoring profile">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--scoring-profile exploit-focused</span>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--scoring-profile exploit-focused</span>
 
  <span class="t-label">Weighted Score:</span> <span class="t-value">92.0/100</span> <span class="t-dim">(profile: exploit-focused, weights: CVSS=0.10 EPSS=0.60 KEV=0.30)</span></pre>
     </TerminalWindow>
@@ -134,13 +134,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <h3>Example: compliance-driven team</h3>
     <p>Your compliance framework requires patching all CVSS &gt;= 7.0, so severity must dominate:</p>
     <TerminalWindow title="Severity-heavy custom weights">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--cvss-weight 0.7 --epss-weight 0.2 --kev-weight 0.1</span></pre>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--cvss-weight 0.7 --epss-weight 0.2 --kev-weight 0.1</span></pre>
     </TerminalWindow>
 
     <h3>Example: ignore severity, focus on real threats</h3>
     <p>Your team only cares about vulnerabilities that are actually being exploited:</p>
     <TerminalWindow title="Exploitation-only custom weights">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3</span></pre>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3</span></pre>
     </TerminalWindow>
 
     <h3>How weights affect the same CVE</h3>
@@ -163,7 +163,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <!-- Priority tiers -->
   <section id="priority-tiers">
     <h2>Priority tiers (P0-P4)</h2>
-    <p>Independent of the weighted score, vulnex assigns every vulnerability a priority tier using a threshold matrix. These tiers are shown in the <code>Risk Priority</code> field of <code>vulnex enrich</code> and <code>vulnex cve get</code> output.</p>
+    <p>Independent of the weighted score, vulnex assigns every vulnerability a priority tier using a threshold matrix. These tiers are shown in the <code>Risk Priority</code> field of <code>vulnex cve get</code> and <code>vulnex cve get</code> output.</p>
 
     <div class="flags-table">
       <table>
@@ -201,7 +201,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <p class="doc-note">Priority tiers use fixed thresholds and are <strong>not affected</strong> by <code>--scoring-profile</code> or custom weights. The weighted score and priority tier are independent assessments — use both for a complete picture.</p>
 
     <TerminalWindow title="Priority tier in output">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span>
 
  <span class="t-label">Risk Priority:</span> <span class="t-critical">P0-CRITICAL</span> <span class="t-dim">(score: 100/100)</span>
  <span class="t-label">Rationale:</span>    In CISA KEV — confirmed active exploitation</pre>
@@ -244,7 +244,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </div>
 
     <TerminalWindow title="Signal conflict in output">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-XXXX</span>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-XXXX</span>
 
  <span class="t-label">Risk Priority:</span>   <span class="t-value">P3-LOW</span> <span class="t-dim">(score: 35/100)</span>
  <span class="t-label">Rationale:</span>      High CVSS but low exploitation probability
@@ -310,12 +310,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
    severity-focused     CVSS=0.60  EPSS=0.30  KEV=0.10</pre>
     </TerminalWindow>
 
-    <TerminalWindow title="Enrich with a preset profile">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--scoring-profile default</span></pre>
+    <TerminalWindow title="cve get with a preset profile">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--scoring-profile default</span></pre>
     </TerminalWindow>
 
-    <TerminalWindow title="Enrich with custom weights">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2</span></pre>
+    <TerminalWindow title="cve get with custom weights">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2</span></pre>
     </TerminalWindow>
 
     <TerminalWindow title="CVE get with scoring profile">
@@ -334,7 +334,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <h2>Related commands</h2>
     <div class="subcommand-grid">
       <a href={`${base}/docs/cve/`} class="subcommand-card">
-        <h3>cve get / enrich</h3>
+        <h3>cve get</h3>
         <p>Fetch CVE details with scoring</p>
       </a>
       <a href={`${base}/docs/cve/#scoring`} class="subcommand-card">

@@ -47,27 +47,30 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <section id="first-query">
     <h2>Your first query</h2>
-    <p>Look up a CVE by ID:</p>
+    <p>Look up a CVE by ID — enriched with data from all sources by default:</p>
     <TerminalWindow title="vulnex cve get">
       <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-3094</span>
 
     <span class="t-cve"><strong>CVE-2024-3094</strong></span> — Malicious code in xz-utils
     <span class="t-label">Severity</span>            <span class="t-critical">CRITICAL (10.0)</span>
+    <span class="t-label">Priority</span>            <span class="t-p0">P0 — Critical: actively exploited, high EPSS</span>
+    <span class="t-label">EPSS</span>                <span class="t-value">0.76460 (76.5%)</span> — percentile: 99.80%
+    <span class="t-label">KEV</span>                 <span class="t-critical">Yes</span> — due 2024-04-19
     <span class="t-label">Published</span>           2024-03-29
-    <span class="t-label">Status</span>              Analyzed</pre>
+    <span class="t-label">Sources</span>             <span class="t-green">NVD</span> · <span class="t-green">KEV</span> · <span class="t-green">EPSS</span> · <span class="t-green">GHSA</span> · <span class="t-green">OSV</span></pre>
     </TerminalWindow>
   </section>
 
   <hr class="doc-divider" />
 
-  <section id="enrich">
+  <section id="cve-get">
     <h2>Enriching a CVE</h2>
     <p>
-      The <code>enrich</code> command aggregates data from all five sources (NVD, KEV, EPSS, GHSA, OSV)
+      The <code>cve get</code> command aggregates data from all five sources (NVD, KEV, EPSS, GHSA, OSV)
       and computes a risk priority score:
     </p>
-    <TerminalWindow title="vulnex enrich">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span>
+    <TerminalWindow title="vulnex cve get">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span>
 
     <span class="t-cve"><strong>CVE-2021-44228</strong></span> — Apache Log4j2 JNDI
     <span class="t-label">Severity</span>            <span class="t-critical">CRITICAL (10.0)</span>
@@ -97,7 +100,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </table>
 
     <TerminalWindow>
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--output json</span> <span class="t-flag">| jq .priority</span>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--output json</span> <span class="t-flag">| jq .priority</span>
 <span class="t-value">"P0-CRITICAL"</span></pre>
     </TerminalWindow>
   </section>
