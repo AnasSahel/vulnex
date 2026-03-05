@@ -19,6 +19,9 @@ var kevCheckCmd = &cobra.Command{
   echo "CVE-2024-3094" | vulnex kev check --stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		stdin, _ := cmd.Flags().GetBool("stdin")
+		outputFmt, _ := cmd.Flags().GetString("output")
+		noColor, _ := cmd.Flags().GetBool("no-color")
+		long, _ := cmd.Flags().GetBool("long")
 		ids := args
 
 		if stdin {
@@ -56,9 +59,52 @@ var kevCheckCmd = &cobra.Command{
 			}
 		}
 
-		if len(entries) > 0 {
+		if len(entries) == 0 {
+			return nil
+		}
+
+		// Non-table formats use the standard formatter
+		if outputFmt != "" && outputFmt != "table" {
 			return app.Formatter.FormatKEVList(os.Stdout, entries)
 		}
+
+		// Table format: render each entry as label-value rows
+		s := newCmdStyles(noColor)
+		truncate := func(text string) string {
+			if long || len(text) <= 80 {
+				return text
+			}
+			return text[:77] + "..."
+		}
+
+		for i, entry := range entries {
+			if i > 0 {
+				fmt.Fprintln(os.Stdout)
+			}
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("CVE ID:"), s.cveID.Render(entry.CVEID))
+			if entry.VulnerabilityName != "" {
+				fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Name:"), truncate(entry.VulnerabilityName))
+			}
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Vendor:"), entry.VendorProject)
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Product:"), entry.Product)
+			if entry.ShortDescription != "" {
+				fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Description:"), truncate(entry.ShortDescription))
+			}
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Date Added:"), entry.DateAdded)
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Due Date:"), entry.DueDate)
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Required Action:"), truncate(entry.RequiredAction))
+			if entry.KnownRansomwareCampaign != "" {
+				label := entry.KnownRansomwareCampaign
+				if strings.EqualFold(label, "Known") {
+					label = s.critical.Render(label)
+				}
+				fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Ransomware:"), label)
+			}
+			if entry.Notes != "" {
+				fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Notes:"), truncate(entry.Notes))
+			}
+		}
+
 		return nil
 	},
 }

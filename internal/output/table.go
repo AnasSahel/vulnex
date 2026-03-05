@@ -205,13 +205,22 @@ func (tf *tableFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 	if cve.KEV != nil {
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("KEV Details"))
+		if cve.KEV.VulnerabilityName != "" {
+			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Name:"), tf.valueStyle.Render(cve.KEV.VulnerabilityName))
+		}
 		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Vendor:"), tf.valueStyle.Render(cve.KEV.VendorProject))
 		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Product:"), tf.valueStyle.Render(cve.KEV.Product))
+		if cve.KEV.ShortDescription != "" {
+			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Description:"), tf.valueStyle.Render(cve.KEV.ShortDescription))
+		}
 		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Date Added:"), tf.valueStyle.Render(cve.KEV.DateAdded))
 		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Due Date:"), tf.valueStyle.Render(cve.KEV.DueDate))
 		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Required Action:"), tf.valueStyle.Render(cve.KEV.RequiredAction))
 		if cve.KEV.KnownRansomwareCampaign != "" {
 			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Ransomware:"), tf.valueStyle.Render(cve.KEV.KnownRansomwareCampaign))
+		}
+		if cve.KEV.Notes != "" {
+			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Notes:"), tf.valueStyle.Render(cve.KEV.Notes))
 		}
 	}
 
