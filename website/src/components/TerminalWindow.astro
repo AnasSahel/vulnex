@@ -1,0 +1,83 @@
+---
+interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="terminal-window">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+    {title && <span class="terminal-title">{title}</span>}
+  </div>
+  <div class="terminal-body">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .terminal-window {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: var(--radius);
+    overflow: hidden;
+    color: #e6edf3;
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(22, 27, 34, 0.8);
+    border-bottom: 1px solid #30363d;
+  }
+
+  .terminal-dots {
+    display: flex;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .dot.red { background: #f85149; }
+  .dot.yellow { background: #d29922; }
+  .dot.green { background: #3fb950; }
+
+  .terminal-title {
+    flex: 1;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #8b949e;
+    font-family: var(--font-mono);
+  }
+
+  .terminal-body {
+    padding: 20px 24px;
+    font-family: var(--font-mono);
+    font-size: 0.825rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+
+  .terminal-body :global(pre) {
+    white-space: pre;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .terminal-body {
+      font-size: 0.7rem;
+      padding: 16px;
+    }
+  }
+</style>

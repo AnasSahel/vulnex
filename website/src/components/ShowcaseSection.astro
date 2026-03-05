@@ -1,0 +1,92 @@
+---
+import TabbedPanel from './TabbedPanel.astro';
+import TerminalWindow from './TerminalWindow.astro';
+import { demos } from '../content/demos';
+---
+
+<section id="showcase">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">IN ACTION</span>
+      <h2 class="section-title">See it in your workflow</h2>
+      <p class="section-desc">From SBOM audits to composable pipelines — vulnex fits right into your terminal workflow.</p>
+    </div>
+
+    <div class="showcase-wrap">
+      <TabbedPanel tabs={demos.map(d => ({ id: d.id, label: d.label }))} groupId="showcase">
+        {demos.map((d, i) => (
+          <div data-tab-id={d.id} class:list={[{ active: i === 0 }]}>
+            <div class="showcase-terminal">
+              <TerminalWindow title={d.title}>
+                <pre set:html={d.html} />
+              </TerminalWindow>
+            </div>
+          </div>
+        ))}
+      </TabbedPanel>
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding: 96px 24px;
+  }
+
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .section-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .showcase-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .showcase-terminal :global(.terminal-window) {
+    border-radius: 0 0 var(--radius) var(--radius);
+    border-top: none;
+  }
+
+  .showcase-terminal :global(.terminal-body) {
+    min-height: 280px;
+  }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 64px 16px;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+  }
+</style>

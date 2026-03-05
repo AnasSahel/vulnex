@@ -1,0 +1,85 @@
+---
+import FeatureCard from './FeatureCard.astro';
+import { features } from '../content/features';
+---
+
+<section id="features">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">FEATURES</span>
+      <h2 class="section-title">Everything you need in one query</h2>
+      <p class="section-desc">Combine five vulnerability data sources, score risk, scan SBOMs, and pipe results — all from a single static binary.</p>
+    </div>
+
+    <div class="features-grid">
+      {features.map(f => (
+        <FeatureCard icon={f.icon} title={f.title} description={f.description} />
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding: 96px 24px;
+  }
+
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .section-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 64px 16px;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+  }
+</style>

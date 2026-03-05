@@ -1,0 +1,87 @@
+---
+interface Props {
+  tabs: Array<{ id: string; label: string }>;
+  groupId: string;
+}
+
+const { tabs, groupId } = Astro.props;
+---
+
+<div class="tabbed-panel" data-tab-group={groupId}>
+  <div class="tab-bar">
+    {tabs.map((tab, i) => (
+      <button
+        class:list={['tab-btn', { active: i === 0 }]}
+        data-tab-target={tab.id}
+      >
+        {tab.label}
+      </button>
+    ))}
+  </div>
+  <div class="tab-content">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .tabbed-panel {
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .tab-bar {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 12px 20px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover {
+    color: var(--text);
+  }
+
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .tab-content :global([data-tab-id]) {
+    display: none;
+  }
+
+  .tab-content :global([data-tab-id].active) {
+    display: block;
+  }
+</style>
+
+<script>
+  document.querySelectorAll('[data-tab-group]').forEach(group => {
+    const buttons = group.querySelectorAll('.tab-btn');
+    const panels = group.querySelectorAll('[data-tab-id]');
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = (btn as HTMLElement).dataset.tabTarget;
+        buttons.forEach(b => b.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        group.querySelector(`[data-tab-id="${target}"]`)?.classList.add('active');
+      });
+    });
+  });
+</script>

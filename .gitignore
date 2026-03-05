@@ -10,3 +10,11 @@ docs/linkedin/
 
 # Vulnex ignore file
 .vulnexignore
+
+# Go Cache
+.cache/
+
+# Website (Astro)
+website/node_modules/
+website/dist/
+website/.astro/

@@ -1,0 +1,131 @@
+---
+import { sources } from '../content/sources';
+---
+
+<section id="sources">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">DATA SOURCES</span>
+      <h2 class="section-title">Five sources, one command</h2>
+      <p class="section-desc">vulnex queries each source in parallel, caches locally, and merges into a unified view.</p>
+    </div>
+
+    <div class="sources-grid">
+      {sources.map(s => (
+        <a href={s.url} class="source-card" target="_blank" rel="noopener">
+          <div class="source-icon" set:html={s.icon} />
+          <h3>{s.name}</h3>
+          <p>{s.description}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding: 96px 24px;
+  }
+
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .section-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .sources-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+
+  .source-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 28px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+
+  .source-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .source-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--icon-bg);
+    border-radius: 50%;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 900px) {
+    .sources-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 64px 16px;
+    }
+
+    .sources-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+  }
+</style>

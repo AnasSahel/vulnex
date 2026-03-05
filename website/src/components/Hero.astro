@@ -1,0 +1,162 @@
+---
+import TerminalWindow from './TerminalWindow.astro';
+---
+
+<section class="hero">
+  <div class="container">
+    <span class="badge">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+      Open Source CLI Tool
+    </span>
+
+    <h1 class="hero-heading">
+      Vulnerability intelligence<br>
+      <span class="hero-accent">from your terminal.</span>
+    </h1>
+
+    <p class="hero-sub">
+      Aggregate NVD, CISA KEV, EPSS, GitHub Advisory &amp; OSV into a single enriched
+      view &mdash; with configurable risk scoring, lockfile &amp; SBOM scanning, and
+      pipe-friendly output.
+    </p>
+
+    <div class="hero-ctas">
+      <a href="#install" class="cta-primary">Install vulnex</a>
+      <a href="#showcase" class="cta-secondary">See it in action</a>
+    </div>
+
+    <div class="hero-terminal">
+      <TerminalWindow title="vulnex enrich CVE-2021-44228">
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span>
+
+    <span class="t-cve"><strong>CVE-2021-44228</strong></span> — Apache Log4j2 JNDI features do not protect
+    against attacker controlled LDAP and other JNDI related endpoints
+
+    <span class="t-label">Severity</span>            <span class="t-critical">CRITICAL (10.0)</span>
+    <span class="t-label">Vector</span>              NETWORK / LOW / NONE / CHANGED
+    <span class="t-label">Priority</span>            <span class="t-p0">P0 — Critical: actively exploited, high EPSS</span>
+
+    <span class="t-label">EPSS</span>                <span class="t-value">0.97185 (97.2%)</span> — percentile: 99.99%
+    <span class="t-label">KEV</span>                 <span class="t-critical">Yes</span> — due 2021-12-24
+    <span class="t-label">Published</span>           2021-12-10
+    <span class="t-label">Modified</span>            2023-11-06
+
+    <span class="t-label">Sources</span>             <span class="t-green">NVD</span> · <span class="t-green">KEV</span> · <span class="t-green">EPSS</span> · <span class="t-green">GHSA</span> · <span class="t-green">OSV</span></pre>
+      </TerminalWindow>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: 140px 24px 80px;
+    text-align: center;
+  }
+
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 32px;
+  }
+
+  .hero-heading {
+    font-size: clamp(2.25rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-accent {
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 580px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+  }
+
+  .hero-ctas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 64px;
+  }
+
+  .cta-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+
+  .cta-primary:hover {
+    background: var(--accent-hover);
+    text-decoration: none;
+  }
+
+  .cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 28px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: border-color 0.15s, background 0.15s;
+    text-decoration: none;
+  }
+
+  .cta-secondary:hover {
+    border-color: var(--text-secondary);
+    background: var(--surface);
+    text-decoration: none;
+  }
+
+  .hero-terminal {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: left;
+  }
+
+  @media (max-width: 768px) {
+    .hero {
+      padding-top: 100px;
+      padding-bottom: 48px;
+    }
+
+    .hero-ctas {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .cta-primary,
+    .cta-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>

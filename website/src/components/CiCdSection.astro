@@ -1,0 +1,165 @@
+---
+import TabbedPanel from './TabbedPanel.astro';
+import { cicdExamples } from '../content/cicd';
+---
+
+<section id="cicd">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">CI/CD</span>
+      <h2 class="section-title">Gate your pipeline on vulnerabilities</h2>
+      <p class="section-desc">
+        <code>vulnex scan</code> checks lockfiles or SBOMs. <code>sbom diff</code> catches new vulns a PR introduces. Both exit 1 on failure.
+      </p>
+    </div>
+
+    <div class="cicd-wrap">
+      <TabbedPanel tabs={cicdExamples.map(e => ({ id: e.id, label: e.label }))} groupId="cicd">
+        {cicdExamples.map((e, i) => (
+          <div data-tab-id={e.id} class:list={[{ active: i === 0 }]}>
+            <div class="cicd-block terminal-window">
+              <div class="cicd-header">
+                <div class="terminal-dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                <span class="cicd-filename">{e.filename}</span>
+              </div>
+              <div class="cicd-body">
+                <pre set:html={e.code} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </TabbedPanel>
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding: 96px 24px;
+  }
+
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .section-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .section-desc :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 2px 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .cicd-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .cicd-block {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 0 0 var(--radius) var(--radius);
+    border-top: none;
+    overflow: hidden;
+    color: #e6edf3;
+  }
+
+  .cicd-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(22, 27, 34, 0.8);
+    border-bottom: 1px solid #30363d;
+  }
+
+  .terminal-dots {
+    display: flex;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .dot.red { background: #f85149; }
+  .dot.yellow { background: #d29922; }
+  .dot.green { background: #3fb950; }
+
+  .cicd-filename {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: #8b949e;
+    font-family: var(--font-mono);
+  }
+
+  .cicd-body {
+    padding: 20px 24px;
+    font-family: var(--font-mono);
+    font-size: 0.825rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+
+  .cicd-body pre {
+    white-space: pre;
+    margin: 0;
+  }
+
+  .cicd-body :global(.line-number) {
+    color: var(--text-secondary);
+    user-select: none;
+    opacity: 0.5;
+  }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 64px 16px;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+
+    .cicd-body {
+      font-size: 0.7rem;
+      padding: 16px;
+    }
+  }
+</style>
