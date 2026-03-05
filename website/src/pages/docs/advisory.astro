@@ -1,0 +1,577 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import TerminalWindow from '../../components/TerminalWindow.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<DocsLayout
+  title="Advisory Commands — vulnex docs"
+  description="Search, retrieve, and inspect security advisories from the GitHub Advisory Database."
+  slug="advisory"
+>
+  <!-- ── Overview ─────────────────────────── -->
+  <section id="overview">
+    <span class="doc-badge">Command Reference</span>
+    <h1>vulnex advisory</h1>
+    <p class="doc-lead">
+      Search and retrieve security advisories from the
+      <a href="https://github.com/advisories" target="_blank" rel="noopener">GitHub Advisory Database (GHSA)</a>.
+      Get full details on any advisory including CVSS scores, EPSS probability, affected packages
+      with version ranges, CWE classifications, and patch references &mdash; all from your terminal.
+    </p>
+
+    <div class="pain-points">
+      <h3>What pain points does this solve?</h3>
+      <ul>
+        <li><strong>No terminal access to advisory data</strong> &mdash; Previously you had to open a browser, navigate to GitHub advisories or NVD, and manually search. Now it's one command.</li>
+        <li><strong>"Is my dependency vulnerable?"</strong> &mdash; <code>advisory affected</code> answers this instantly for any package in any ecosystem.</li>
+        <li><strong>Scattered vulnerability context</strong> &mdash; Advisory details (CVSS, EPSS, CWEs, affected versions, patches) are spread across multiple sources. <code>advisory get</code> aggregates them in one view.</li>
+        <li><strong>No quick search for vulnerability classes</strong> &mdash; <code>advisory search "xss" --ecosystem npm --severity critical</code> finds exactly what you need with filters.</li>
+      </ul>
+    </div>
+
+    <div class="subcommand-grid">
+      <a href="#advisory-search" class="subcommand-card">
+        <h3>advisory search</h3>
+        <p>Search advisories by keyword with ecosystem and severity filters</p>
+      </a>
+      <a href="#advisory-get" class="subcommand-card">
+        <h3>advisory get</h3>
+        <p>Get full details on a specific advisory by GHSA ID</p>
+      </a>
+      <a href="#advisory-affected" class="subcommand-card">
+        <h3>advisory affected</h3>
+        <p>Find all advisories affecting a specific package</p>
+      </a>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── advisory search ──────────────────── -->
+  <section id="advisory-search">
+    <h2>advisory search</h2>
+    <p>Search the GitHub Advisory Database with keywords. Filter by ecosystem, severity, and advisory type. Results show GHSA ID, severity, associated CVE, and summary in a clean table.</p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex advisory search &lt;query&gt; [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="advisory search — critical RCE advisories">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"remote code execution" --severity critical --limit 5</span>
+
+<span class="t-label">GHSA ID               Severity    CVE                 Summary</span>
+<span class="t-cve">GHSA-cj4v-437j-jq4c</span>   <span class="t-critical">CRITICAL</span>    CVE-2026-25921      Gogs: Cross-repository LFS object overwrite via...
+<span class="t-cve">GHSA-g9w5-qffc-6762</span>   <span class="t-critical">CRITICAL</span>    CVE-2026-27944      Nginx-UI Vulnerable to Unauthenticated Backup D...
+<span class="t-cve">GHSA-xhw7-jhmp-j62j</span>   <span class="t-critical">CRITICAL</span>    -                   `dnp3times` was removed from crates.io due to m...
+
+<span class="t-dim">5 advisories</span>
+  <span class="t-critical">CRITICAL: 5</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="advisory search — XSS in npm, high severity">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"xss" --ecosystem npm --severity high</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="advisory search — malware advisories">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"crypto" --type malware --ecosystem npm</span></pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--ecosystem</code></td><td>string</td><td></td><td>Filter by ecosystem (npm, pip, maven, go, rubygems, etc.)</td></tr>
+          <tr><td><code>--severity</code></td><td>string</td><td></td><td>Filter by severity (critical, high, medium, low)</td></tr>
+          <tr><td><code>--type</code></td><td>string</td><td>reviewed</td><td>Advisory type: reviewed, malware, or unreviewed</td></tr>
+          <tr><td><code>--limit</code></td><td>int</td><td>30</td><td>Maximum results to return</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── advisory get ─────────────────────── -->
+  <section id="advisory-get">
+    <h2>advisory get</h2>
+    <p>Retrieve full details on a specific advisory by its GHSA ID. Shows CVSS score and vector, EPSS probability, CWE classifications, affected packages with vulnerable version ranges and fix versions, and labeled references.</p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex advisory get &lt;GHSA-ID&gt; [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="advisory get — full detail view">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory get</span> <span class="t-cve">GHSA-xxjr-mmjv-4gpg</span>
+
+<span class="t-label">Advisory:</span>        <span class="t-cve">GHSA-xxjr-mmjv-4gpg</span>
+<span class="t-label">CVE:</span>             CVE-2025-13465
+<span class="t-label">Severity:</span>        <span class="t-medium">MEDIUM</span>
+<span class="t-label">CVSS Score:</span>      <span class="t-medium">6.5</span> (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L)
+<span class="t-label">EPSS Score:</span>      0.00025 (percentile: 0.0681)
+<span class="t-label">Published:</span>       2026-01-21
+<span class="t-label">URL:</span>             <span class="t-dim">https://github.com/advisories/GHSA-xxjr-mmjv-4gpg</span>
+
+<span class="t-label">Summary</span>
+  Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions
+
+<span class="t-label">Description</span>
+  Impact
+
+  Lodash versions 4.0.0 through 4.17.22 are vulnerable to prototype
+  pollution in the `_.unset` and `_.omit` functions. An attacker can
+  pass crafted paths which cause Lodash to delete methods from global
+  prototypes...
+  <span class="t-dim">(use --long for full output)</span>
+
+<span class="t-label">Weaknesses (CWE)</span>
+  <span class="t-cve">CWE-1321</span>: Improperly Controlled Modification of Object Prototype Attributes
+
+<span class="t-label">Affected Packages</span>
+  npm/<span class="t-cve">lodash</span> (&gt;= 4.0.0, &lt;= 4.17.22, fixed: 4.17.23)
+  npm/<span class="t-cve">lodash.unset</span> (&gt;= 4.0.0, &lt;= 4.5.2, fixed: no fix)
+  npm/<span class="t-cve">lodash-es</span> (&gt;= 4.0.0, &lt;= 4.17.22, fixed: 4.17.23)
+
+<span class="t-label">References</span>
+  <span class="t-dim">https://github.com/lodash/lodash/security/advisories/...</span> <span class="t-value">[Advisory]</span>
+  <span class="t-dim">https://nvd.nist.gov/vuln/detail/CVE-2025-13465</span> <span class="t-value">[NVD]</span>
+  <span class="t-dim">https://github.com/lodash/lodash/commit/edadd452...</span> <span class="t-value">[Patch]</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="advisory get — JSON output">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory get</span> <span class="t-cve">GHSA-g9w5-qffc-6762</span> <span class="t-flag">--output json</span></pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>-l, --long</code></td><td>bool</td><td>false</td><td>Show full description instead of truncated (300 char) version</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="doc-note">The detail view includes word-wrapped descriptions, stripped markdown headings, vulnerable version ranges, and labeled references (Patch, Advisory, NVD). Results are cached for 4 hours.</p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── advisory affected ────────────────── -->
+  <section id="advisory-affected">
+    <h2>advisory affected</h2>
+    <p>Find all security advisories that affect a specific package. Requires the <code>--ecosystem</code> flag to identify the package registry. Automatically paginates through all results.</p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex advisory affected &lt;package&gt; --ecosystem &lt;eco&gt; [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="advisory affected — npm package">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> lodash <span class="t-flag">--ecosystem npm</span>
+
+<span class="t-label">GHSA ID               Severity    CVE                 Summary</span>
+<span class="t-cve">GHSA-xxjr-mmjv-4gpg</span>   <span class="t-medium">MEDIUM</span>      CVE-2025-13465      Lodash has Prototype Pollution Vulnerability i...
+<span class="t-cve">GHSA-35jh-r3h4-6jhm</span>   <span class="t-high">HIGH</span>        CVE-2020-28500      Lodash vulnerable to Regular Expression Denial...
+<span class="t-cve">GHSA-p6mc-m468-83gw</span>   <span class="t-high">HIGH</span>        CVE-2021-23337      Lodash command injection via template function
+<span class="t-cve">GHSA-29mw-wpgm-hmr9</span>   <span class="t-critical">CRITICAL</span>    CVE-2019-10744      Lodash Prototype Pollution
+<span class="t-dim">...</span>
+
+<span class="t-dim">10 advisories</span>
+  <span class="t-critical">CRITICAL: 2</span>  <span class="t-high">HIGH: 5</span>  <span class="t-medium">MEDIUM: 3</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="advisory affected — Python package">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> django <span class="t-flag">--ecosystem pip</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="advisory affected — Go module">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> golang.org/x/crypto <span class="t-flag">--ecosystem go</span></pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>-e, --ecosystem</code></td><td>string</td><td></td><td>Package ecosystem (required): npm, pip, maven, go, rubygems, nuget, crates.io, composer, pub, swift, erlang</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── What is GHSA? ───────────────────── -->
+  <section id="what-is-ghsa">
+    <h2>What is the GitHub Advisory Database?</h2>
+    <p>
+      The <strong>GitHub Advisory Database</strong> is the world's largest collection of security advisories
+      for open-source software. It aggregates data from the <a href="https://nvd.nist.gov/" target="_blank" rel="noopener">NVD</a>,
+      <a href="https://osv.dev/" target="_blank" rel="noopener">OSV</a>, and community submissions, then maps each advisory
+      to specific packages and version ranges.
+    </p>
+
+    <div class="info-cards">
+      <div class="info-card">
+        <h4>Package-level mapping</h4>
+        <p>Unlike NVD (which uses CPE identifiers), GHSA maps advisories directly to package ecosystems (npm, pip, maven, go, etc.) with exact version ranges. This means you can ask "is lodash 4.17.20 vulnerable?" and get a precise answer.</p>
+      </div>
+      <div class="info-card">
+        <h4>Reviewed vs unreviewed</h4>
+        <p>GHSA distinguishes between reviewed (curated by GitHub security team), unreviewed (auto-imported from NVD), and malware advisories. Use <code>--type</code> to filter. Reviewed advisories have higher accuracy.</p>
+      </div>
+    </div>
+
+    <h3>Why use advisory alongside cve?</h3>
+    <p>
+      The <a href={`${base}/docs/cve/`}><code>cve</code></a> command queries the NVD for vulnerability details at the CVE level.
+      The <code>advisory</code> command queries GHSA for <em>package-level</em> vulnerability data &mdash; which packages are affected,
+      what versions are vulnerable, and what version fixes it. Use both together for complete context:
+    </p>
+    <TerminalWindow title="CVE detail + advisory context">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span>      <span class="t-dim"># NVD detail, CVSS, EPSS, KEV</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"CVE-2021-44228"</span>   <span class="t-dim"># GHSA advisories, affected packages</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Tips & Recipes ───────────────────── -->
+  <section id="tips">
+    <h2>Tips &amp; recipes</h2>
+
+    <h3>Audit a dependency before adding it</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> express <span class="t-flag">--ecosystem npm</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> flask <span class="t-flag">--ecosystem pip</span></pre>
+    </TerminalWindow>
+
+    <h3>Find critical advisories for your ecosystem</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"" --ecosystem go --severity critical --limit 50</span></pre>
+    </TerminalWindow>
+
+    <h3>Export advisory details to JSON</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory get</span> <span class="t-cve">GHSA-xxjr-mmjv-4gpg</span> <span class="t-flag">-o json</span> > advisory.json
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> lodash <span class="t-flag">-e npm -o json</span> > lodash-vulns.json</pre>
+    </TerminalWindow>
+
+    <h3>Search for malware in npm</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"" --ecosystem npm --type malware --limit 20</span></pre>
+    </TerminalWindow>
+
+    <h3>Combine with other vulnex commands</h3>
+    <TerminalWindow>
+      <pre><span class="t-dim"># Get EPSS score for a CVE found in an advisory</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex epss score</span> <span class="t-cve">CVE-2025-13465</span>
+
+<span class="t-dim"># Check if an advisory's CVE is in the KEV catalog</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2021-44228</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Related Commands ─────────────────── -->
+  <section id="related">
+    <h2>Related commands</h2>
+    <div class="related-grid">
+      <a href={`${base}/docs/cve/`} class="related-card">
+        <strong>vulnex cve</strong>
+        <span>Search, list, and fetch CVE details from NVD</span>
+      </a>
+      <a href={`${base}/docs/kev/`} class="related-card">
+        <strong>vulnex kev</strong>
+        <span>Check CISA Known Exploited Vulnerabilities</span>
+      </a>
+      <a href={`${base}/docs/epss/`} class="related-card">
+        <strong>vulnex epss</strong>
+        <span>Query exploit prediction scores and trends</span>
+      </a>
+      <a href={`${base}/docs/scoring/`} class="related-card">
+        <strong>Scoring &amp; Prioritization</strong>
+        <span>How advisory data feeds into composite risk scoring</span>
+      </a>
+    </div>
+  </section>
+</DocsLayout>
+
+<style>
+  .doc-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+
+  .doc-lead {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+  }
+
+  h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  p a {
+    color: var(--accent);
+  }
+
+  code {
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+
+  .code-inline {
+    margin-bottom: 20px;
+  }
+
+  .code-inline code {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    display: inline-block;
+  }
+
+  .doc-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .doc-note {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 16px;
+  }
+
+  /* Pain points */
+  .pain-points {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+
+  .pain-points h3 {
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+
+  .pain-points ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .pain-points li {
+    padding: 6px 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .pain-points li::before {
+    content: "→ ";
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .pain-points li strong {
+    color: var(--text);
+  }
+
+  /* Subcommand cards */
+  .subcommand-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .subcommand-card {
+    display: block;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+
+  .subcommand-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .subcommand-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--accent);
+  }
+
+  .subcommand-card p {
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* Flag tables */
+  .flags-table {
+    overflow-x: auto;
+    margin: 16px 0 24px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  thead {
+    border-bottom: 2px solid var(--border);
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  td code {
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Info cards */
+  .info-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+
+  .info-card {
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .info-card h4 {
+    color: var(--accent);
+  }
+
+  .info-card p {
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  .info-card a {
+    color: var(--accent);
+  }
+
+  /* Related links */
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+
+  .related-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .related-card strong {
+    font-size: 0.95rem;
+  }
+
+  .related-card span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 600px) {
+    .subcommand-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .info-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

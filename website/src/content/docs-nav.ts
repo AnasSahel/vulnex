@@ -60,6 +60,14 @@ export const docsSections: DocsSection[] = [
           { id: "epss-trend", label: "epss trend" },
         ],
       },
+      {
+        slug: "advisory", title: "advisory", description: "Search, retrieve, and inspect security advisories from GitHub Advisory Database.",
+        subcommands: [
+          { id: "advisory-search", label: "advisory search" },
+          { id: "advisory-get", label: "advisory get" },
+          { id: "advisory-affected", label: "advisory affected" },
+        ],
+      },
     ],
   },
   {
