@@ -27,6 +27,9 @@ Results are displayed as a simple text table with counts.`,
 		limit, _ := cmd.Flags().GetInt("limit")
 		severity, _ := cmd.Flags().GetString("severity")
 		quiet, _ := cmd.Flags().GetBool("quiet")
+		noColor, _ := cmd.Flags().GetBool("no-color")
+
+		s := newCmdStyles(noColor)
 
 		// Build search parameters
 		params := nvd.SearchParams{
@@ -68,13 +71,13 @@ Results are displayed as a simple text table with counts.`,
 		// Aggregate by the specified grouping
 		switch groupBy {
 		case "month":
-			return printMonthStats(result.CVEs, limit)
+			return printMonthStats(s, result.CVEs, limit)
 		case "cwe":
-			return printCWEStats(result.CVEs, limit)
+			return printCWEStats(s, result.CVEs, limit)
 		case "vendor":
-			return printVendorStats(result.CVEs, limit)
+			return printVendorStats(s, result.CVEs, limit)
 		default:
-			return printSeverityStats(result.CVEs)
+			return printSeverityStats(s, result.CVEs)
 		}
 	},
 }
@@ -86,7 +89,7 @@ type statEntry struct {
 }
 
 // printMonthStats groups CVEs by publication month and prints counts.
-func printMonthStats(cves []*model.EnrichedCVE, limit int) error {
+func printMonthStats(s cmdStyles, cves []*model.EnrichedCVE, limit int) error {
 	counts := make(map[string]int)
 	for _, cve := range cves {
 		if cve.Published.IsZero() {
@@ -106,12 +109,12 @@ func printMonthStats(cves []*model.EnrichedCVE, limit int) error {
 		entries = entries[:limit]
 	}
 
-	printTable("Month", "CVEs", entries)
+	printStyledTable(s, "Month", "CVEs", entries, false)
 	return nil
 }
 
 // printCWEStats groups CVEs by CWE classification and prints counts.
-func printCWEStats(cves []*model.EnrichedCVE, limit int) error {
+func printCWEStats(s cmdStyles, cves []*model.EnrichedCVE, limit int) error {
 	counts := make(map[string]int)
 	for _, cve := range cves {
 		if len(cve.CWEs) == 0 {
@@ -133,12 +136,12 @@ func printCWEStats(cves []*model.EnrichedCVE, limit int) error {
 		entries = entries[:limit]
 	}
 
-	printTable("CWE", "CVEs", entries)
+	printStyledTable(s, "CWE", "CVEs", entries, false)
 	return nil
 }
 
 // printVendorStats groups CVEs by CPE vendor and prints counts.
-func printVendorStats(cves []*model.EnrichedCVE, limit int) error {
+func printVendorStats(s cmdStyles, cves []*model.EnrichedCVE, limit int) error {
 	counts := make(map[string]int)
 	for _, cve := range cves {
 		if len(cve.CPEs) == 0 {
@@ -168,13 +171,13 @@ func printVendorStats(cves []*model.EnrichedCVE, limit int) error {
 		entries = entries[:limit]
 	}
 
-	printTable("Vendor", "CVEs", entries)
+	printStyledTable(s, "Vendor", "CVEs", entries, false)
 	return nil
 }
 
 // printSeverityStats groups CVEs by CVSS severity and prints counts.
 // This is the default grouping when no --group-by is specified.
-func printSeverityStats(cves []*model.EnrichedCVE) error {
+func printSeverityStats(s cmdStyles, cves []*model.EnrichedCVE) error {
 	counts := make(map[string]int)
 	for _, cve := range cves {
 		sev := cve.Severity()
@@ -190,7 +193,7 @@ func printSeverityStats(cves []*model.EnrichedCVE) error {
 		}
 	}
 
-	printTable("Severity", "CVEs", entries)
+	printStyledTable(s, "Severity", "CVEs", entries, true)
 	return nil
 }
 
@@ -219,8 +222,9 @@ func sortedEntries(counts map[string]int) []statEntry {
 	return entries
 }
 
-// printTable renders a simple two-column text table to stdout.
-func printTable(header1, header2 string, entries []statEntry) {
+// printStyledTable renders a two-column text table with styled headers.
+// When colorLabels is true, labels are colored using severity styling.
+func printStyledTable(s cmdStyles, header1, header2 string, entries []statEntry, colorLabels bool) {
 	if len(entries) == 0 {
 		return
 	}
@@ -234,12 +238,19 @@ func printTable(header1, header2 string, entries []statEntry) {
 	}
 
 	// Print header
-	fmt.Printf("%-*s  %s\n", maxLabel, header1, header2)
-	fmt.Printf("%-*s  %s\n", maxLabel, strings.Repeat("-", maxLabel), strings.Repeat("-", len(header2)))
+	fmt.Fprintf(os.Stdout, "%s  %s\n",
+		styledPadCmd(header1, maxLabel, s.header),
+		s.header.Render(header2))
 
 	// Print rows
 	for _, e := range entries {
-		fmt.Printf("%-*s  %d\n", maxLabel, e.Label, e.Count)
+		label := e.Label
+		if colorLabels {
+			label = styledPadCmd(e.Label, maxLabel, s.severity(e.Label))
+		} else {
+			label = fmt.Sprintf("%-*s", maxLabel, e.Label)
+		}
+		fmt.Fprintf(os.Stdout, "%s  %d\n", label, e.Count)
 	}
 
 	// Print total
@@ -247,7 +258,7 @@ func printTable(header1, header2 string, entries []statEntry) {
 	for _, e := range entries {
 		total += e.Count
 	}
-	fmt.Printf("\nTotal: %d\n", total)
+	fmt.Fprintf(os.Stdout, "\n%s %d\n", s.label.Render("Total:"), total)
 }
 
 func init() {

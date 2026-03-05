@@ -13,17 +13,19 @@ var kevStatsCmd = &cobra.Command{
 	Short: "Show KEV catalog statistics",
 	Long:  "Display statistics about the CISA KEV catalog.",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		noColor, _ := cmd.Flags().GetBool("no-color")
+		s := newCmdStyles(noColor)
+
 		stats, err := app.KEV.Stats(cmd.Context())
 		if err != nil {
 			return err
 		}
 
-		fmt.Fprintf(os.Stdout, "KEV Catalog Statistics\n")
-		fmt.Fprintf(os.Stdout, "======================\n")
-		fmt.Fprintf(os.Stdout, "Total entries:          %d\n", stats.TotalCount)
-		fmt.Fprintf(os.Stdout, "Added in last 30 days:  %d\n", stats.RecentCount)
-		fmt.Fprintf(os.Stdout, "Ransomware-associated:  %d\n", stats.RansomwareCount)
-		fmt.Fprintf(os.Stdout, "\nTop Vendors:\n")
+		fmt.Fprintln(os.Stdout, s.header.Render("KEV Catalog Statistics"))
+		fmt.Fprintln(os.Stdout)
+		fmt.Fprintf(os.Stdout, "%s %d\n", s.label.Render("Total entries:"), stats.TotalCount)
+		fmt.Fprintf(os.Stdout, "%s %d\n", s.label.Render("Added (last 30d):"), stats.RecentCount)
+		fmt.Fprintf(os.Stdout, "%s %d\n", s.label.Render("Ransomware:"), stats.RansomwareCount)
 
 		// Sort vendors by count descending
 		type vendorCount struct {
@@ -38,12 +40,14 @@ var kevStatsCmd = &cobra.Command{
 			return vendors[i].count > vendors[j].count
 		})
 
+		fmt.Fprintln(os.Stdout)
+		fmt.Fprintln(os.Stdout, s.header.Render("Top Vendors"))
 		limit, _ := cmd.Flags().GetInt("top")
 		for i, v := range vendors {
 			if i >= limit {
 				break
 			}
-			fmt.Fprintf(os.Stdout, "  %-30s %d\n", v.vendor, v.count)
+			fmt.Fprintf(os.Stdout, "  %-30s %s\n", s.value.Render(v.vendor), s.muted.Render(fmt.Sprintf("%d", v.count)))
 		}
 
 		return nil

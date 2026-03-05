@@ -8,14 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
-)
-
-// Watch command styles.
-var (
-	watchSuccessStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10")) // green
-	watchCVEIDStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("12")) // blue
 )
 
 var cveWatchCmd = &cobra.Command{
@@ -31,15 +24,17 @@ in the cache and can be refreshed with 'vulnex cve watch --refresh'.`,
 		refreshFlag, _ := cmd.Flags().GetBool("refresh")
 		removeFlag, _ := cmd.Flags().GetBool("remove")
 		stdinFlag, _ := cmd.Flags().GetBool("stdin")
+		noColor, _ := cmd.Flags().GetBool("no-color")
 
 		if app.Cache == nil {
 			return fmt.Errorf("cache is required for watch list (cache is disabled)")
 		}
 
+		s := newCmdStyles(noColor)
 		ctx := cmd.Context()
 
 		if listFlag {
-			return listWatchedCVEs(ctx)
+			return listWatchedCVEs(ctx, s)
 		}
 
 		ids := args
@@ -54,22 +49,22 @@ in the cache and can be refreshed with 'vulnex cve watch --refresh'.`,
 		}
 
 		if refreshFlag {
-			return refreshWatchList(ctx)
+			return refreshWatchList(ctx, s)
 		}
 
 		if removeFlag {
-			return removeFromWatchList(ctx, ids)
+			return removeFromWatchList(ctx, s, ids)
 		}
 
 		if len(ids) == 0 {
-			return listWatchedCVEs(ctx)
+			return listWatchedCVEs(ctx, s)
 		}
 
-		return addToWatchList(ctx, ids)
+		return addToWatchList(ctx, s, ids)
 	},
 }
 
-func listWatchedCVEs(ctx context.Context) error {
+func listWatchedCVEs(ctx context.Context, s cmdStyles) error {
 	data, err := app.Cache.GetMetadata(ctx, "watch_list")
 	if err != nil {
 		return err
@@ -86,12 +81,12 @@ func listWatchedCVEs(ctx context.Context) error {
 
 	fmt.Fprintf(os.Stdout, "%d CVEs in watch list:\n", len(ids))
 	for _, id := range ids {
-		fmt.Fprintf(os.Stdout, "  %s\n", watchCVEIDStyle.Render(id))
+		fmt.Fprintf(os.Stdout, "  %s\n", s.cveID.Render(id))
 	}
 	return nil
 }
 
-func addToWatchList(ctx context.Context, newIDs []string) error {
+func addToWatchList(ctx context.Context, s cmdStyles, newIDs []string) error {
 	ids, err := getWatchList(ctx)
 	if err != nil {
 		return err
@@ -110,11 +105,11 @@ func addToWatchList(ctx context.Context, newIDs []string) error {
 	}
 
 	msg := fmt.Sprintf("Added %d CVEs to watch list (%d total)", added, len(ids))
-	fmt.Fprintln(os.Stdout, watchSuccessStyle.Render(msg))
+	fmt.Fprintln(os.Stdout, s.success.Render(msg))
 	return nil
 }
 
-func removeFromWatchList(ctx context.Context, removeIDs []string) error {
+func removeFromWatchList(ctx context.Context, s cmdStyles, removeIDs []string) error {
 	ids, err := getWatchList(ctx)
 	if err != nil {
 		return err
@@ -135,27 +130,11 @@ func removeFromWatchList(ctx context.Context, removeIDs []string) error {
 	}
 
 	msg := fmt.Sprintf("Removed %d, %d remaining", removed, len(filtered))
-	fmt.Fprintln(os.Stdout, watchSuccessStyle.Render(msg))
+	fmt.Fprintln(os.Stdout, s.success.Render(msg))
 	return nil
 }
 
-// watchSeverityStyle returns a colored style for severity strings.
-func watchSeverityStyle(severity string) lipgloss.Style {
-	switch strings.ToUpper(severity) {
-	case "CRITICAL":
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
-	case "HIGH":
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
-	case "MEDIUM":
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
-	case "LOW":
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-	default:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	}
-}
-
-func refreshWatchList(ctx context.Context) error {
+func refreshWatchList(ctx context.Context, s cmdStyles) error {
 	ids, err := getWatchList(ctx)
 	if err != nil {
 		return err
@@ -173,7 +152,7 @@ func refreshWatchList(ctx context.Context) error {
 
 	for _, cve := range cves {
 		severity := cve.Severity()
-		sevStyle := watchSeverityStyle(severity)
+		sevStyle := s.severity(severity)
 
 		cvss := "N/A"
 		if score := cve.HighestScore(); score != nil {
@@ -187,7 +166,7 @@ func refreshWatchList(ctx context.Context) error {
 
 		sevLabel := sevStyle.Render(fmt.Sprintf("%s (%s)", severity, cvss))
 		fmt.Fprintf(os.Stdout, "  %s  %s  %s\n",
-			watchCVEIDStyle.Render(fmt.Sprintf("%-16s", cve.ID)),
+			s.cveID.Render(fmt.Sprintf("%-16s", cve.ID)),
 			sevLabel,
 			desc)
 	}

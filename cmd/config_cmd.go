@@ -20,27 +20,30 @@ var configShowCmd = &cobra.Command{
 	Use:   "show",
 	Short: "Show current configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		noColor, _ := cmd.Flags().GetBool("no-color")
+		s := newCmdStyles(noColor)
+
 		cfgPath := config.ConfigFilePath()
-		fmt.Fprintf(os.Stdout, "Config file: %s\n\n", cfgPath)
+		fmt.Fprintf(os.Stdout, "%s %s\n\n", s.label.Render("Config file:"), s.muted.Render(cfgPath))
 
 		cfg := app.Config
-		fmt.Fprintf(os.Stdout, "Output format:    %s\n", cfg.Output.Format)
-		fmt.Fprintf(os.Stdout, "Color:            %s\n", cfg.Output.Color)
-		fmt.Fprintf(os.Stdout, "Cache enabled:    %v\n", cfg.Cache.Enabled)
-		fmt.Fprintf(os.Stdout, "Cache directory:  %s\n", config.CacheDir())
-		fmt.Fprintf(os.Stdout, "Cache TTL (CVE):  %s\n", cfg.Cache.TTL.CVE)
-		fmt.Fprintf(os.Stdout, "Cache TTL (KEV):  %s\n", cfg.Cache.TTL.KEV)
-		fmt.Fprintf(os.Stdout, "Cache TTL (EPSS): %s\n", cfg.Cache.TTL.EPSS)
+		fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Output format:"), cfg.Output.Format)
+		fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Color:"), cfg.Output.Color)
+		fmt.Fprintf(os.Stdout, "%s %v\n", s.label.Render("Cache enabled:"), cfg.Cache.Enabled)
+		fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Cache directory:"), config.CacheDir())
+		fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Cache TTL (CVE):"), cfg.Cache.TTL.CVE)
+		fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Cache TTL (KEV):"), cfg.Cache.TTL.KEV)
+		fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("Cache TTL (EPSS):"), cfg.Cache.TTL.EPSS)
 
 		if cfg.APIKeys.NVD != "" {
-			fmt.Fprintf(os.Stdout, "NVD API key:      %s...%s\n", cfg.APIKeys.NVD[:4], cfg.APIKeys.NVD[len(cfg.APIKeys.NVD)-4:])
+			fmt.Fprintf(os.Stdout, "%s %s...%s\n", s.label.Render("NVD API key:"), cfg.APIKeys.NVD[:4], cfg.APIKeys.NVD[len(cfg.APIKeys.NVD)-4:])
 		} else {
-			fmt.Fprintf(os.Stdout, "NVD API key:      (not set)\n")
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("NVD API key:"), s.muted.Render("(not set)"))
 		}
 		if cfg.APIKeys.GitHub != "" {
-			fmt.Fprintf(os.Stdout, "GitHub token:     %s...%s\n", cfg.APIKeys.GitHub[:4], cfg.APIKeys.GitHub[len(cfg.APIKeys.GitHub)-4:])
+			fmt.Fprintf(os.Stdout, "%s %s...%s\n", s.label.Render("GitHub token:"), cfg.APIKeys.GitHub[:4], cfg.APIKeys.GitHub[len(cfg.APIKeys.GitHub)-4:])
 		} else {
-			fmt.Fprintf(os.Stdout, "GitHub token:     (not set)\n")
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.label.Render("GitHub token:"), s.muted.Render("(not set)"))
 		}
 
 		return nil

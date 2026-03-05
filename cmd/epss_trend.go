@@ -26,6 +26,7 @@ historical score data.`,
 		cveID := args[0]
 		days, _ := cmd.Flags().GetInt("days")
 		outputFmt, _ := cmd.Flags().GetString("output")
+		noColor, _ := cmd.Flags().GetBool("no-color")
 
 		entries, err := app.EPSS.GetTimeSeries(cmd.Context(), cveID, days)
 		if err != nil {
@@ -41,7 +42,8 @@ historical score data.`,
 		case "json":
 			return renderTimeSeriesJSON(os.Stdout, cveID, entries)
 		default:
-			return renderTimeSeriesTable(os.Stdout, cveID, entries)
+			s := newCmdStyles(noColor)
+			return renderTimeSeriesTable(os.Stdout, s, cveID, entries)
 		}
 	},
 }
@@ -52,10 +54,16 @@ func init() {
 }
 
 // renderTimeSeriesTable prints the time-series data as a formatted table.
-func renderTimeSeriesTable(w *os.File, cveID string, entries []epss.TimeSeriesEntry) error {
-	fmt.Fprintf(w, "EPSS Score History: %s (%d data points)\n\n", cveID, len(entries))
-	fmt.Fprintf(w, "%-12s  %10s  %10s\n", "DATE", "SCORE", "PERCENTILE")
-	fmt.Fprintf(w, "%-12s  %10s  %10s\n", "----", "-----", "----------")
+func renderTimeSeriesTable(w *os.File, s cmdStyles, cveID string, entries []epss.TimeSeriesEntry) error {
+	fmt.Fprintf(w, "%s %s (%d data points)\n\n",
+		s.header.Render("EPSS Score History:"),
+		s.cveID.Render(cveID),
+		len(entries))
+
+	fmt.Fprintf(w, "%s  %s  %s\n",
+		styledPadCmd("DATE", 12, s.header),
+		styledRightPad("SCORE", 10, s.header),
+		styledRightPad("PERCENTILE", 10, s.header))
 
 	for _, e := range entries {
 		fmt.Fprintf(w, "%-12s  %10.6f  %10.6f\n", e.Date, e.Score, e.Percentile)
