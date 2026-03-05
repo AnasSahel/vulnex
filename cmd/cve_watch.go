@@ -8,7 +8,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
+)
+
+// Watch command styles.
+var (
+	watchSuccessStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10")) // green
+	watchCVEIDStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("12")) // blue
 )
 
 var cveWatchCmd = &cobra.Command{
@@ -77,9 +84,9 @@ func listWatchedCVEs(ctx context.Context) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stdout, "Watched CVEs (%d):\n", len(ids))
+	fmt.Fprintf(os.Stdout, "%d CVEs in watch list:\n", len(ids))
 	for _, id := range ids {
-		fmt.Fprintf(os.Stdout, "  %s\n", id)
+		fmt.Fprintf(os.Stdout, "  %s\n", watchCVEIDStyle.Render(id))
 	}
 	return nil
 }
@@ -102,7 +109,8 @@ func addToWatchList(ctx context.Context, newIDs []string) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stdout, "Added %d CVE(s) to watch list (total: %d)\n", added, len(ids))
+	msg := fmt.Sprintf("Added %d CVEs to watch list (%d total)", added, len(ids))
+	fmt.Fprintln(os.Stdout, watchSuccessStyle.Render(msg))
 	return nil
 }
 
@@ -126,8 +134,25 @@ func removeFromWatchList(ctx context.Context, removeIDs []string) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stdout, "Removed %d CVE(s) from watch list (remaining: %d)\n", removed, len(filtered))
+	msg := fmt.Sprintf("Removed %d, %d remaining", removed, len(filtered))
+	fmt.Fprintln(os.Stdout, watchSuccessStyle.Render(msg))
 	return nil
+}
+
+// watchSeverityStyle returns a colored style for severity strings.
+func watchSeverityStyle(severity string) lipgloss.Style {
+	switch strings.ToUpper(severity) {
+	case "CRITICAL":
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
+	case "HIGH":
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
+	case "MEDIUM":
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
+	case "LOW":
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
+	default:
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+	}
 }
 
 func refreshWatchList(ctx context.Context) error {
@@ -146,7 +171,28 @@ func refreshWatchList(ctx context.Context) error {
 		return err
 	}
 
-	return app.Formatter.FormatCVEList(os.Stdout, cves)
+	for _, cve := range cves {
+		severity := cve.Severity()
+		sevStyle := watchSeverityStyle(severity)
+
+		cvss := "N/A"
+		if score := cve.HighestScore(); score != nil {
+			cvss = fmt.Sprintf("%.1f", score.BaseScore)
+		}
+
+		desc := cve.Description()
+		if len(desc) > 50 {
+			desc = desc[:47] + "..."
+		}
+
+		sevLabel := sevStyle.Render(fmt.Sprintf("%s (%s)", severity, cvss))
+		fmt.Fprintf(os.Stdout, "  %s  %s  %s\n",
+			watchCVEIDStyle.Render(fmt.Sprintf("%-16s", cve.ID)),
+			sevLabel,
+			desc)
+	}
+
+	return nil
 }
 
 func getWatchList(ctx context.Context) ([]string, error) {
