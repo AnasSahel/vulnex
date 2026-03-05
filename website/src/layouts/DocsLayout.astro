@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
+import DocsSidebar from '../components/DocsSidebar.astro';
 import { docsSections, getPagerLinks } from '../content/docs-nav';
 
 interface Props {
@@ -14,7 +15,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const { title, description, slug } = Astro.props;
 const pager = slug ? getPagerLinks(slug) : { prev: undefined, next: undefined };
 
-// Determine which section this page belongs to for sidebar highlighting
+// Determine which section this page belongs to for breadcrumbs
 const currentSection = slug ? docsSections.find(s => s.pages.some(p => p.slug === slug)) : undefined;
 ---
 
@@ -22,10 +23,7 @@ const currentSection = slug ? docsSections.find(s => s.pages.some(p => p.slug ==
   <Navbar />
   <div class="docs-page">
     <aside class="docs-sidebar" id="docs-sidebar">
-      <nav class="sidebar-nav">
-        <a href={`${base}/docs/`} class="sidebar-back">&larr; All docs</a>
-        <slot name="sidebar" />
-      </nav>
+      <DocsSidebar slug={slug} />
     </aside>
     <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
@@ -63,8 +61,6 @@ const currentSection = slug ? docsSections.find(s => s.pages.some(p => p.slug ==
 <style>
   .docs-page {
     display: flex;
-    max-width: 1120px;
-    margin: 0 auto;
     padding-top: 60px;
     min-height: 100vh;
     position: relative;
@@ -73,65 +69,12 @@ const currentSection = slug ? docsSections.find(s => s.pages.some(p => p.slug ==
   .docs-sidebar {
     position: sticky;
     top: 60px;
-    width: 240px;
+    width: 260px;
     flex-shrink: 0;
     height: calc(100vh - 60px);
     overflow-y: auto;
-    padding: 32px 24px 32px 24px;
+    padding: 24px 16px 32px;
     border-right: 1px solid var(--border);
-  }
-
-  .sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .sidebar-back {
-    display: block;
-    padding: 6px 12px;
-    margin-bottom: 8px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--accent);
-    border-radius: 6px;
-    text-decoration: none;
-    transition: background 0.15s;
-  }
-
-  .sidebar-back:hover {
-    background: var(--surface);
-    text-decoration: none;
-  }
-
-  .sidebar-nav :global(a) {
-    display: block;
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    border-radius: 6px;
-    text-decoration: none;
-    transition: color 0.15s, background 0.15s;
-  }
-
-  .sidebar-nav :global(a:hover) {
-    color: var(--text);
-    background: var(--surface);
-    text-decoration: none;
-  }
-
-  .sidebar-nav :global(.sidebar-heading) {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-secondary);
-    padding: 16px 12px 6px;
-    cursor: default;
-  }
-
-  .sidebar-nav :global(.sidebar-heading:first-child) {
-    padding-top: 0;
   }
 
   .sidebar-toggle {
@@ -155,7 +98,8 @@ const currentSection = slug ? docsSections.find(s => s.pages.some(p => p.slug ==
   .docs-content {
     flex: 1;
     min-width: 0;
-    padding: 40px 48px 80px;
+    max-width: 900px;
+    padding: 40px 56px 80px;
   }
 
   /* Breadcrumbs */

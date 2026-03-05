@@ -1,75 +1,57 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Navbar from '../../components/Navbar.astro';
-import Footer from '../../components/Footer.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
 import { docsSections } from '../../content/docs-nav';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
-<BaseLayout
+<DocsLayout
   title="Documentation — vulnex"
   description="Browse vulnex documentation: getting started guides, command references, scoring model, and CI/CD integration."
 >
-  <Navbar />
-  <main class="docs-hub">
-    <div class="container">
-      <div class="hub-header">
-        <span class="hub-badge">Documentation</span>
-        <h1>vulnex docs</h1>
-        <p class="hub-lead">
-          Learn how to use vulnex for vulnerability intelligence, risk scoring,
-          and CI/CD pipeline gating.
-        </p>
-      </div>
+  <div class="hub-header">
+    <span class="hub-badge">Documentation</span>
+    <h1>vulnex docs</h1>
+    <p class="hub-lead">
+      Learn how to use vulnex for vulnerability intelligence, risk scoring,
+      and CI/CD pipeline gating.
+    </p>
+  </div>
 
-      <div class="hub-quick">
-        <a href={`${base}/docs/getting-started/`} class="quick-start-card">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-          <div>
-            <strong>Quick Start</strong>
-            <span>Install and run your first query in under two minutes</span>
-          </div>
-          <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>
+  <div class="hub-quick">
+    <a href={`${base}/docs/getting-started/`} class="quick-start-card">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+      <div>
+        <strong>Quick Start</strong>
+        <span>Install and run your first query in under two minutes</span>
       </div>
+      <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </a>
+  </div>
 
-      <div class="section-grid">
-        {docsSections.map(section => (
-          <div class="section-card">
-            <div class="section-card-header">
-              <span class="section-icon" set:html={section.icon} />
-              <h2>{section.label}</h2>
-            </div>
-            <ul>
-              {section.pages.map(page => (
-                <li>
-                  <a href={`${base}/docs/${page.slug}/`}>
-                    <strong>{page.title}</strong>
-                    <span>{page.description}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+  <div class="section-grid">
+    {docsSections.map(section => (
+      <div class="section-card">
+        <div class="section-card-header">
+          <span class="section-icon" set:html={section.icon} />
+          <h2>{section.label}</h2>
+        </div>
+        <ul>
+          {section.pages.map(page => (
+            <li>
+              <a href={`${base}/docs/${page.slug}/`}>
+                <strong>{page.title}</strong>
+                <span>{page.description}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
-  </main>
-  <Footer />
-</BaseLayout>
+    ))}
+  </div>
+</DocsLayout>
 
 <style>
-  .docs-hub {
-    padding: 120px 24px 80px;
-  }
-
-  .container {
-    max-width: 860px;
-    margin: 0 auto;
-  }
-
   .hub-header {
-    text-align: center;
     margin-bottom: 48px;
   }
 
@@ -85,7 +67,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   }
 
   .hub-header h1 {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 800;
     margin-bottom: 16px;
     letter-spacing: -0.02em;
@@ -93,9 +75,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   .hub-lead {
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     max-width: 520px;
-    margin: 0 auto;
     line-height: 1.7;
   }
 
@@ -221,10 +202,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   }
 
   @media (max-width: 600px) {
-    .docs-hub {
-      padding-top: 88px;
-    }
-
     .hub-header h1 {
       font-size: 1.75rem;
     }

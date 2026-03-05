@@ -1,0 +1,179 @@
+---
+import { docsSections } from '../content/docs-nav';
+
+interface Props {
+  slug?: string;
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const { slug } = Astro.props;
+---
+
+<nav class="docs-sidebar-nav">
+  <a href={`${base}/docs/`} class:list={["sidebar-home", { active: !slug }]}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    Home
+  </a>
+
+  {docsSections.map(section => {
+    const sectionHasActive = section.pages.some(p => p.slug === slug);
+    return (
+      <div class="sidebar-section">
+        <span class="sidebar-section-label">{section.label}</span>
+        <ul class="sidebar-pages">
+          {section.pages.map(page => {
+            const isActive = page.slug === slug;
+            const hasSubcommands = page.subcommands && page.subcommands.length > 0;
+            return (
+              <li>
+                <a
+                  href={`${base}/docs/${page.slug}/`}
+                  class:list={["sidebar-page-link", { active: isActive }]}
+                >
+                  {page.title}
+                  {hasSubcommands && (
+                    <svg class:list={["chevron", { expanded: isActive }]} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  )}
+                </a>
+                {hasSubcommands && isActive && (
+                  <ul class="sidebar-subcommands">
+                    {page.subcommands!.map(sub => (
+                      <li>
+                        <a href={`${base}/docs/${page.slug}/#${sub.id}`} class="sidebar-sub-link">
+                          {sub.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  })}
+</nav>
+
+<style>
+  .docs-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  /* Home link */
+  .sidebar-home {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+    margin-bottom: 8px;
+  }
+
+  .sidebar-home:hover {
+    color: var(--text);
+    background: var(--surface);
+    text-decoration: none;
+  }
+
+  .sidebar-home.active {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .sidebar-home svg {
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  /* Section */
+  .sidebar-section {
+    margin-bottom: 4px;
+  }
+
+  .sidebar-section-label {
+    display: block;
+    padding: 12px 12px 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    cursor: default;
+  }
+
+  /* Pages list */
+  .sidebar-pages {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .sidebar-page-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .sidebar-page-link:hover {
+    color: var(--text);
+    background: var(--surface);
+    text-decoration: none;
+  }
+
+  .sidebar-page-link.active {
+    color: var(--text);
+    font-weight: 600;
+    background: var(--surface);
+  }
+
+  /* Chevron */
+  .chevron {
+    flex-shrink: 0;
+    opacity: 0.4;
+    transition: transform 0.2s;
+  }
+
+  .chevron.expanded {
+    transform: rotate(90deg);
+    opacity: 0.7;
+  }
+
+  /* Subcommands */
+  .sidebar-subcommands {
+    list-style: none;
+    padding: 0;
+    margin: 2px 0 4px 0;
+  }
+
+  .sidebar-sub-link {
+    display: block;
+    padding: 4px 12px 4px 24px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    text-decoration: none;
+    border-left: 1px solid var(--border);
+    margin-left: 12px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .sidebar-sub-link:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    text-decoration: none;
+  }
+</style>
