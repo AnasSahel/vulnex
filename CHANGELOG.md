@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.4.0](https://github.com/AnasSahel/vulnex/compare/v1.3.0...v1.4.0) (2026-03-05)
+
+
+### Features
+
+* add policy engine, scanner parsers, and init command ([0b427ab](https://github.com/AnasSahel/vulnex/commit/0b427ab752522dc8e094a4938bd1fb0a70018b24))
+* **cache:** wire up caching for NVD, EPSS, GHSA, and OSV clients ([4930282](https://github.com/AnasSahel/vulnex/commit/4930282489d8d715dc0b29af2542ed19f8e9c1a7))
+* **cve:** add styled output for cve history command ([296f411](https://github.com/AnasSahel/vulnex/commit/296f411cf22c350a8aad4d5ae0af5d48188fdfaa))
+* **cve:** add styled output for cve watch command ([acc1b31](https://github.com/AnasSahel/vulnex/commit/acc1b31608937baef9cacfe7d0f357aa90b4c74f))
+* **cve:** display references, affected versions, and last modified date ([6d57d05](https://github.com/AnasSahel/vulnex/commit/6d57d050a07c869a9b1135d9a8f6f3b30211d63f))
+* **sbom:** add --enrich flag for EPSS/KEV/exploit enrichment of scan findings ([1696e4d](https://github.com/AnasSahel/vulnex/commit/1696e4dd446fb6c78661afc4497ee110df276dab))
+* **website:** add CVE command documentation page ([b9472c1](https://github.com/AnasSahel/vulnex/commit/b9472c1113e85c5d8b16917bddc49c13c43f9e28))
+* **website:** add scoring and prioritization documentation page ([d4df48b](https://github.com/AnasSahel/vulnex/commit/d4df48b1dac55eec9b863f2514004763068284c5))
+* **website:** migrate to Astro with light/dark mode support ([86aede6](https://github.com/AnasSahel/vulnex/commit/86aede6d837a07b3e47e125ad791ccca1118a09d))
+
+
+### Bug Fixes
+
+* **nvd:** uppercase cvssV3Severity parameter for NVD API ([7ad7457](https://github.com/AnasSahel/vulnex/commit/7ad7457017b3c7a6d5ca0ac2812f686291142b41))
+* **website:** add base path for GitHub Pages deployment ([70a2ce3](https://github.com/AnasSahel/vulnex/commit/70a2ce31b7b354ba9b7b1825f9f714c8d789aeba))
+* **website:** escape HTML entities in CVE docs version range ([b473455](https://github.com/AnasSahel/vulnex/commit/b4734552eb56e058ee785acb658efcee28d34b71))
+
 ## [1.3.0](https://github.com/AnasSahel/vulnex/compare/v1.2.1...v1.3.0) (2026-03-04)
 
 
