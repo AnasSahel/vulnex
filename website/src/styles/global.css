@@ -8,13 +8,14 @@
 }
 
 .dark {
-  --bg: #0d1117;
+  --bg: #0D1117;
   --bg-secondary: #0a0e14;
-  --surface: #161b22;
+  --surface: #161B22;
   --border: #30363d;
-  --accent: #3fb950;
-  --accent-hover: #2ea043;
-  --text: #e6edf3;
+  --accent: #8B5CF6;
+  --accent-hover: #7C3AED;
+  --accent-glow: #C4B5FD;
+  --text: #E6EDF3;
   --text-secondary: #8b949e;
   --red: #f85149;
   --yellow: #d29922;
@@ -22,7 +23,7 @@
   --orange: #db6d28;
   --purple: #a371f7;
   --nav-bg: rgba(13, 17, 23, 0.85);
-  --icon-bg: rgba(63, 185, 80, 0.12);
+  --icon-bg: rgba(139, 92, 246, 0.12);
 }
 
 .light {
@@ -30,8 +31,9 @@
   --bg-secondary: #f6f8fa;
   --surface: #f6f8fa;
   --border: #d0d7de;
-  --accent: #1a7f37;
-  --accent-hover: #116329;
+  --accent: #7C3AED;
+  --accent-hover: #6D28D9;
+  --accent-glow: #8B5CF6;
   --text: #1f2328;
   --text-secondary: #656d76;
   --red: #cf222e;
@@ -40,7 +42,7 @@
   --orange: #bc4c00;
   --purple: #8250df;
   --nav-bg: rgba(255, 255, 255, 0.85);
-  --icon-bg: rgba(26, 127, 55, 0.1);
+  --icon-bg: rgba(124, 58, 237, 0.1);
 }
 
 /* ── Base ───────────────────────────────────────── */
@@ -72,7 +74,7 @@ section {
 
 /* ── Terminal Syntax Colors (always dark) ────────── */
 
-.t-prompt { color: #3fb950; }
+.t-prompt { color: #C4B5FD; }
 .t-cmd { color: #e6edf3; }
 .t-flag { color: #d29922; }
 .t-cve { color: #58a6ff; }
@@ -81,13 +83,13 @@ section {
 .t-high { color: #db6d28; font-weight: 700; }
 .t-medium { color: #d29922; font-weight: 700; }
 .t-p0 { color: #f85149; }
-.t-value { color: #3fb950; font-weight: 600; }
-.t-green { color: #3fb950; }
+.t-value { color: #C4B5FD; font-weight: 600; }
+.t-green { color: #8B5CF6; }
 .t-dim { color: #8b949e; }
-.t-accent { color: #58a6ff; }
+.t-accent { color: #8B5CF6; }
 
 /* YAML syntax */
-.y-key { color: #3fb950; }
+.y-key { color: #C4B5FD; }
 .y-str { color: #58a6ff; }
 .y-comment { color: #8b949e; }
 
