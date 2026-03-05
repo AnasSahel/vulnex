@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "TestScanner",
+          "rules": [
+            {
+              "id": "CVE-2023-44487",
+              "shortDescription": {
+                "text": "HTTP/2 rapid reset attack"
+              }
+            },
+            {
+              "id": "CVE-2024-4068",
+              "shortDescription": {
+                "text": "Uncontrolled resource consumption in braces"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CVE-2023-44487",
+          "level": "error",
+          "message": {
+            "text": "HTTP/2 rapid reset attack in golang.org/x/net"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "go.sum"
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "golang.org/x/net"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2024-4068",
+          "level": "warning",
+          "message": {
+            "text": "Uncontrolled resource consumption in braces"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json"
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "braces"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

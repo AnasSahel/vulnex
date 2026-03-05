@@ -1,0 +1,49 @@
+{
+  "matches": [
+    {
+      "vulnerability": {
+        "id": "CVE-2023-44487",
+        "severity": "High",
+        "fix": {
+          "state": "fixed",
+          "versions": ["0.17.0"]
+        }
+      },
+      "artifact": {
+        "name": "golang.org/x/net",
+        "version": "0.7.0",
+        "type": "go-module"
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "CVE-2024-4068",
+        "severity": "Medium",
+        "fix": {
+          "state": "fixed",
+          "versions": ["3.0.3"]
+        }
+      },
+      "artifact": {
+        "name": "braces",
+        "version": "3.0.2",
+        "type": "npm"
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "CVE-2021-44228",
+        "severity": "Critical",
+        "fix": {
+          "state": "fixed",
+          "versions": ["2.17.0"]
+        }
+      },
+      "artifact": {
+        "name": "log4j-core",
+        "version": "2.14.1",
+        "type": "java-archive"
+      }
+    }
+  ]
+}

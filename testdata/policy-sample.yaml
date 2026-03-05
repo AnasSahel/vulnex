@@ -1,0 +1,29 @@
+version: 1
+rules:
+  - name: block-kev
+    match:
+      kev: true
+    action: fail
+
+  - name: block-critical-epss
+    match:
+      severity:
+        - CRITICAL
+      epss_gte: 0.7
+    action: fail
+
+  - name: block-critical-cvss
+    match:
+      cvss_gte: 9.0
+    action: fail
+
+  - name: warn-high-severity
+    match:
+      severity:
+        - HIGH
+    action: warn
+
+  - name: warn-exploitable
+    match:
+      has_exploit: true
+    action: warn

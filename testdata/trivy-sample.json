@@ -1,0 +1,49 @@
+{
+  "SchemaVersion": 2,
+  "Results": [
+    {
+      "Target": "go.sum",
+      "Type": "gomod",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2023-44487",
+          "PkgName": "golang.org/x/net",
+          "InstalledVersion": "0.7.0",
+          "FixedVersion": "0.17.0",
+          "Severity": "HIGH",
+          "Title": "HTTP/2 rapid reset attack"
+        },
+        {
+          "VulnerabilityID": "CVE-2023-39325",
+          "PkgName": "golang.org/x/net",
+          "InstalledVersion": "0.7.0",
+          "FixedVersion": "0.17.0",
+          "Severity": "HIGH",
+          "Title": "HTTP/2 stream cancellation can cause excessive CPU usage"
+        },
+        {
+          "VulnerabilityID": "CVE-2022-27664",
+          "PkgName": "golang.org/x/net",
+          "InstalledVersion": "0.7.0",
+          "FixedVersion": "0.0.0-20220906165146-f3363e06e74c",
+          "Severity": "HIGH",
+          "Title": "Denial of service in net/http"
+        }
+      ]
+    },
+    {
+      "Target": "package-lock.json",
+      "Type": "npm",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2024-4068",
+          "PkgName": "braces",
+          "InstalledVersion": "3.0.2",
+          "FixedVersion": "3.0.3",
+          "Severity": "MEDIUM",
+          "Title": "Uncontrolled resource consumption in braces"
+        }
+      ]
+    }
+  ]
+}
