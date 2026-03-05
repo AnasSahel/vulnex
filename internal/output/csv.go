@@ -381,6 +381,11 @@ func (cf *csvFormatter) FormatExploitResults(w io.Writer, results []*model.Explo
 	return nil
 }
 
+// FormatCVEHistory renders CVE history as CSV (same as FormatCVE).
+func (cf *csvFormatter) FormatCVEHistory(w io.Writer, cve *model.EnrichedCVE) error {
+	return cf.FormatCVE(w, cve)
+}
+
 // FormatCacheStats renders cache statistics as CSV.
 func (cf *csvFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	writer := csv.NewWriter(w)

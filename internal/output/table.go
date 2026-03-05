@@ -898,6 +898,62 @@ func (tf *tableFormatter) FormatExploitResults(w io.Writer, results []*model.Exp
 	return nil
 }
 
+// FormatCVEHistory renders the modification history of a CVE with styled output.
+func (tf *tableFormatter) FormatCVEHistory(w io.Writer, cve *model.EnrichedCVE) error {
+	// Header
+	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("CVE ID:"), tf.headerStyle.Render(cve.ID))
+	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Status:"), tf.valueStyle.Render(cve.Status))
+
+	// Published
+	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Published:"), tf.valueStyle.Render(cve.Published.Format("2006-01-02")))
+
+	// Last Modified
+	if !cve.LastModified.IsZero() {
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Last Modified:"), tf.valueStyle.Render(cve.LastModified.Format("2006-01-02")))
+	}
+
+	// Source
+	if cve.SourceID != "" {
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Source:"), tf.valueStyle.Render(cve.SourceID))
+	}
+
+	// Tags
+	if len(cve.Tags) > 0 {
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Tags:"), tf.valueStyle.Render(strings.Join(cve.Tags, ", ")))
+	}
+
+	// CVSS Score History
+	if len(cve.CVSS) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("CVSS Score History"))
+
+		// Column headers
+		fmt.Fprintf(w, "  %s %s %s %s\n",
+			styledPad("Version", 10, tf.headerStyle),
+			styledPad("Severity", 12, tf.headerStyle),
+			styledPad("Score", 8, tf.headerStyle),
+			tf.headerStyle.Render("Source"))
+
+		for _, s := range cve.CVSS {
+			sev := strings.ToUpper(s.Severity)
+			style := tf.severityStyle(sev)
+
+			source := s.Source
+			if s.Type != "" {
+				source += " [" + s.Type + "]"
+			}
+
+			fmt.Fprintf(w, "  %-10s %s %-8s %s\n",
+				"v"+s.Version,
+				styledPad(sev, 12, style),
+				fmt.Sprintf("%.1f", s.BaseScore),
+				tf.valueStyle.Render(source))
+		}
+	}
+
+	return nil
+}
+
 // FormatCacheStats renders cache statistics in a simple key-value format.
 func (tf *tableFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("Total Entries:"), stats.TotalEntries)

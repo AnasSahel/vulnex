@@ -420,6 +420,10 @@ func (f *markdownFormatter) FormatExploitResults(w io.Writer, results []*model.E
 	return nil
 }
 
+func (f *markdownFormatter) FormatCVEHistory(w io.Writer, cve *model.EnrichedCVE) error {
+	return f.FormatCVE(w, cve)
+}
+
 func (f *markdownFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	fmt.Fprintf(w, "## Cache Statistics\n\n")
 	fmt.Fprintf(w, "| Metric | Value |\n")

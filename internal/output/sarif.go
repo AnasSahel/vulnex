@@ -399,6 +399,10 @@ func (sf *sarifFormatter) FormatEPSSScores(w io.Writer, scores map[string]*model
 	return sf.jsonFallback.FormatEPSSScores(w, scores)
 }
 
+func (sf *sarifFormatter) FormatCVEHistory(w io.Writer, cve *model.EnrichedCVE) error {
+	return sf.jsonFallback.FormatCVEHistory(w, cve)
+}
+
 func (sf *sarifFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	return sf.jsonFallback.FormatCacheStats(w, stats)
 }

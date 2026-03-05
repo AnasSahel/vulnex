@@ -131,6 +131,10 @@ func (f *templateFormatter) FormatExploitResults(w io.Writer, results []*model.E
 	return nil
 }
 
+func (f *templateFormatter) FormatCVEHistory(w io.Writer, cve *model.EnrichedCVE) error {
+	return f.FormatCVE(w, cve)
+}
+
 func (f *templateFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	tmpl, err := template.New("stats").Parse(f.tmplStr)
 	if err != nil {

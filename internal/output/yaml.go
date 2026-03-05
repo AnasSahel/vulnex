@@ -136,6 +136,10 @@ func (f *yamlFormatter) FormatExploitResults(w io.Writer, results []*model.Explo
 	return toYAML(w, results)
 }
 
+func (f *yamlFormatter) FormatCVEHistory(w io.Writer, cve *model.EnrichedCVE) error {
+	return f.FormatCVE(w, cve)
+}
+
 func (f *yamlFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	return toYAML(w, stats)
 }

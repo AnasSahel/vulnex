@@ -20,6 +20,7 @@ type Formatter interface {
 	FormatSBOMDiffResult(w io.Writer, result *model.SBOMDiffResult) error
 	FormatExploitResult(w io.Writer, result *model.ExploitResult) error
 	FormatExploitResults(w io.Writer, results []*model.ExploitResult) error
+	FormatCVEHistory(w io.Writer, cve *model.EnrichedCVE) error
 	FormatCacheStats(w io.Writer, stats *cache.Stats) error
 }
 

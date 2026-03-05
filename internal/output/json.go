@@ -129,6 +129,11 @@ func (jf *jsonFormatter) FormatExploitResults(w io.Writer, results []*model.Expl
 	return err
 }
 
+// FormatCVEHistory renders CVE history as JSON (same as FormatCVE).
+func (jf *jsonFormatter) FormatCVEHistory(w io.Writer, cve *model.EnrichedCVE) error {
+	return jf.FormatCVE(w, cve)
+}
+
 // FormatCacheStats renders cache statistics as JSON.
 func (jf *jsonFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) error {
 	data, err := jf.marshal(stats)
