@@ -84,6 +84,18 @@ func (tf *tableFormatter) severityStyle(severity string) lipgloss.Style {
 	}
 }
 
+// styledPad renders text with the given style, then pads with trailing spaces
+// so the total visible width equals width. This avoids ANSI escape codes
+// breaking fmt's %-Ns padding.
+func styledPad(s string, width int, style lipgloss.Style) string {
+	rendered := style.Render(s)
+	pad := width - len(s)
+	if pad <= 0 {
+		return rendered
+	}
+	return rendered + strings.Repeat(" ", pad)
+}
+
 // truncate shortens a string to the specified max length, appending "..." if truncated.
 func truncate(s string, maxLen int) string {
 	if len(s) <= maxLen {
@@ -139,6 +151,11 @@ func (tf *tableFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 	// Published Date
 	published := cve.Published.Format("2006-01-02")
 	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Published:"), tf.valueStyle.Render(published))
+
+	// Last Modified Date (only if different from Published)
+	if !cve.LastModified.IsZero() && cve.LastModified.Format("2006-01-02") != published {
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Last Modified:"), tf.valueStyle.Render(cve.LastModified.Format("2006-01-02")))
+	}
 
 	// CWE IDs
 	if len(cve.CWEs) > 0 {
@@ -224,6 +241,40 @@ func (tf *tableFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 		}
 	}
 
+	// Affected Versions (CPE matches)
+	if len(cve.CPEs) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("Affected Versions"))
+		for _, cpe := range cve.CPEs {
+			if !cpe.Vulnerable {
+				continue
+			}
+			product := cpeProduct(cpe.CPE23URI)
+			vRange := cpeVersionRange(cpe)
+			fmt.Fprintf(w, "  %s %s\n", tf.headerStyle.Render(product), tf.valueStyle.Render(vRange))
+		}
+	}
+
+	// References
+	if len(cve.References) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("References"))
+		maxRefs := len(cve.References)
+		if !tf.long && maxRefs > 5 {
+			maxRefs = 5
+		}
+		for _, ref := range cve.References[:maxRefs] {
+			tags := ""
+			if len(ref.Tags) > 0 {
+				tags = " [" + strings.Join(ref.Tags, ", ") + "]"
+			}
+			fmt.Fprintf(w, "  %s%s\n", tf.noneStyle.Render(ref.URL), tf.valueStyle.Render(tags))
+		}
+		if remaining := len(cve.References) - maxRefs; remaining > 0 {
+			fmt.Fprintf(w, "  %s\n", tf.noneStyle.Render(fmt.Sprintf("(%d more...)", remaining)))
+		}
+	}
+
 	// Data Sources
 	if len(cve.DataSources) > 0 {
 		fmt.Fprintln(w)
@@ -231,6 +282,42 @@ func (tf *tableFormatter) FormatCVE(w io.Writer, cve *model.EnrichedCVE) error {
 	}
 
 	return nil
+}
+
+// cpeProduct extracts the vendor:product from a CPE 2.3 URI.
+func cpeProduct(cpe23 string) string {
+	// cpe:2.3:a:vendor:product:version:...
+	parts := strings.Split(cpe23, ":")
+	if len(parts) >= 5 {
+		return parts[3] + ":" + parts[4]
+	}
+	return cpe23
+}
+
+// cpeVersionRange builds a human-readable version range string from a CPEMatch.
+func cpeVersionRange(cpe model.CPEMatch) string {
+	var parts []string
+	if cpe.VersionStartIncl != "" {
+		parts = append(parts, ">= "+cpe.VersionStartIncl)
+	}
+	if cpe.VersionStartExcl != "" {
+		parts = append(parts, "> "+cpe.VersionStartExcl)
+	}
+	if cpe.VersionEndIncl != "" {
+		parts = append(parts, "<= "+cpe.VersionEndIncl)
+	}
+	if cpe.VersionEndExcl != "" {
+		parts = append(parts, "< "+cpe.VersionEndExcl)
+	}
+	if len(parts) == 0 {
+		// Try to extract version from CPE URI itself
+		p := strings.Split(cpe.CPE23URI, ":")
+		if len(p) >= 6 && p[5] != "*" && p[5] != "-" {
+			return p[5]
+		}
+		return "all versions"
+	}
+	return strings.Join(parts, ", ")
 }
 
 // FormatCVEList renders a list of enriched CVEs as a table.
@@ -541,21 +628,32 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 		header := fmt.Sprintf("%s %s (%s)", key.name, key.version, key.ecosystem)
 		fmt.Fprintf(w, "\n%s\n", tf.headerStyle.Render(header))
 
+		// Column widths
+		const (
+			colID       = 20
+			colSeverity = 10
+			colCVSS     = 6
+			colEPSS     = 8
+			colKEV      = 5
+			colPriority = 13
+			colFixed    = 9
+		)
+
 		// Print column headers
 		if enriched {
-			fmt.Fprintf(w, "  %-26s%-10s%-7s%-8s%-5s%-12s%s\n",
-				tf.headerStyle.Render("ID"),
-				tf.headerStyle.Render("Severity"),
-				tf.headerStyle.Render("CVSS"),
-				tf.headerStyle.Render("EPSS"),
-				tf.headerStyle.Render("KEV"),
-				tf.headerStyle.Render("Priority"),
+			fmt.Fprintf(w, "  %s %s %s %s %s %s %s\n",
+				styledPad("ID", colID, tf.headerStyle),
+				styledPad("Severity", colSeverity, tf.headerStyle),
+				styledPad("CVSS", colCVSS, tf.headerStyle),
+				styledPad("EPSS", colEPSS, tf.headerStyle),
+				styledPad("KEV", colKEV, tf.headerStyle),
+				styledPad("Priority", colPriority, tf.headerStyle),
 				tf.headerStyle.Render("Fixed"))
 		} else {
-			fmt.Fprintf(w, "  %-26s%-10s%-9s%s\n",
-				tf.headerStyle.Render("ID"),
-				tf.headerStyle.Render("Severity"),
-				tf.headerStyle.Render("Fixed"),
+			fmt.Fprintf(w, "  %s %s %s %s\n",
+				styledPad("ID", colID, tf.headerStyle),
+				styledPad("Severity", colSeverity, tf.headerStyle),
+				styledPad("Fixed", colFixed, tf.headerStyle),
 				tf.headerStyle.Render("Summary"))
 		}
 
@@ -580,28 +678,40 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 					cvss = fmt.Sprintf("%.1f", f.CVSSScore)
 				}
 
-				epss := "N/A"
+				epssVal := "N/A"
 				if f.EPSS != nil {
-					epss = fmt.Sprintf("%.4f", f.EPSS.Score)
+					epssVal = fmt.Sprintf("%.4f", f.EPSS.Score)
+					if f.EPSSTrend != nil {
+						switch f.EPSSTrend.Direction {
+						case "rising":
+							epssVal += "↑"
+						case "falling":
+							epssVal += "↓"
+						}
+					}
 				}
 
 				kevStr := "-"
+				kevStyle := lipgloss.NewStyle()
 				if f.KEV != nil {
-					kevStr = tf.kevYesStyle.Render("YES")
+					kevStr = "YES"
+					kevStyle = tf.kevYesStyle
 				}
 
-				priority := "-"
+				priorityStr := "-"
+				priorityStyle := lipgloss.NewStyle()
 				if f.Risk != nil {
-					priority = tf.severityStyle(string(f.Risk.Priority)).Render(string(f.Risk.Priority))
+					priorityStr = string(f.Risk.Priority)
+					priorityStyle = tf.severityStyle(priorityStr)
 				}
 
-				fmt.Fprintf(w, "  %-26s%-10s%-7s%-8s%-5s%-12s%s\n",
-					f.Advisory.ID,
-					style.Render(sev),
-					cvss,
-					epss,
-					kevStr,
-					priority,
+				fmt.Fprintf(w, "  %-*s %s %-*s %-*s %s %s %s\n",
+					colID, f.Advisory.ID,
+					styledPad(sev, colSeverity, style),
+					colCVSS, cvss,
+					colEPSS, epssVal,
+					styledPad(kevStr, colKEV, kevStyle),
+					styledPad(priorityStr, colPriority, priorityStyle),
 					fixed)
 			} else {
 				summary := f.Advisory.Summary
@@ -609,10 +719,10 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 					summary = truncate(summary, 50)
 				}
 
-				fmt.Fprintf(w, "  %-26s%-10s%-9s%s\n",
-					f.Advisory.ID,
-					style.Render(sev),
-					fixed,
+				fmt.Fprintf(w, "  %-*s %s %-*s %s\n",
+					colID, f.Advisory.ID,
+					styledPad(sev, colSeverity, style),
+					colFixed, fixed,
 					summary)
 			}
 		}
