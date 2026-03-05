@@ -326,35 +326,31 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <!-- ── When to use which ────────────────── -->
   <section id="comparison">
     <h2>When to use which command</h2>
-    <p>vulnex has three commands that check for vulnerabilities. They start from different inputs and serve different purposes:</p>
+    <p>vulnex has two commands that check for vulnerabilities. They start from different inputs and serve different purposes:</p>
 
     <div class="comparison-table">
       <table>
         <thead>
-          <tr><th></th><th><code>sbom check</code></th><th><code>scan</code></th><th><code>prioritize</code></th></tr>
+          <tr><th></th><th><code>sbom check</code></th><th><code>prioritize</code></th></tr>
         </thead>
         <tbody>
           <tr>
             <td><strong>Input</strong></td>
             <td>SBOM (CycloneDX/SPDX) or lockfile</td>
-            <td>Same as sbom check (alias)</td>
             <td>Scanner report (Trivy/Grype/SARIF)</td>
           </tr>
           <tr>
             <td><strong>Vuln source</strong></td>
-            <td>OSV (queries live)</td>
             <td>OSV (queries live)</td>
             <td>Already in the scanner report</td>
           </tr>
           <tr>
             <td><strong>Enrichment</strong></td>
             <td>Optional (<code>--enrich</code>)</td>
-            <td>Optional (<code>--enrich</code>)</td>
             <td>Always enriched (EPSS, KEV, CVSS)</td>
           </tr>
           <tr>
             <td><strong>VEX output</strong></td>
-            <td>Yes (<code>--vex</code>)</td>
             <td>Yes (<code>--vex</code>)</td>
             <td>No</td>
           </tr>
@@ -362,22 +358,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
             <td><strong>Diff mode</strong></td>
             <td>Yes (<code>sbom diff</code>)</td>
             <td>No</td>
-            <td>No</td>
           </tr>
           <tr>
             <td><strong>Best for</strong></td>
             <td>Supply chain audits, SBOM analysis, lockfile checks</td>
-            <td>Quick lockfile scans (shorter to type)</td>
             <td>Triaging existing scanner results with risk scoring</td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <p class="doc-note">
-      <strong>Tip:</strong> <code>vulnex scan</code> is a shorthand alias &mdash; it runs the same pipeline as <code>sbom check</code>.
-      Use whichever you prefer. <code>sbom check</code> is more discoverable; <code>scan</code> is faster to type.
-    </p>
   </section>
 
   <hr class="doc-divider" />

@@ -43,7 +43,7 @@ $ vulnex cve get CVE-2021-44228
 - **Offline mode** — Local SQLite cache with configurable TTLs; work without network access
 - **SBOM scanning** — Parse CycloneDX/SPDX SBOMs, find vulnerabilities grouped by component, and generate OpenVEX documents
 - **SBOM diffing** — Compare two SBOMs and see which vulnerabilities a dependency change introduces or fixes
-- **CI/CD gating** — `sbom check` / `scan` exits 1 on vulns found, `sbom diff` exits 1 on new vulns introduced; filter by `--severity` to control thresholds
+- **CI/CD gating** — `sbom check` exits 1 on vulns found, `sbom diff` exits 1 on new vulns introduced; filter by `--severity` to control thresholds
 - **Suppression file** — `.vulnexignore` lets teams suppress accepted risks with package scoping, expiry dates, and audit trails
 - **Pipe-friendly** — stdin support, multiple output formats, and composable commands
 - **Zero CGO** — Pure Go with no C dependencies; single static binary
@@ -86,8 +86,8 @@ vulnex epss score CVE-2024-3094
 vulnex cve search "apache log4j" --severity critical
 
 # Scan a lockfile or SBOM for vulnerabilities
-vulnex scan go.sum
-vulnex scan package-lock.json
+vulnex sbom check go.sum
+vulnex sbom check package-lock.json
 vulnex sbom check bom.json
 
 # Diff two SBOMs — what vulns did this change introduce?
@@ -144,30 +144,6 @@ These flags apply to all commands:
 | `-q, --quiet` | Suppress non-essential output |
 
 ## Commands
-
-### `vulnex scan` — Scan lockfiles and SBOMs
-
-Scan a package lockfile or SBOM file for known vulnerabilities. Automatically detects the format and queries OSV. This is the fastest way to check your dependencies.
-
-```bash
-vulnex scan go.sum
-vulnex scan package-lock.json --severity HIGH
-vulnex scan Cargo.lock -o json
-vulnex scan bom.json --ecosystem npm
-```
-
-Supported lockfiles: `go.sum`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Cargo.lock`, `Gemfile.lock`, `requirements.txt`, `poetry.lock`, `composer.lock`.
-
-Supported SBOMs: CycloneDX (JSON), SPDX (JSON).
-
-| Flag | Description |
-|------|-------------|
-| `--vex` | Output a VEX document for sharing triage decisions |
-| `--enrich` | Add exploit likelihood, known-exploitation status, and severity scores from multiple sources |
-| `--ecosystem` | Filter components by ecosystem |
-| `--severity` | Filter results by severity (exits 0 if no matches) |
-| `--ignore-file` | Path to suppression file (default: `.vulnexignore`) |
-| `--strict` | Show all findings, including those suppressed by `.vulnexignore` |
 
 ### `vulnex cve` — CVE operations
 
@@ -361,8 +337,6 @@ vulnex advisory affected django --ecosystem pip --output json
 #### `sbom check` — Scan SBOM or lockfile for vulnerabilities
 
 Parses CycloneDX/SPDX JSON files or package lockfiles and queries each component against OSV. Results are grouped by component showing advisory ID, severity, fixed version, and summary. Exits with code 1 when vulnerabilities are found, making it suitable for CI/CD pipelines.
-
-This is equivalent to `vulnex scan` — both commands accept lockfiles and SBOMs.
 
 ```bash
 vulnex sbom check bom.json

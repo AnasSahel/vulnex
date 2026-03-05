@@ -40,7 +40,7 @@ export const cicdExamples = [
 <span class="line-number">10</span>          <span class="y-key">run:</span> <span class="y-str">go install github.com/trustin-tech/vulnex@latest</span>
 <span class="line-number">11</span>
 <span class="line-number">12</span>        - <span class="y-key">name:</span> <span class="y-str">Scan lockfile for vulnerabilities</span>
-<span class="line-number">13</span>          <span class="y-key">run:</span> <span class="y-str">vulnex scan go.sum --severity critical</span>
+<span class="line-number">13</span>          <span class="y-key">run:</span> <span class="y-str">vulnex sbom check go.sum --severity critical</span>
 <span class="line-number">14</span>          <span class="y-comment"># Works with any lockfile: go.sum, package-lock.json,</span>
 <span class="line-number">15</span>          <span class="y-comment"># yarn.lock, pnpm-lock.yaml, Cargo.lock, etc.</span>
 <span class="line-number">16</span>          <span class="y-comment"># Exits 1 if critical vulns found</span>`,

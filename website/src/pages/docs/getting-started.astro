@@ -110,8 +110,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <section id="scan">
     <h2>Scanning a lockfile</h2>
     <p>Point vulnex at any supported lockfile to find vulnerable dependencies:</p>
-    <TerminalWindow title="vulnex scan">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex scan</span> <span class="t-flag">go.sum</span>
+    <TerminalWindow title="vulnex sbom check">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-flag">go.sum</span>
 
 <span class="t-dim">Scanning go.sum... found 142 packages</span>
 <span class="t-dim">Querying OSV for vulnerabilities...</span>
