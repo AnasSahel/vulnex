@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/trustin-tech/vulnex/internal/api"
@@ -240,7 +241,7 @@ func buildSearchURL(p SearchParams) (string, error) {
 		params.Set("keywordSearch", p.KeywordSearch)
 	}
 	if p.CvssV3Severity != "" {
-		params.Set("cvssV3Severity", p.CvssV3Severity)
+		params.Set("cvssV3Severity", strings.ToUpper(p.CvssV3Severity))
 	}
 	if p.CweID != "" {
 		params.Set("cweId", p.CweID)
