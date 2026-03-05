@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -221,8 +222,12 @@ func scanSBOM(ctx context.Context, filePath, ecosystemFilter string, quiet bool)
 		}
 	}
 
-	// Collect all batch results, aligned by index with queryComps
-	allResults := make([][]osv.OSVVulnerability, len(queryComps))
+	// Collect all batch results, aligned by index with queryComps.
+	// The batch endpoint only returns vuln IDs, so we collect IDs per component.
+	type batchHit struct {
+		vulnIDs []string
+	}
+	allHits := make([]batchHit, len(queryComps))
 	for start := 0; start < len(queries); start += batchSize {
 		end := start + batchSize
 		if end > len(queries) {
@@ -233,33 +238,77 @@ func scanSBOM(ctx context.Context, filePath, ecosystemFilter string, quiet bool)
 		batchResp, err := app.OSV.BatchQuery(ctx, batch)
 		if err != nil {
 			slog.Warn("OSV batch query failed", "error", err)
-			// Fall through with empty results for this batch
 			continue
 		}
 
 		for i, result := range batchResp.Results {
-			allResults[start+i] = result.Vulns
+			ids := make([]string, len(result.Vulns))
+			for j, v := range result.Vulns {
+				ids[j] = v.ID
+			}
+			allHits[start+i] = batchHit{vulnIDs: ids}
 		}
 	}
 
-	// Process results
+	// Collect unique vuln IDs and fetch full details
+	uniqueVulnIDs := make(map[string]struct{})
+	for _, hit := range allHits {
+		for _, id := range hit.vulnIDs {
+			uniqueVulnIDs[id] = struct{}{}
+		}
+	}
+
+	if !quiet && len(uniqueVulnIDs) > 0 {
+		fmt.Fprintf(os.Stderr, "Fetching details for %d vulnerabilities...\n", len(uniqueVulnIDs))
+	}
+
+	// Fetch full vulnerability details concurrently
+	fullVulns := make(map[string]*osv.OSVVulnerability, len(uniqueVulnIDs))
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, 10) // limit concurrency to 10
+	for id := range uniqueVulnIDs {
+		wg.Add(1)
+		go func(vulnID string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			vuln, err := app.OSV.GetVulnerability(ctx, vulnID)
+			if err != nil {
+				slog.Debug("failed to fetch vulnerability details", "id", vulnID, "error", err)
+				return
+			}
+			if vuln != nil {
+				mu.Lock()
+				fullVulns[vulnID] = vuln
+				mu.Unlock()
+			}
+		}(id)
+	}
+	wg.Wait()
+
+	// Process results using full vulnerability data
 	var findings []model.SBOMFinding
 	vulnResults := make(map[string]*model.EnrichedCVE)
 
 	for i, qc := range queryComps {
-		vulns := allResults[i]
-		if len(vulns) == 0 {
+		if len(allHits[i].vulnIDs) == 0 {
 			continue
 		}
 
 		slog.Debug("found vulnerabilities",
 			"component", qc.name,
 			"version", qc.version,
-			"count", len(vulns),
+			"count", len(allHits[i].vulnIDs),
 		)
 
-		for _, v := range vulns {
-			severity := osv.ExtractSeverity(v)
+		for _, vulnID := range allHits[i].vulnIDs {
+			v, ok := fullVulns[vulnID]
+			if !ok {
+				continue
+			}
+
+			severity := osv.ExtractSeverity(*v)
 
 			// Extract first fixed version for this component
 			fixed := ""

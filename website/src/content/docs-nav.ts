@@ -77,6 +77,13 @@ export const docsSections: DocsSection[] = [
       {
         slug: "prioritize", title: "prioritize", description: "Triage scanner findings with risk-based prioritization using CVSS, EPSS, and KEV signals.",
       },
+      {
+        slug: "sbom", title: "sbom", description: "Parse SBOMs and lockfiles, check for vulnerabilities, diff between versions, and generate VEX documents.",
+        subcommands: [
+          { id: "sbom-check", label: "sbom check" },
+          { id: "sbom-diff", label: "sbom diff" },
+        ],
+      },
     ],
   },
   {

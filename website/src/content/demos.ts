@@ -22,24 +22,27 @@ export const demos = [
   <span class="t-critical">+2 added</span>  <span class="t-green">-1 removed</span>`,
   },
   {
-    id: 'sc-lockfile',
-    label: 'Lockfile Scan',
-    title: 'vulnex scan pnpm-lock.yaml',
-    html: `<span class="t-prompt">$</span> <span class="t-cmd">vulnex scan</span> <span class="t-value">pnpm-lock.yaml</span>
-<span class="t-dim">Parsed 847 components from pnpm-lock.yaml</span>
-<span class="t-dim">Querying OSV for 847 components...</span>
-<span class="t-dim">Found 4 vulnerabilities</span>
+    id: 'sc-sbom',
+    label: 'SBOM Check',
+    title: 'vulnex sbom check go.sum --enrich',
+    html: `<span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">go.sum</span> <span class="t-flag">--enrich</span>
+<span class="t-dim">Parsed 42 components from go.sum</span>
+<span class="t-dim">Querying OSV for 42 components...</span>
+<span class="t-dim">Enriching 3 unique CVE IDs...</span>
 
-<span class="t-accent">postcss 8.4.14</span> <span class="t-dim">(npm)</span>
-  <span class="t-dim">ID                        Severity  Fixed    Summary</span>
-  GHSA-7fh5-64p2-3v2j      <span class="t-medium">MEDIUM</span>    8.4.31   Parsing error in PostCSS
+<span class="t-accent">golang.org/x/net 0.7.0</span> <span class="t-dim">(Go)</span>
+  <span class="t-dim">ID                  Severity   CVSS   EPSS       KEV   Priority        Fixed</span>
+  CVE-2023-44487      <span class="t-high">HIGH</span>       7.5    <span class="t-critical">94.4%↑</span>     <span class="t-critical">YES</span>   <span class="t-p0">P0-CRITICAL</span>     0.17.0
+    <span class="t-dim">→ In CISA KEV — confirmed active exploitation, 94% exploitation probability. Patch immediately.</span>
+  CVE-2023-39325      <span class="t-high">HIGH</span>       7.5    0.2%       —     P3-LOW          0.17.0
 
-<span class="t-accent">semver 6.3.0</span> <span class="t-dim">(npm)</span>
-  GHSA-c2qf-rxjj-qqgw      <span class="t-medium">MEDIUM</span>    6.3.1    semver vuln to ReDoS
+<span class="t-dim">Summary: 42 components scanned, 1 vulnerable, 2 findings</span>
+  <span class="t-high">HIGH: 2</span>
 
-<span class="t-dim">Summary: 847 components scanned, 2 vulnerable, 4 findings</span>
-  <span class="t-medium">MEDIUM: 4</span>
-<span class="t-dim">Completed in 1.203s</span>`,
+<span class="t-label">Prioritization</span>
+  Action required    1 finding — patch immediately (P0+P1)
+  Can wait           1 finding — low exploitation risk (P2-P4)
+  Top priority       CVE-2023-44487 in golang.org/x/net — upgrade to 0.17.0`,
   },
   {
     id: 'sc-scoring',

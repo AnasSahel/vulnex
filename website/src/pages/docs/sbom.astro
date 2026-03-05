@@ -1,0 +1,825 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import TerminalWindow from '../../components/TerminalWindow.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<DocsLayout
+  title="SBOM Command — vulnex docs"
+  description="Parse SBOMs and lockfiles, check for vulnerabilities, diff between versions, and generate VEX documents."
+  slug="sbom"
+>
+  <!-- ── Overview ─────────────────────────── -->
+  <section id="overview">
+    <span class="doc-badge">Command Reference</span>
+    <h1>vulnex sbom</h1>
+    <p class="doc-lead">
+      Check your software supply chain for known vulnerabilities.
+      Feed it an SBOM (CycloneDX or SPDX) or any common lockfile and vulnex queries every component against the
+      <a href="https://osv.dev">OSV vulnerability database</a> &mdash; then optionally enriches findings with
+      EPSS, KEV, CVSS, and exploit data from five additional sources.
+    </p>
+
+    <div class="pain-points">
+      <h3>Pain points it solves</h3>
+      <ul>
+        <li><strong>SBOMs with no vulnerability context.</strong> Build tools generate SBOMs but don't tell you which components have known vulnerabilities. This command bridges the gap.</li>
+        <li><strong>Lockfile format fragmentation.</strong> One command handles <code>go.sum</code>, <code>package-lock.json</code>, <code>yarn.lock</code>, <code>pnpm-lock.yaml</code>, <code>Cargo.lock</code>, <code>Gemfile.lock</code>, <code>requirements.txt</code>, <code>poetry.lock</code>, and <code>composer.lock</code>.</li>
+        <li><strong>No CI gate for new vulnerabilities.</strong> <code>sbom diff</code> compares two SBOMs and exits non-zero only when <em>new</em> vulnerabilities appear &mdash; so you gate on regressions, not pre-existing debt.</li>
+        <li><strong>Sharing triage decisions.</strong> The <code>--vex</code> flag generates a VEX document you can share with downstream consumers of your SBOM.</li>
+        <li><strong>Suppressing accepted risks.</strong> The <code>.vulnexignore</code> integration lets you suppress known-accepted findings with reasons and expiry dates.</li>
+      </ul>
+    </div>
+
+    <div class="subcommand-grid">
+      <a href="#sbom-check" class="subcommand-card">
+        <h3>sbom check</h3>
+        <p>Check SBOM or lockfile components for vulnerabilities</p>
+      </a>
+      <a href="#sbom-diff" class="subcommand-card">
+        <h3>sbom diff</h3>
+        <p>Compare two SBOMs for vulnerability changes</p>
+      </a>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── sbom check ───────────────────────── -->
+  <section id="sbom-check">
+    <h2>sbom check</h2>
+    <p>
+      Parse a CycloneDX/SPDX JSON SBOM or a package lockfile and query each component against the OSV vulnerability database.
+      Results are displayed as a table by default, or as a VEX document with <code>--vex</code>.
+    </p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex sbom check &lt;file&gt; [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="sbom check — lockfile scan">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">pnpm-lock.yaml</span>
+<span class="t-dim">Parsed 847 components from pnpm-lock.yaml</span>
+<span class="t-dim">Querying OSV for 847 components...</span>
+<span class="t-dim">Found 4 vulnerabilities</span>
+
+<span class="t-accent">postcss 8.4.14</span> <span class="t-dim">(npm)</span>
+  <span class="t-dim">ID                        Severity  Fixed    Summary</span>
+  GHSA-7fh5-64p2-3v2j      <span class="t-medium">MEDIUM</span>    8.4.31   Parsing error in PostCSS
+
+<span class="t-accent">semver 6.3.0</span> <span class="t-dim">(npm)</span>
+  GHSA-c2qf-rxjj-qqgw      <span class="t-medium">MEDIUM</span>    6.3.1    semver vuln to ReDoS
+
+<span class="t-dim">Summary: 847 components scanned, 2 vulnerable, 4 findings</span>
+  <span class="t-medium">MEDIUM: 4</span>
+<span class="t-dim">Completed in 1.203s</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="sbom check — enriched with EPSS/KEV/priority">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--enrich</span>
+<span class="t-dim">Parsed 12 components from bom.json</span>
+<span class="t-dim">Querying OSV for 12 components...</span>
+<span class="t-dim">Enriching 3 unique CVE IDs...</span>
+
+<span class="t-accent">golang.org/x/net 0.7.0</span> <span class="t-dim">(Go)</span>
+  <span class="t-dim">ID                  Severity   CVSS   EPSS       KEV   Priority        Fixed</span>
+  CVE-2023-44487      <span class="t-high">HIGH</span>       7.5    <span class="t-critical">94.4%↑</span>     <span class="t-critical">YES</span>   <span class="t-p0">P0-CRITICAL</span>     0.17.0
+    <span class="t-dim">→ In CISA KEV — confirmed active exploitation, 94% exploitation probability. Patch immediately.</span>
+  CVE-2023-39325      <span class="t-high">HIGH</span>       7.5    0.2%       —     P3-LOW          0.17.0
+
+<span class="t-dim">Summary: 12 components scanned, 1 vulnerable, 2 findings</span>
+  <span class="t-high">HIGH: 2</span>
+
+<span class="t-label">Prioritization</span>
+  Action required    1 finding — patch immediately (P0+P1)
+  Can wait           1 finding — low exploitation risk (P2-P4)
+  Top priority       CVE-2023-44487 in golang.org/x/net — upgrade to 0.17.0</pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="sbom check — filter by ecosystem">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--ecosystem npm --severity HIGH</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="sbom check — VEX output">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--vex</span> > vex.json</pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--enrich</code></td><td>bool</td><td>false</td><td>Add EPSS, KEV, CVSS, exploit data, and risk priority to findings</td></tr>
+          <tr><td><code>--vex</code></td><td>bool</td><td>false</td><td>Output a VEX document instead of a table</td></tr>
+          <tr><td><code>--ecosystem</code></td><td>string</td><td></td><td>Filter components by ecosystem (npm, pip, maven, go, etc.)</td></tr>
+          <tr><td><code>--severity</code></td><td>string</td><td></td><td>Filter results by severity (critical, high, medium, low)</td></tr>
+          <tr><td><code>--ignore-file</code></td><td>string</td><td>.vulnexignore</td><td>Path to suppression file</td></tr>
+          <tr><td><code>--strict</code></td><td>bool</td><td>false</td><td>Show all findings, including suppressed ones</td></tr>
+          <tr><td><code>--policy</code></td><td>string</td><td></td><td>Path to policy file for pass/fail evaluation</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── sbom diff ────────────────────────── -->
+  <section id="sbom-diff">
+    <h2>sbom diff</h2>
+    <p>
+      Compare two CycloneDX or SPDX JSON SBOM files and report which vulnerabilities were added, removed, or unchanged.
+      Exit code 0 means no new vulnerabilities were introduced. Exit code 1 means at least one was added &mdash; perfect for CI gates.
+    </p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex sbom diff &lt;old-sbom&gt; &lt;new-sbom&gt; [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="sbom diff — compare two SBOMs">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">old-bom.json new-bom.json</span>
+
+<span class="t-critical">+ ADDED (2 vulnerabilities)</span>
+  <span class="t-accent">flask 0.12.0</span> <span class="t-dim">(PyPI)</span>
+    GHSA-562c-5r94-xh97   <span class="t-high">HIGH</span>      0.12.3   Flask is vulnerable to...
+    GHSA-5wv5-4vpf-pj6m   <span class="t-high">HIGH</span>      1.0      Directory traversal i...
+
+<span class="t-green">- REMOVED (1 vulnerability)</span>
+  <span class="t-accent">lodash 4.17.20</span> <span class="t-dim">(npm)</span>
+    GHSA-35jh-r3h4-6jhm   <span class="t-high">HIGH</span>      4.17.21  Command Injection in ...
+
+<span class="t-dim">= UNCHANGED (55 vulnerabilities)</span>
+  <span class="t-accent">django 3.2.0</span> <span class="t-dim">(PyPI)</span>
+    GHSA-2gwj-7jmv-h26r   <span class="t-critical">CRITICAL</span>  2.2.28   SQL Injection in Django
+
+<span class="t-dim">Summary: old=3 components (56 vulns), new=4 components (57 vulns)</span>
+  <span class="t-critical">+2 added</span>  <span class="t-green">-1 removed</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="sbom diff — CI gate">
+      <pre><span class="t-dim"># In CI: fail the build only if new vulnerabilities were introduced</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">baseline.json current.json</span> <span class="t-flag">--severity critical</span>
+<span class="t-dim"># Exit code 0 → no new CRITICAL vulns → pipeline passes</span>
+<span class="t-dim"># Exit code 1 → new CRITICAL vulns found → pipeline fails</span></pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--enrich</code></td><td>bool</td><td>false</td><td>Add EPSS, KEV, CVSS, and exploit data to findings</td></tr>
+          <tr><td><code>--ecosystem</code></td><td>string</td><td></td><td>Filter components by ecosystem</td></tr>
+          <tr><td><code>--severity</code></td><td>string</td><td></td><td>Filter results by severity</td></tr>
+          <tr><td><code>--ignore-file</code></td><td>string</td><td>.vulnexignore</td><td>Path to suppression file</td></tr>
+          <tr><td><code>--strict</code></td><td>bool</td><td>false</td><td>Show all findings, including suppressed ones</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Supported formats ────────────────── -->
+  <section id="formats">
+    <h2>Supported formats</h2>
+    <p>The format is auto-detected from the file content (SBOMs) or filename (lockfiles). No <code>--from</code> flag needed.</p>
+
+    <div class="source-grid">
+      <div class="source-card">
+        <h4>CycloneDX</h4>
+        <p class="source-subtitle">SBOM — JSON format</p>
+        <p>The most widely adopted SBOM format. Generated by tools like <code>syft</code>, <code>cdxgen</code>, <code>trivy</code>, and many build plugins.</p>
+      </div>
+      <div class="source-card">
+        <h4>SPDX</h4>
+        <p class="source-subtitle">SBOM — JSON format</p>
+        <p>The ISO/IEC standard SBOM format. Generated by <code>syft</code>, GitHub dependency graph exports, and enterprise SCA tools.</p>
+      </div>
+      <div class="source-card">
+        <h4>Go</h4>
+        <p class="source-subtitle">go.sum</p>
+        <p>Go module checksum database file. Every Go project has one.</p>
+      </div>
+      <div class="source-card">
+        <h4>npm</h4>
+        <p class="source-subtitle">package-lock.json</p>
+        <p>npm lockfile with exact resolved versions for every dependency.</p>
+      </div>
+      <div class="source-card">
+        <h4>Yarn</h4>
+        <p class="source-subtitle">yarn.lock</p>
+        <p>Yarn classic and berry lockfile format.</p>
+      </div>
+      <div class="source-card">
+        <h4>pnpm</h4>
+        <p class="source-subtitle">pnpm-lock.yaml</p>
+        <p>pnpm lockfile in YAML format with content-addressable storage references.</p>
+      </div>
+      <div class="source-card">
+        <h4>Rust</h4>
+        <p class="source-subtitle">Cargo.lock</p>
+        <p>Cargo lockfile for Rust crate dependencies.</p>
+      </div>
+      <div class="source-card">
+        <h4>Ruby</h4>
+        <p class="source-subtitle">Gemfile.lock</p>
+        <p>Bundler lockfile for Ruby gem dependencies.</p>
+      </div>
+      <div class="source-card">
+        <h4>Python</h4>
+        <p class="source-subtitle">requirements.txt &middot; poetry.lock</p>
+        <p>pip requirements file and Poetry lockfile for Python packages.</p>
+      </div>
+      <div class="source-card">
+        <h4>PHP</h4>
+        <p class="source-subtitle">composer.lock</p>
+        <p>Composer lockfile for PHP package dependencies.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Enrichment ───────────────────────── -->
+  <section id="enrichment">
+    <h2>Enrichment with <code>--enrich</code></h2>
+    <p>
+      By default, <code>sbom check</code> queries only OSV and shows basic advisory data (ID, severity, fix version, summary).
+      Add <code>--enrich</code> to cross-reference findings with five additional intelligence sources:
+    </p>
+
+    <div class="enrich-grid">
+      <div class="enrich-item">
+        <strong>EPSS</strong>
+        <span>Exploitation probability as a percentage with 30-day trend</span>
+      </div>
+      <div class="enrich-item">
+        <strong>CISA KEV</strong>
+        <span>Whether the CVE is confirmed actively exploited</span>
+      </div>
+      <div class="enrich-item">
+        <strong>CVSS</strong>
+        <span>Base score from NVD (v3.1 or v4.0)</span>
+      </div>
+      <div class="enrich-item">
+        <strong>Exploit status</strong>
+        <span>Whether public exploit code exists (GitHub, Metasploit, etc.)</span>
+      </div>
+      <div class="enrich-item">
+        <strong>Risk priority</strong>
+        <span>Composite P0&ndash;P4 tier with rationale for critical findings</span>
+      </div>
+    </div>
+
+    <p class="doc-note">
+      <strong>When to use enrichment:</strong> Use <code>--enrich</code> when you need to triage findings and decide what to fix first.
+      Skip it when you just need a quick vulnerability count or when running in a bandwidth-constrained CI environment.
+    </p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── VEX output ───────────────────────── -->
+  <section id="vex">
+    <h2>VEX output with <code>--vex</code></h2>
+    <p>
+      A <strong>VEX (Vulnerability Exploitability eXchange)</strong> document communicates the exploitability status of
+      vulnerabilities in the context of a specific product. It answers: "yes, this CVE exists in our dependencies,
+      but here's our triage assessment."
+    </p>
+    <p>
+      Use <code>--vex</code> to generate a machine-readable VEX document instead of a human-readable table.
+      This is useful for sharing triage decisions with customers, auditors, or downstream consumers of your SBOM.
+    </p>
+    <TerminalWindow title="Generate VEX document">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--vex</span> > vex.json
+<span class="t-prompt">$</span> cat vex.json | jq '.statements | length'
+<span class="t-value">4</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Suppression ──────────────────────── -->
+  <section id="suppression">
+    <h2>Suppressing accepted risks</h2>
+    <p>
+      Create a <code>.vulnexignore</code> file to suppress findings you've reviewed and accepted.
+      Suppressions support reasons and expiry dates, so they're auditable and self-cleaning.
+    </p>
+    <TerminalWindow title="Suppression with .vulnexignore">
+      <pre><span class="t-dim"># .vulnexignore</span>
+<span class="y-key">suppressions:</span>
+  - <span class="y-key">id:</span> <span class="y-str">GHSA-2gwj-7jmv-h26r</span>
+    <span class="y-key">package:</span> <span class="y-str">django</span>
+    <span class="y-key">reason:</span> <span class="y-str">"Transitive dep, mitigated at WAF"</span>
+    <span class="y-key">expires:</span> <span class="y-str">"2026-06-01"</span>
+
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span>
+<span class="t-dim">Suppressed 1 findings via .vulnexignore</span></pre>
+    </TerminalWindow>
+    <p>Use <code>--strict</code> to show all findings including suppressed ones. Use <code>--ignore-file</code> to point to a custom suppression file.</p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── When to use which ────────────────── -->
+  <section id="comparison">
+    <h2>When to use which command</h2>
+    <p>vulnex has three commands that check for vulnerabilities. They start from different inputs and serve different purposes:</p>
+
+    <div class="comparison-table">
+      <table>
+        <thead>
+          <tr><th></th><th><code>sbom check</code></th><th><code>scan</code></th><th><code>prioritize</code></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Input</strong></td>
+            <td>SBOM (CycloneDX/SPDX) or lockfile</td>
+            <td>Same as sbom check (alias)</td>
+            <td>Scanner report (Trivy/Grype/SARIF)</td>
+          </tr>
+          <tr>
+            <td><strong>Vuln source</strong></td>
+            <td>OSV (queries live)</td>
+            <td>OSV (queries live)</td>
+            <td>Already in the scanner report</td>
+          </tr>
+          <tr>
+            <td><strong>Enrichment</strong></td>
+            <td>Optional (<code>--enrich</code>)</td>
+            <td>Optional (<code>--enrich</code>)</td>
+            <td>Always enriched (EPSS, KEV, CVSS)</td>
+          </tr>
+          <tr>
+            <td><strong>VEX output</strong></td>
+            <td>Yes (<code>--vex</code>)</td>
+            <td>Yes (<code>--vex</code>)</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><strong>Diff mode</strong></td>
+            <td>Yes (<code>sbom diff</code>)</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><strong>Best for</strong></td>
+            <td>Supply chain audits, SBOM analysis, lockfile checks</td>
+            <td>Quick lockfile scans (shorter to type)</td>
+            <td>Triaging existing scanner results with risk scoring</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="doc-note">
+      <strong>Tip:</strong> <code>vulnex scan</code> is a shorthand alias &mdash; it runs the same pipeline as <code>sbom check</code>.
+      Use whichever you prefer. <code>sbom check</code> is more discoverable; <code>scan</code> is faster to type.
+    </p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Tips & Recipes ───────────────────── -->
+  <section id="tips">
+    <h2>Tips &amp; recipes</h2>
+
+    <h3>CI pipeline with diff gate</h3>
+    <TerminalWindow title="CI — gate on new vulnerabilities">
+      <pre><span class="t-dim"># Generate SBOM from the main branch (baseline)</span>
+<span class="t-prompt">$</span> syft . -o cyclonedx-json > baseline.json
+
+<span class="t-dim"># After dependency changes, generate new SBOM</span>
+<span class="t-prompt">$</span> syft . -o cyclonedx-json > current.json
+
+<span class="t-dim"># Fail only if new vulnerabilities were introduced</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">baseline.json current.json</span></pre>
+    </TerminalWindow>
+
+    <h3>Scan and enrich in one step</h3>
+    <TerminalWindow title="Enriched lockfile scan">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">go.sum</span> <span class="t-flag">--enrich</span></pre>
+    </TerminalWindow>
+
+    <h3>Filter by ecosystem in a multi-language project</h3>
+    <TerminalWindow title="Ecosystem filter">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--ecosystem npm</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--ecosystem go --severity critical</span></pre>
+    </TerminalWindow>
+
+    <h3>Export to JSON or CSV</h3>
+    <TerminalWindow title="Export formats">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">-o json</span> > findings.json
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">-o csv</span> > findings.csv</pre>
+    </TerminalWindow>
+
+    <h3>Generate VEX for downstream consumers</h3>
+    <TerminalWindow title="VEX pipeline">
+      <pre><span class="t-dim"># Generate SBOM + VEX together</span>
+<span class="t-prompt">$</span> syft . -o cyclonedx-json > bom.json
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--vex</span> > vex.json</pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Related Commands ─────────────────── -->
+  <section id="related">
+    <h2>Related commands</h2>
+    <div class="related-grid">
+      <a href={`${base}/docs/prioritize/`} class="related-card">
+        <strong>vulnex prioritize</strong>
+        <span>Re-rank scanner findings with risk-based prioritization</span>
+      </a>
+      <a href={`${base}/docs/exploit/`} class="related-card">
+        <strong>vulnex exploit check</strong>
+        <span>Find public exploits and PoCs for CVEs</span>
+      </a>
+      <a href={`${base}/docs/cve/`} class="related-card">
+        <strong>vulnex cve get</strong>
+        <span>Enriched CVE lookup with risk scoring</span>
+      </a>
+      <a href={`${base}/docs/scoring/`} class="related-card">
+        <strong>Scoring &amp; Prioritization</strong>
+        <span>Composite risk scoring with CVSS, EPSS, and KEV</span>
+      </a>
+    </div>
+  </section>
+</DocsLayout>
+
+<style>
+  .doc-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+
+  .doc-lead {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+  }
+
+  h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  p a {
+    color: var(--accent);
+  }
+
+  code {
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+
+  .code-inline {
+    margin-bottom: 20px;
+  }
+
+  .code-inline code {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    display: inline-block;
+  }
+
+  .doc-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .doc-note {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 16px;
+  }
+
+  /* ── Pain points ────────────────────────── */
+
+  .pain-points {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+
+  .pain-points h3 {
+    margin: 0 0 12px;
+    font-size: 0.95rem;
+    color: var(--accent);
+  }
+
+  .pain-points ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  .pain-points li {
+    margin-bottom: 8px;
+  }
+
+  .pain-points li:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ── Subcommand cards ───────────────────── */
+
+  .subcommand-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .subcommand-card {
+    display: block;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+
+  .subcommand-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .subcommand-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--accent);
+  }
+
+  .subcommand-card p {
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* ── Comparison table ───────────────────── */
+
+  .comparison-table {
+    overflow-x: auto;
+    margin: 20px 0 24px;
+  }
+
+  .comparison-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .comparison-table thead {
+    border-bottom: 2px solid var(--border);
+  }
+
+  .comparison-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .comparison-table th:first-child {
+    width: 120px;
+  }
+
+  .comparison-table td {
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .comparison-table td:first-child {
+    color: var(--text);
+    font-size: 0.8rem;
+  }
+
+  .comparison-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ── Enrichment grid ────────────────────── */
+
+  .enrich-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 20px 0 24px;
+  }
+
+  .enrich-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .enrich-item strong {
+    font-size: 0.9rem;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  .enrich-item span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ── Source cards ────────────────────────── */
+
+  .source-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+
+  .source-card {
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .source-card h4 {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    margin-bottom: 2px;
+  }
+
+  .source-subtitle {
+    font-size: 0.75rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary) !important;
+    margin-bottom: 12px !important;
+  }
+
+  .source-card p {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  .source-card p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ── Flag tables ────────────────────────── */
+
+  .flags-table {
+    overflow-x: auto;
+    margin: 16px 0 24px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  thead {
+    border-bottom: 2px solid var(--border);
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  td code {
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ── Related links ──────────────────────── */
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+
+  .related-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .related-card strong {
+    font-size: 0.95rem;
+  }
+
+  .related-card span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  /* ── Lists ──────────────────────────────── */
+
+  ul {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    padding-left: 20px;
+    margin-bottom: 16px;
+  }
+
+  li {
+    margin-bottom: 6px;
+  }
+
+  @media (max-width: 600px) {
+    .subcommand-grid,
+    .source-grid,
+    .enrich-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

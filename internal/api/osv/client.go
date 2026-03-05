@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -336,19 +337,22 @@ func ExtractSeverity(v OSVVulnerability) string {
 }
 
 // normalizeCVSSSeverity attempts to extract a severity label from a CVSS vector
-// string or score. If the string itself is a numeric score, it maps it to the
-// standard severity labels.
+// string, numeric score, or severity label.
 func normalizeCVSSSeverity(score string) string {
 	score = strings.TrimSpace(score)
 	if score == "" {
 		return ""
 	}
 
-	// If the score is a CVSS vector string, it does not contain a severity
-	// label. Return empty so the caller falls through to database_specific.
+	// If the score is a CVSS vector string, extract the base score from it.
 	lower := strings.ToLower(score)
 	if strings.HasPrefix(lower, "cvss:") {
-		return ""
+		return severityFromCVSSVector(score)
+	}
+
+	// Try to parse as a numeric score.
+	if val, err := strconv.ParseFloat(score, 64); err == nil {
+		return severityFromScore(val)
 	}
 
 	// Try to map well-known severity labels.
@@ -365,6 +369,61 @@ func normalizeCVSSSeverity(score string) string {
 		return "low"
 	default:
 		return score
+	}
+}
+
+// severityFromCVSSVector extracts a severity label from a CVSS v3/v4 vector string
+// by parsing the base score metric groups.
+func severityFromCVSSVector(vector string) string {
+	// Look for known base score patterns in the vector
+	// CVSS v3.x vectors contain metrics like AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+	// We compute an approximate severity from the attack complexity and impact metrics.
+	parts := strings.Split(vector, "/")
+
+	// Simple heuristic: count high-impact metrics
+	highImpact := 0
+	lowBarrier := 0
+	for _, p := range parts {
+		switch {
+		case strings.HasSuffix(p, ":H"):
+			highImpact++
+		case p == "AV:N":
+			lowBarrier++
+		case p == "AC:L":
+			lowBarrier++
+		case p == "PR:N":
+			lowBarrier++
+		case p == "UI:N":
+			lowBarrier++
+		}
+	}
+
+	// Map to severity based on impact and attack surface
+	switch {
+	case highImpact >= 3 && lowBarrier >= 3:
+		return "critical"
+	case highImpact >= 2 && lowBarrier >= 2:
+		return "high"
+	case highImpact >= 1:
+		return "medium"
+	default:
+		return "low"
+	}
+}
+
+// severityFromScore maps a numeric CVSS score to a severity label.
+func severityFromScore(score float64) string {
+	switch {
+	case score >= 9.0:
+		return "critical"
+	case score >= 7.0:
+		return "high"
+	case score >= 4.0:
+		return "medium"
+	case score > 0:
+		return "low"
+	default:
+		return ""
 	}
 }
 
