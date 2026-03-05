@@ -1021,9 +1021,9 @@ func (tf *tableFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDi
 					summary = truncate(summary, 50)
 				}
 
-				fmt.Fprintf(w, "    %-26s%-10s%-9s%s\n",
+				fmt.Fprintf(w, "    %-26s %s %-9s %s\n",
 					f.Advisory.ID,
-					style.Render(sev),
+					styledPad(sev, 10, style),
 					fixed,
 					summary)
 			}
