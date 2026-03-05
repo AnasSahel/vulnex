@@ -477,7 +477,7 @@ Sources: GitHub (5) · Metasploit (2) · Nuclei (1) · ExploitDB (1)
 
 ### `vulnex scoring` — Scoring profiles and thresholds
 
-Display the built-in scoring profiles and P0–P4 priority threshold matrix. No API calls needed.
+Display the built-in scoring profiles and P0–P4 priority threshold matrix. No API calls needed. See the [Scoring & Prioritization Guide](https://vulnex.dev/docs/scoring/) for the full formula, worked examples, and practical guidance on choosing weights.
 
 ```bash
 vulnex scoring

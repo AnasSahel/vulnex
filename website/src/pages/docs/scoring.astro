@@ -1,0 +1,631 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import TerminalWindow from '../../components/TerminalWindow.astro';
+---
+
+<DocsLayout
+  title="Scoring &amp; Prioritization — vulnex docs"
+  description="How vulnex scores and prioritizes vulnerabilities using CVSS, EPSS, and KEV signals with configurable weights."
+>
+  <Fragment slot="sidebar">
+    <span class="sidebar-heading">Scoring Guide</span>
+    <a href="#overview">Overview</a>
+    <a href="#signals">The three signals</a>
+    <a href="#formula">The formula</a>
+    <a href="#profiles">Scoring profiles</a>
+    <a href="#custom-weights">Custom weights</a>
+    <span class="sidebar-heading">Prioritization</span>
+    <a href="#priority-tiers">Priority tiers (P0-P4)</a>
+    <a href="#disagreements">Signal disagreements</a>
+    <a href="#guidance">Practical guidance</a>
+    <span class="sidebar-heading">Reference</span>
+    <a href="#examples">CLI examples</a>
+    <a href="#related">Related commands</a>
+  </Fragment>
+
+  <!-- Overview -->
+  <section id="overview">
+    <span class="doc-badge">Concepts</span>
+    <h1>Scoring &amp; Prioritization</h1>
+    <p class="doc-lead">
+      Not every vulnerability matters equally. A CVE with a perfect 10.0 severity score may never be exploited in practice, while a "medium" severity bug might be actively targeted in the wild. Vulnex combines multiple signals to produce a composite score that reflects real-world risk, not just theoretical severity.
+    </p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- The three signals -->
+  <section id="signals">
+    <h2>The three signals</h2>
+    <p>Vulnex blends three independent vulnerability signals, each measuring a different dimension of risk:</p>
+
+    <div class="signal-grid">
+      <div class="signal-card">
+        <h4>CVSS</h4>
+        <p class="signal-subtitle">Severity score</p>
+        <p>The Common Vulnerability Scoring System rates how <strong>severe</strong> a vulnerability could be if exploited. Ranges from 0.0 to 10.0. Published by NVD.</p>
+        <p class="signal-detail">Measures: attack complexity, privileges required, user interaction, impact on confidentiality/integrity/availability.</p>
+        <p class="signal-limitation">Limitation: a high CVSS doesn't mean anyone is actually exploiting it.</p>
+      </div>
+      <div class="signal-card">
+        <h4>EPSS</h4>
+        <p class="signal-subtitle">Exploit probability</p>
+        <p>The Exploit Prediction Scoring System estimates the <strong>probability</strong> that a vulnerability will be exploited in the wild within the next 30 days. Ranges from 0.0 to 1.0. Published by FIRST.org.</p>
+        <p class="signal-detail">Measures: real-world exploitation likelihood based on historical patterns, exploit availability, and threat intelligence.</p>
+        <p class="signal-limitation">Limitation: probabilistic — a low score doesn't guarantee safety.</p>
+      </div>
+      <div class="signal-card">
+        <h4>KEV</h4>
+        <p class="signal-subtitle">Known exploitation</p>
+        <p>CISA's Known Exploited Vulnerabilities catalog is a <strong>binary signal</strong>: either a vulnerability is confirmed to be actively exploited in the wild, or it isn't. Published by the U.S. Cybersecurity and Infrastructure Security Agency.</p>
+        <p class="signal-detail">Measures: confirmed, active exploitation — the strongest possible signal.</p>
+        <p class="signal-limitation">Limitation: only lists vulnerabilities after exploitation is confirmed (lagging indicator).</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- The formula -->
+  <section id="formula">
+    <h2>The formula</h2>
+    <p>Vulnex normalizes all three signals to a 0-1 range, applies configurable weights, and produces a composite score from 0 to 100:</p>
+
+    <div class="formula-block">
+      <code>score = (CVSS/10 &times; cvss_weight + EPSS &times; epss_weight + KEV &times; kev_weight) &times; 100</code>
+    </div>
+
+    <p>Where:</p>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Term</th><th>Range</th><th>How it's normalized</th></tr></thead>
+        <tbody>
+          <tr><td><code>CVSS/10</code></td><td>0.0 - 1.0</td><td>Divided by 10 (CVSS is 0-10)</td></tr>
+          <tr><td><code>EPSS</code></td><td>0.0 - 1.0</td><td>Already a probability (no change)</td></tr>
+          <tr><td><code>KEV</code></td><td>0 or 1</td><td>1 if in CISA KEV catalog, 0 otherwise</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Worked example</h3>
+    <p>Consider <strong>CVE-2021-44228</strong> (Log4Shell): CVSS = 10.0, EPSS = 0.97, in KEV = yes.</p>
+    <p>Using the default profile (CVSS=0.3, EPSS=0.5, KEV=0.2):</p>
+
+    <div class="formula-block">
+      <code>score = (10.0/10 &times; 0.3 + 0.97 &times; 0.5 + 1 &times; 0.2) &times; 100<br/>score = (0.30 + 0.485 + 0.20) &times; 100<br/>score = <strong>98.5</strong></code>
+    </div>
+
+    <p>Now consider a vulnerability with CVSS = 9.8 but EPSS = 0.02 (low exploitation) and not in KEV:</p>
+    <div class="formula-block">
+      <code>score = (9.8/10 &times; 0.3 + 0.02 &times; 0.5 + 0 &times; 0.2) &times; 100<br/>score = (0.294 + 0.01 + 0) &times; 100<br/>score = <strong>30.4</strong></code>
+    </div>
+    <p>Despite having a near-perfect CVSS score, the vulnerability scores only 30.4 because nobody is exploiting it. This is the key insight: <strong>severity alone doesn't equal risk</strong>.</p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- Scoring profiles -->
+  <section id="profiles">
+    <h2>Scoring profiles</h2>
+    <p>Vulnex ships with three built-in profiles. Each is a preset combination of weights designed for a specific prioritization philosophy:</p>
+
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Profile</th><th>CVSS</th><th>EPSS</th><th>KEV</th><th>Philosophy</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>default</code></td><td>0.30</td><td>0.50</td><td>0.20</td>
+            <td>Balanced. Exploitation probability is the strongest signal, but severity and confirmed exploitation still matter.</td>
+          </tr>
+          <tr>
+            <td><code>exploit-focused</code></td><td>0.10</td><td>0.60</td><td>0.30</td>
+            <td>Prioritize real-world exploitation evidence. CVSS is largely ignored because high severity alone is not actionable.</td>
+          </tr>
+          <tr>
+            <td><code>severity-focused</code></td><td>0.60</td><td>0.30</td><td>0.10</td>
+            <td>Prioritize theoretical severity. Useful for compliance frameworks that require patching by CVSS score.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <TerminalWindow title="Using a scoring profile">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--scoring-profile exploit-focused</span>
+
+ <span class="t-label">Weighted Score:</span> <span class="t-value">92.0/100</span> <span class="t-dim">(profile: exploit-focused, weights: CVSS=0.10 EPSS=0.60 KEV=0.30)</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- Custom weights -->
+  <section id="custom-weights">
+    <h2>Custom weights</h2>
+    <p>If the built-in profiles don't match your needs, override individual weights with <code>--cvss-weight</code>, <code>--epss-weight</code>, and <code>--kev-weight</code>. Each takes a value from 0.0 (ignore this signal entirely) to 1.0 (give it full weight).</p>
+
+    <p class="doc-note">Custom weights override the profile. Start with <code>--scoring-profile</code> as a base and adjust individual weights as needed.</p>
+
+    <h3>Example: compliance-driven team</h3>
+    <p>Your compliance framework requires patching all CVSS &gt;= 7.0, so severity must dominate:</p>
+    <TerminalWindow title="Severity-heavy custom weights">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--cvss-weight 0.7 --epss-weight 0.2 --kev-weight 0.1</span></pre>
+    </TerminalWindow>
+
+    <h3>Example: ignore severity, focus on real threats</h3>
+    <p>Your team only cares about vulnerabilities that are actually being exploited:</p>
+    <TerminalWindow title="Exploitation-only custom weights">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3</span></pre>
+    </TerminalWindow>
+
+    <h3>How weights affect the same CVE</h3>
+    <p>Given a CVE with CVSS = 9.0, EPSS = 0.02, not in KEV:</p>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Weights</th><th>Score</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>default (0.3 / 0.5 / 0.2)</td><td>28.0</td><td>Low EPSS drags the score down</td></tr>
+          <tr><td>severity-focused (0.6 / 0.3 / 0.1)</td><td>54.6</td><td>High CVSS carries more weight</td></tr>
+          <tr><td>custom (0.8 / 0.1 / 0.1)</td><td>72.2</td><td>CVSS dominates almost entirely</td></tr>
+          <tr><td>custom (0 / 0.8 / 0.2)</td><td>1.6</td><td>Without CVSS, only EPSS matters — and it's very low</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- Priority tiers -->
+  <section id="priority-tiers">
+    <h2>Priority tiers (P0-P4)</h2>
+    <p>Independent of the weighted score, vulnex assigns every vulnerability a priority tier using a threshold matrix. These tiers are shown in the <code>Risk Priority</code> field of <code>vulnex enrich</code> and <code>vulnex cve get</code> output.</p>
+
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Tier</th><th>Condition</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code class="p0">P0-CRITICAL</code></td>
+            <td>In CISA KEV</td>
+            <td>Confirmed active exploitation. Patch immediately regardless of other scores.</td>
+          </tr>
+          <tr>
+            <td><code class="p1">P1-HIGH</code></td>
+            <td>EPSS &gt;= 0.7 OR CVSS &gt;= 9.0</td>
+            <td>Very likely to be exploited or extremely severe. Patch within days.</td>
+          </tr>
+          <tr>
+            <td><code class="p2">P2-MEDIUM</code></td>
+            <td>EPSS &gt;= 0.3 OR (CVSS &gt;= 7.0 AND EPSS &gt;= 0.1)</td>
+            <td>Moderate exploitation risk. Schedule patching within your normal cycle.</td>
+          </tr>
+          <tr>
+            <td><code class="p3">P3-LOW</code></td>
+            <td>CVSS &gt;= 7.0 but EPSS &lt; 0.1</td>
+            <td>Severe on paper but not being exploited. Patch when convenient.</td>
+          </tr>
+          <tr>
+            <td><code class="p4">P4-MINIMAL</code></td>
+            <td>CVSS &lt; 7.0 AND EPSS &lt; 0.1</td>
+            <td>Low severity, low exploitation risk. Monitor but deprioritize.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="doc-note">Priority tiers use fixed thresholds and are <strong>not affected</strong> by <code>--scoring-profile</code> or custom weights. The weighted score and priority tier are independent assessments — use both for a complete picture.</p>
+
+    <TerminalWindow title="Priority tier in output">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span>
+
+ <span class="t-label">Risk Priority:</span> <span class="t-critical">P0-CRITICAL</span> <span class="t-dim">(score: 100/100)</span>
+ <span class="t-label">Rationale:</span>    In CISA KEV — confirmed active exploitation</pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- Signal disagreements -->
+  <section id="disagreements">
+    <h2>Signal disagreements</h2>
+    <p>Sometimes CVSS and EPSS tell different stories. Vulnex detects these conflicts and flags them as "Signal Conflict" in the output. Understanding disagreements helps you make better triage decisions.</p>
+
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Pattern</th><th>What it means</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>High CVSS / Low EPSS</td>
+            <td>Theoretically severe but nobody is exploiting it in practice. Common with vulnerabilities that require unusual preconditions.</td>
+            <td>Deprioritize unless you have specific exposure. The CVSS may be inflated.</td>
+          </tr>
+          <tr>
+            <td>Low CVSS / High EPSS</td>
+            <td>Underrated by CVSS but attackers are actively interested. Often seen with information disclosure or privilege escalation bugs that enable attack chains.</td>
+            <td>Prioritize — attackers see value that the CVSS score misses.</td>
+          </tr>
+          <tr>
+            <td>High EPSS / Not in KEV</td>
+            <td>Exploitation is likely imminent but hasn't been confirmed yet by CISA. May simply be a lag in KEV updates.</td>
+            <td>Treat as high priority — don't wait for KEV confirmation.</td>
+          </tr>
+          <tr>
+            <td>Low CVSS / In KEV</td>
+            <td>Low severity score but confirmed active exploitation. The vulnerability may be easy to exploit despite low theoretical impact.</td>
+            <td>Patch immediately — KEV confirmation overrides CVSS.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <TerminalWindow title="Signal conflict in output">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2024-XXXX</span>
+
+ <span class="t-label">Risk Priority:</span>   <span class="t-value">P3-LOW</span> <span class="t-dim">(score: 35/100)</span>
+ <span class="t-label">Rationale:</span>      High CVSS but low exploitation probability
+ <span class="t-label">Signal Conflict:</span> <span class="t-warning">HIGH CVSS / LOW EPSS: Theoretically severe but practically low exploitation risk</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- Practical guidance -->
+  <section id="guidance">
+    <h2>Practical guidance</h2>
+
+    <h3>When to raise CVSS weight</h3>
+    <ul>
+      <li>Your compliance framework mandates patching by CVSS severity (e.g., PCI-DSS, FedRAMP)</li>
+      <li>You need audit-defensible prioritization based on industry-standard scores</li>
+      <li>Your environment has broad attack surface and you want to be conservative</li>
+    </ul>
+
+    <h3>When to raise EPSS weight</h3>
+    <ul>
+      <li>You want to focus engineering effort on vulnerabilities that are actually being exploited</li>
+      <li>You have limited patching capacity and need to maximize impact per patch</li>
+      <li>You're building a risk-based vulnerability management program</li>
+    </ul>
+
+    <h3>When to raise KEV weight</h3>
+    <ul>
+      <li>You're a U.S. federal agency (BOD 22-01 compliance requires KEV patching)</li>
+      <li>You want the strongest possible signal — confirmed exploitation is binary and definitive</li>
+      <li>You're building emergency patching workflows that trigger on confirmed threats</li>
+    </ul>
+
+    <h3>Recommended starting points</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Team type</th><th>Recommended profile</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Small startup, limited resources</td><td><code>exploit-focused</code></td><td>Focus on what's actually being exploited — ignore the noise</td></tr>
+          <tr><td>Enterprise with compliance requirements</td><td><code>severity-focused</code></td><td>Auditors want to see CVSS-driven patching</td></tr>
+          <tr><td>Security-mature team with vuln management</td><td><code>default</code></td><td>Balanced approach using all signals</td></tr>
+          <tr><td>Federal agency / government</td><td>Custom: 0.1 / 0.3 / 0.6</td><td>KEV compliance (BOD 22-01) is the primary driver</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- CLI examples -->
+  <section id="examples">
+    <h2>CLI examples</h2>
+
+    <TerminalWindow title="View built-in profiles and thresholds">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex scoring</span>
+
+ <span class="t-dim">Scoring Profiles</span>
+ <span class="t-dim">================</span>
+
+   default              CVSS=0.30  EPSS=0.50  KEV=0.20
+   exploit-focused      CVSS=0.10  EPSS=0.60  KEV=0.30
+   severity-focused     CVSS=0.60  EPSS=0.30  KEV=0.10</pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="Enrich with a preset profile">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--scoring-profile default</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="Enrich with custom weights">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="CVE get with scoring profile">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--scoring-profile exploit-focused</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="Prioritize scanner findings with custom weights">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex prioritize</span> <span class="t-value">trivy-results.json</span> <span class="t-flag">--cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- Related commands -->
+  <section id="related">
+    <h2>Related commands</h2>
+    <div class="subcommand-grid">
+      <a href="/docs/cve/" class="subcommand-card">
+        <h3>cve get / enrich</h3>
+        <p>Fetch CVE details with scoring</p>
+      </a>
+      <a href="/docs/cve/#scoring" class="subcommand-card">
+        <h3>Scoring profiles</h3>
+        <p>Profile table and custom weights</p>
+      </a>
+    </div>
+  </section>
+</DocsLayout>
+
+<style>
+  /* ── Documentation page styles ──────────── */
+
+  section {
+    scroll-margin-top: 80px;
+    margin-bottom: 16px;
+  }
+
+  .doc-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    font-family: var(--font-mono);
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    font-family: var(--font-mono);
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  p a {
+    color: var(--accent);
+  }
+
+  .doc-lead {
+    font-size: 1.05rem;
+    max-width: 640px;
+    margin-bottom: 32px;
+  }
+
+  .doc-note {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 16px;
+  }
+
+  .doc-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 2px 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+  }
+
+  ul {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    padding-left: 20px;
+    margin-bottom: 16px;
+  }
+
+  li {
+    margin-bottom: 6px;
+  }
+
+  /* ── Signal cards ───────────────────────── */
+
+  .signal-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0 24px;
+  }
+
+  .signal-card {
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .signal-card h4 {
+    margin-bottom: 2px;
+  }
+
+  .signal-subtitle {
+    font-size: 0.75rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary) !important;
+    margin-bottom: 12px !important;
+  }
+
+  .signal-card p {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  .signal-detail {
+    font-size: 0.8rem !important;
+    color: var(--text-secondary);
+  }
+
+  .signal-limitation {
+    font-size: 0.8rem !important;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-bottom: 0 !important;
+  }
+
+  /* ── Formula block ─────────────────────── */
+
+  .formula-block {
+    padding: 16px 20px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: var(--radius);
+    margin: 16px 0;
+  }
+
+  .formula-block code {
+    font-size: 0.9rem;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #e6edf3;
+  }
+
+  /* ── Priority tier colors ──────────────── */
+
+  .p0 { color: #f85149 !important; font-weight: 700; }
+  .p1 { color: #f0883e !important; font-weight: 600; }
+  .p2 { color: #d29922 !important; }
+  .p3 { color: #3fb950 !important; }
+  .p4 { color: #8b949e !important; }
+
+  /* ── Tables ────────────────────────────── */
+
+  .flags-table {
+    overflow-x: auto;
+    margin: 16px 0 24px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  thead {
+    border-bottom: 2px solid var(--border);
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  td code {
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ── Subcommand grid ───────────────────── */
+
+  .subcommand-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .subcommand-card {
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+
+  .subcommand-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .subcommand-card h3 {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--accent);
+    margin: 0 0 6px;
+  }
+
+  .subcommand-card p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* ── Terminal spacing ──────────────────── */
+
+  section :global(.terminal-window) {
+    margin: 16px 0 24px;
+  }
+
+  /* ── Responsive ────────────────────────── */
+
+  @media (max-width: 768px) {
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.25rem; }
+
+    .signal-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
