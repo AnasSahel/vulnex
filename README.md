@@ -261,22 +261,43 @@ cat cves.txt | vulnex cve watch --stdin            # add from file
 
 #### `kev list` — List all KEV entries
 
+Browse the CISA KEV catalog with pagination. Defaults to 20 entries per page.
+
 ```bash
-vulnex kev list
+vulnex kev list                        # first 20 entries
+vulnex kev list --limit 50             # 50 entries
+vulnex kev list --limit 0              # all entries
+vulnex kev list --offset 20            # skip first 20
+vulnex kev list --ransomware           # only ransomware-linked entries
 vulnex kev list --output json
 ```
+
+| Flag | Description |
+|------|-------------|
+| `--limit` | Maximum entries to display (default: 20, 0 = all) |
+| `--offset` | Skip first N entries for pagination |
+| `--ransomware` | Show only entries with known ransomware campaigns |
 
 #### `kev recent` — Recently added entries
 
 ```bash
-vulnex kev recent
-vulnex kev recent --days 7
+vulnex kev recent                      # last 7 days
+vulnex kev recent --days 30
+vulnex kev recent --ransomware         # only ransomware-linked
 ```
+
+| Flag | Description |
+|------|-------------|
+| `--days` | Number of days to look back (default: 7) |
+| `--ransomware` | Show only entries with known ransomware campaigns |
 
 #### `kev check` — Check if CVEs are in KEV
 
+Displays detailed label-value output for each match. Long fields (description, required action, notes) are truncated by default — use `--long` to show full content.
+
 ```bash
 vulnex kev check CVE-2021-44228
+vulnex kev check CVE-2021-44228 --long
 vulnex kev check CVE-2024-3094 CVE-2023-44228
 echo "CVE-2024-3094" | vulnex kev check --stdin
 ```

@@ -1,0 +1,569 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import TerminalWindow from '../../components/TerminalWindow.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<DocsLayout
+  title="KEV Commands — vulnex docs"
+  description="Browse, check, and filter CISA Known Exploited Vulnerabilities from the command line."
+  slug="kev"
+>
+  <Fragment slot="sidebar">
+    <span class="sidebar-heading">KEV Commands</span>
+    <a href="#overview">Overview</a>
+    <a href="#kev-list">kev list</a>
+    <a href="#kev-recent">kev recent</a>
+    <a href="#kev-check">kev check</a>
+    <a href="#kev-stats">kev stats</a>
+    <span class="sidebar-heading">Reference</span>
+    <a href="#what-is-kev">What is CISA KEV?</a>
+    <a href="#tips">Tips &amp; recipes</a>
+    <a href="#related">Related commands</a>
+  </Fragment>
+
+  <!-- ── Overview ─────────────────────────── -->
+  <section id="overview">
+    <span class="doc-badge">Command Reference</span>
+    <h1>vulnex kev</h1>
+    <p class="doc-lead">
+      Query the <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">CISA Known Exploited Vulnerabilities</a>
+      catalog to identify CVEs that are actively being exploited in the wild. Federal agencies are required to remediate
+      KEV entries by their due date, making this a critical prioritization signal.
+    </p>
+
+    <div class="subcommand-grid">
+      <a href="#kev-list" class="subcommand-card">
+        <h3>kev list</h3>
+        <p>Browse the full KEV catalog with pagination</p>
+      </a>
+      <a href="#kev-recent" class="subcommand-card">
+        <h3>kev recent</h3>
+        <p>See entries added in the last N days</p>
+      </a>
+      <a href="#kev-check" class="subcommand-card">
+        <h3>kev check</h3>
+        <p>Check if specific CVEs are in KEV</p>
+      </a>
+      <a href="#kev-stats" class="subcommand-card">
+        <h3>kev stats</h3>
+        <p>Catalog statistics and top vendors</p>
+      </a>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── kev list ──────────────────────────── -->
+  <section id="kev-list">
+    <h2>kev list</h2>
+    <p>Browse all entries in the CISA KEV catalog. Defaults to 20 entries per page with <code>--limit</code> and <code>--offset</code> for pagination. Use <code>--ransomware</code> to filter to entries linked to known ransomware campaigns.</p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex kev list [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="kev list — default (20 entries)">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span>
+
+<span class="t-dim">Showing 20 of 1189 entries</span>
+
+<span class="t-label">CVE ID</span>             <span class="t-label">VENDOR</span>           <span class="t-label">PRODUCT</span>                  <span class="t-label">ADDED</span>        <span class="t-label">RANSOMWARE</span>
+<span class="t-cve">CVE-2021-27104</span>     Accellion        FTA                      2021-11-03   Unknown
+<span class="t-cve">CVE-2021-27102</span>     Accellion        FTA                      2021-11-03   Unknown
+<span class="t-cve">CVE-2021-27101</span>     Accellion        FTA                      2021-11-03   Known
+<span class="t-dim">... 17 more rows</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="kev list — pagination">
+      <pre><span class="t-dim"># Page 2</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--offset 20 --limit 20</span>
+
+<span class="t-dim"># All entries</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--limit 0</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="kev list — ransomware filter">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--ransomware</span>
+
+<span class="t-dim">Showing 20 of 238 entries</span>
+
+<span class="t-label">CVE ID</span>             <span class="t-label">VENDOR</span>           <span class="t-label">PRODUCT</span>                  <span class="t-label">ADDED</span>        <span class="t-label">RANSOMWARE</span>
+<span class="t-cve">CVE-2021-27101</span>     Accellion        FTA                      2021-11-03   Known
+<span class="t-cve">CVE-2021-27103</span>     Accellion        FTA                      2021-11-03   Known
+<span class="t-dim">...</span></pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--limit</code></td><td>int</td><td>20</td><td>Maximum entries to display (0 = all)</td></tr>
+          <tr><td><code>--offset</code></td><td>int</td><td>0</td><td>Skip first N entries for pagination</td></tr>
+          <tr><td><code>--ransomware</code></td><td>bool</td><td>false</td><td>Show only entries with known ransomware campaigns</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="doc-note">Pagination applies only to table output. Structured formats (<code>json</code>, <code>csv</code>) return all entries (respecting <code>--ransomware</code> filter).</p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── kev recent ────────────────────────── -->
+  <section id="kev-recent">
+    <h2>kev recent</h2>
+    <p>Show KEV entries added in the last N days. Useful for tracking new additions to the catalog.</p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex kev recent [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="kev recent — last 7 days">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span>
+
+<span class="t-label">CVE ID</span>             <span class="t-label">VENDOR</span>           <span class="t-label">PRODUCT</span>                  <span class="t-label">ADDED</span>        <span class="t-label">RANSOMWARE</span>
+<span class="t-cve">CVE-2025-1234</span>      Fortinet         FortiOS                  2026-03-03   Unknown
+<span class="t-cve">CVE-2025-5678</span>      Microsoft        Exchange Server          2026-03-01   Known</pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="kev recent — 30 days, ransomware only">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span> <span class="t-flag">--days 30 --ransomware</span></pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--days</code></td><td>int</td><td>7</td><td>Number of days to look back</td></tr>
+          <tr><td><code>--ransomware</code></td><td>bool</td><td>false</td><td>Show only entries with known ransomware campaigns</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── kev check ─────────────────────────── -->
+  <section id="kev-check">
+    <h2>kev check</h2>
+    <p>Check whether one or more CVEs are in the CISA KEV catalog. Displays detailed label-value output for each match, including vendor, product, description, required action, ransomware status, and notes.</p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex kev check &lt;CVE-ID...&gt; [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="kev check — single CVE">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2021-44228</span>
+
+<span class="t-label">CVE ID:</span>           <span class="t-cve">CVE-2021-44228</span>
+<span class="t-label">Name:</span>             Apache Log4j2 Remote Code Execution Vulnerability
+<span class="t-label">Vendor:</span>           Apache
+<span class="t-label">Product:</span>          Log4j2
+<span class="t-label">Description:</span>      Apache Log4j2 2.0-beta9 through 2.15.0 JNDI features used in confi...
+<span class="t-label">Date Added:</span>       2021-12-10
+<span class="t-label">Due Date:</span>         2021-12-24
+<span class="t-label">Required Action:</span>  For all affected software assets, apply patches referenced in CISA...
+<span class="t-label">Ransomware:</span>       <span class="t-critical">Known</span>
+<span class="t-label">Notes:</span>            https://logging.apache.org/log4j/2.x/security.html</pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="kev check — full output">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--long</span></pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="kev check — multiple CVEs + stdin">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2024-3094 CVE-2023-44228</span>
+
+<span class="t-prompt">$</span> echo <span class="t-cve">"CVE-2024-3094"</span> | <span class="t-cmd">vulnex kev check</span> <span class="t-flag">--stdin</span></pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--stdin</code></td><td>bool</td><td>false</td><td>Read CVE IDs from stdin (one per line)</td></tr>
+          <tr><td><code>-l, --long</code></td><td>bool</td><td>false</td><td>Show full content for description, required action, and notes (otherwise truncated to 80 chars)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="doc-note">CVEs not found in KEV are reported on stderr. Use <code>-q</code> to suppress these messages.</p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── kev stats ─────────────────────────── -->
+  <section id="kev-stats">
+    <h2>kev stats</h2>
+    <p>Display summary statistics for the KEV catalog: total entries, ransomware-linked count, top vendors, and recent additions.</p>
+
+    <h3>Usage</h3>
+    <div class="code-inline"><code>vulnex kev stats [flags]</code></div>
+
+    <h3>Examples</h3>
+    <TerminalWindow title="kev stats">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev stats</span>
+
+<span class="t-label">KEV Catalog Statistics</span>
+
+<span class="t-label">Total Entries</span>       1,189
+<span class="t-label">Ransomware</span>          238
+<span class="t-label">Last Updated</span>        2026-03-05
+
+<span class="t-label">Top Vendors</span>
+  Microsoft           305
+  Cisco               68
+  Apple               65
+  Adobe               64
+  Google              53
+  Oracle              40
+  Apache              36
+  Fortinet            22
+  VMware              21
+  Citrix              18</pre>
+    </TerminalWindow>
+
+    <TerminalWindow title="kev stats — more vendors">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev stats</span> <span class="t-flag">--top 20</span></pre>
+    </TerminalWindow>
+
+    <h3>Flags</h3>
+    <div class="flags-table">
+      <table>
+        <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--top</code></td><td>int</td><td>10</td><td>Number of top vendors to display</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── What is CISA KEV? ────────────────── -->
+  <section id="what-is-kev">
+    <h2>What is CISA KEV?</h2>
+    <p>
+      The <strong>Known Exploited Vulnerabilities (KEV) catalog</strong> is maintained by the
+      <a href="https://www.cisa.gov/" target="_blank" rel="noopener">Cybersecurity and Infrastructure Security Agency (CISA)</a>.
+      It lists CVEs that are confirmed to be actively exploited in the wild.
+    </p>
+
+    <div class="info-cards">
+      <div class="info-card">
+        <h4>Mandatory remediation</h4>
+        <p>Federal agencies are required by <a href="https://www.cisa.gov/news-events/directives/bod-22-01-reducing-significant-risk-known-exploited-vulnerabilities" target="_blank" rel="noopener">BOD 22-01</a> to remediate KEV entries by their due date. Many private organizations also use KEV as a prioritization signal.</p>
+      </div>
+      <div class="info-card">
+        <h4>Ransomware tracking</h4>
+        <p>Each KEV entry includes a <code>KnownRansomwareCampaign</code> field indicating whether the vulnerability has been used in ransomware attacks. Use <code>--ransomware</code> to filter for these entries.</p>
+      </div>
+    </div>
+
+    <h3>Why KEV matters for prioritization</h3>
+    <p>
+      A CVE in the KEV catalog is <em>confirmed actively exploited</em> &mdash; not just theoretically exploitable.
+      In vulnex's <a href={`${base}/docs/scoring/`}>composite scoring</a>, KEV presence is one of three signals
+      (alongside CVSS and EPSS) and automatically triggers a <strong>P0-CRITICAL</strong> priority rating.
+    </p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Tips & Recipes ───────────────────── -->
+  <section id="tips">
+    <h2>Tips &amp; recipes</h2>
+
+    <h3>Find ransomware-linked CVEs and enrich them</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--ransomware --limit 0 -o csv</span> \
+    | cut -d, -f1 \
+    | <span class="t-cmd">vulnex enrich</span> <span class="t-flag">--stdin -o json</span></pre>
+    </TerminalWindow>
+
+    <h3>Check recent KEV additions and enrich</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span> <span class="t-flag">--days 7 -o csv</span> \
+    | cut -d, -f1 \
+    | <span class="t-cmd">vulnex enrich</span> <span class="t-flag">--stdin</span></pre>
+    </TerminalWindow>
+
+    <h3>Page through the catalog</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--limit 20</span>              <span class="t-dim"># page 1</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--limit 20 --offset 20</span>  <span class="t-dim"># page 2</span>
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--limit 20 --offset 40</span>  <span class="t-dim"># page 3</span></pre>
+    </TerminalWindow>
+
+    <h3>Export KEV data</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--limit 0 -o json</span> > kev-catalog.json
+<span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--ransomware --limit 0 -o csv</span> > ransomware-cves.csv</pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- ── Related Commands ─────────────────── -->
+  <section id="related">
+    <h2>Related commands</h2>
+    <div class="related-grid">
+      <a href={`${base}/docs/cve/`} class="related-card">
+        <strong>vulnex cve</strong>
+        <span>Search, list, and fetch CVE details from NVD</span>
+      </a>
+      <a href={`${base}/docs/epss/`} class="related-card">
+        <strong>vulnex epss</strong>
+        <span>Query exploit prediction scores and trends</span>
+      </a>
+      <a href={`${base}/docs/scoring/`} class="related-card">
+        <strong>Scoring &amp; Prioritization</strong>
+        <span>How KEV integrates into composite risk scoring</span>
+      </a>
+    </div>
+  </section>
+</DocsLayout>
+
+<style>
+  .doc-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+
+  .doc-lead {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+  }
+
+  h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  p a {
+    color: var(--accent);
+  }
+
+  code {
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+
+  .code-inline {
+    margin-bottom: 20px;
+  }
+
+  .code-inline code {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    display: inline-block;
+  }
+
+  .doc-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .doc-note {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 16px;
+  }
+
+  /* Subcommand cards */
+  .subcommand-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .subcommand-card {
+    display: block;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+
+  .subcommand-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .subcommand-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--accent);
+  }
+
+  .subcommand-card p {
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* Flag tables */
+  .flags-table {
+    overflow-x: auto;
+    margin: 16px 0 24px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  thead {
+    border-bottom: 2px solid var(--border);
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  td code {
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Info cards */
+  .info-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+
+  .info-card {
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .info-card h4 {
+    color: var(--accent);
+  }
+
+  .info-card p {
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  .info-card a {
+    color: var(--accent);
+  }
+
+  /* Related links */
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+
+  .related-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .related-card strong {
+    font-size: 0.95rem;
+  }
+
+  .related-card span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 600px) {
+    .subcommand-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .info-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
