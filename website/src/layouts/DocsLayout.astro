@@ -1,0 +1,100 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <Navbar />
+  <div class="docs-page">
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <nav class="sidebar-nav">
+        <slot name="sidebar" />
+      </nav>
+    </aside>
+    <main class="docs-content">
+      <slot />
+    </main>
+  </div>
+  <Footer />
+</BaseLayout>
+
+<style>
+  .docs-page {
+    display: flex;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-top: 60px;
+    min-height: 100vh;
+  }
+
+  .docs-sidebar {
+    position: sticky;
+    top: 60px;
+    width: 240px;
+    flex-shrink: 0;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+    padding: 32px 24px 32px 24px;
+    border-right: 1px solid var(--border);
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-nav :global(a) {
+    display: block;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .sidebar-nav :global(a:hover) {
+    color: var(--text);
+    background: var(--surface);
+    text-decoration: none;
+  }
+
+  .sidebar-nav :global(.sidebar-heading) {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    padding: 16px 12px 6px;
+    cursor: default;
+  }
+
+  .sidebar-nav :global(.sidebar-heading:first-child) {
+    padding-top: 0;
+  }
+
+  .docs-content {
+    flex: 1;
+    min-width: 0;
+    padding: 40px 48px 80px;
+  }
+
+  @media (max-width: 900px) {
+    .docs-sidebar {
+      display: none;
+    }
+
+    .docs-content {
+      padding: 32px 20px 64px;
+    }
+  }
+</style>
