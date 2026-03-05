@@ -1,5 +1,6 @@
 ---
 import TerminalWindow from './TerminalWindow.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section class="hero">
@@ -22,7 +23,7 @@ import TerminalWindow from './TerminalWindow.astro';
 
     <div class="hero-ctas">
       <a href="#install" class="cta-primary">Install vulnex</a>
-      <a href="#showcase" class="cta-secondary">See it in action</a>
+      <a href={`${base}/docs/`} class="cta-secondary">Read the docs</a>
     </div>
 
     <div class="hero-terminal">

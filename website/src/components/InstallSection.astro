@@ -2,6 +2,7 @@
 import TabbedPanel from './TabbedPanel.astro';
 import TerminalWindow from './TerminalWindow.astro';
 import { installMethods } from '../content/install';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section id="install">
@@ -10,6 +11,7 @@ import { installMethods } from '../content/install';
       <span class="section-label">INSTALLATION</span>
       <h2 class="section-title">Get started in seconds</h2>
       <p class="section-desc">Pick your preferred method — one command and you're ready.</p>
+      <a href={`${base}/docs/getting-started/`} class="section-link">Post-install quickstart &rarr;</a>
     </div>
 
     <div class="install-wrap">
@@ -70,6 +72,19 @@ import { installMethods } from '../content/install';
     font-size: 1.05rem;
     max-width: 600px;
     margin: 0 auto;
+  }
+
+  .section-link {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .section-link:hover {
+    text-decoration: underline;
   }
 
   .install-wrap {

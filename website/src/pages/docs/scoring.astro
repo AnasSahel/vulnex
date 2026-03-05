@@ -1,12 +1,13 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import TerminalWindow from '../../components/TerminalWindow.astro';
-const base = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <DocsLayout
   title="Scoring &amp; Prioritization — vulnex docs"
   description="How vulnex scores and prioritizes vulnerabilities using CVSS, EPSS, and KEV signals with configurable weights."
+  slug="scoring"
 >
   <Fragment slot="sidebar">
     <span class="sidebar-heading">Scoring Guide</span>

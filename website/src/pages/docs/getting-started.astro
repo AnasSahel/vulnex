@@ -1,0 +1,271 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import TerminalWindow from '../../components/TerminalWindow.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<DocsLayout
+  title="Getting Started — vulnex docs"
+  description="Install vulnex and run your first vulnerability query in under two minutes."
+>
+  <Fragment slot="sidebar">
+    <span class="sidebar-heading">Getting Started</span>
+    <a href="#install">Installation</a>
+    <a href="#first-query">First query</a>
+    <a href="#enrich">Enriching a CVE</a>
+    <a href="#output-formats">Output formats</a>
+    <a href="#scan">Scanning a lockfile</a>
+    <span class="sidebar-heading">Next Steps</span>
+    <a href="#next-steps">Where to go next</a>
+  </Fragment>
+
+  <section id="install">
+    <span class="doc-badge">Guide</span>
+    <h1>Getting Started</h1>
+    <p class="doc-lead">
+      Install vulnex and run your first vulnerability query in under two minutes.
+      No API keys required — vulnex works out of the box with public data sources.
+    </p>
+
+    <h2>Installation</h2>
+
+    <h3>Homebrew (macOS / Linux)</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">brew install anassahel/tap/vulnex</span></pre>
+    </TerminalWindow>
+
+    <h3>Go install</h3>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">go install github.com/trustin-tech/vulnex@latest</span></pre>
+    </TerminalWindow>
+
+    <h3>Binary download</h3>
+    <p>
+      Download the latest release from
+      <a href="https://github.com/AnasSahel/vulnex/releases" target="_blank" rel="noopener">GitHub Releases</a>
+      for your platform (Linux, macOS, Windows).
+    </p>
+
+    <p>Verify the installation:</p>
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex version</span>
+<span class="t-value">vulnex v1.4.0</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <section id="first-query">
+    <h2>Your first query</h2>
+    <p>Look up a CVE by ID:</p>
+    <TerminalWindow title="vulnex cve get">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2024-3094</span>
+
+    <span class="t-cve"><strong>CVE-2024-3094</strong></span> — Malicious code in xz-utils
+    <span class="t-label">Severity</span>            <span class="t-critical">CRITICAL (10.0)</span>
+    <span class="t-label">Published</span>           2024-03-29
+    <span class="t-label">Status</span>              Analyzed</pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <section id="enrich">
+    <h2>Enriching a CVE</h2>
+    <p>
+      The <code>enrich</code> command aggregates data from all five sources (NVD, KEV, EPSS, GHSA, OSV)
+      and computes a risk priority score:
+    </p>
+    <TerminalWindow title="vulnex enrich">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span>
+
+    <span class="t-cve"><strong>CVE-2021-44228</strong></span> — Apache Log4j2 JNDI
+    <span class="t-label">Severity</span>            <span class="t-critical">CRITICAL (10.0)</span>
+    <span class="t-label">Priority</span>            <span class="t-p0">P0 — Critical: actively exploited, high EPSS</span>
+    <span class="t-label">EPSS</span>                <span class="t-value">0.97185 (97.2%)</span> — percentile: 99.99%
+    <span class="t-label">KEV</span>                 <span class="t-critical">Yes</span> — due 2021-12-24
+    <span class="t-label">Sources</span>             <span class="t-green">NVD</span> · <span class="t-green">KEV</span> · <span class="t-green">EPSS</span> · <span class="t-green">GHSA</span> · <span class="t-green">OSV</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <section id="output-formats">
+    <h2>Output formats</h2>
+    <p>Every command supports multiple output formats via <code>--output</code>:</p>
+
+    <table class="doc-table">
+      <thead><tr><th>Format</th><th>Flag</th><th>Use case</th></tr></thead>
+      <tbody>
+        <tr><td>Table</td><td><code>--output table</code></td><td>Human-readable (default)</td></tr>
+        <tr><td>JSON</td><td><code>--output json</code></td><td>Scripting, pipelines</td></tr>
+        <tr><td>CSV</td><td><code>--output csv</code></td><td>Spreadsheets, data analysis</td></tr>
+        <tr><td>Markdown</td><td><code>--output markdown</code></td><td>Reports, GitHub issues</td></tr>
+        <tr><td>YAML</td><td><code>--output yaml</code></td><td>Configuration integration</td></tr>
+        <tr><td>SARIF</td><td><code>--output sarif</code></td><td>GitHub Code Scanning</td></tr>
+      </tbody>
+    </table>
+
+    <TerminalWindow>
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex enrich</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--output json</span> <span class="t-flag">| jq .priority</span>
+<span class="t-value">"P0-CRITICAL"</span></pre>
+    </TerminalWindow>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <section id="scan">
+    <h2>Scanning a lockfile</h2>
+    <p>Point vulnex at any supported lockfile to find vulnerable dependencies:</p>
+    <TerminalWindow title="vulnex scan">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex scan</span> <span class="t-flag">go.sum</span>
+
+<span class="t-dim">Scanning go.sum... found 142 packages</span>
+<span class="t-dim">Querying OSV for vulnerabilities...</span>
+
+<span class="t-label">PACKAGE</span>              <span class="t-label">VERSION</span>     <span class="t-label">CVE</span>                <span class="t-label">SEVERITY</span>
+golang.org/x/net     v0.7.0      <span class="t-cve">CVE-2023-39325</span>     <span class="t-high">HIGH</span>
+golang.org/x/crypto  v0.6.0      <span class="t-cve">CVE-2023-48795</span>     <span class="t-medium">MEDIUM</span>
+
+<span class="t-dim">2 vulnerabilities found in 142 packages</span></pre>
+    </TerminalWindow>
+
+    <p>Supported lockfiles: <code>go.sum</code>, <code>package-lock.json</code>,
+      <code>yarn.lock</code>, <code>pnpm-lock.yaml</code>, <code>Cargo.lock</code>,
+      <code>Gemfile.lock</code>, <code>requirements.txt</code>, <code>poetry.lock</code>,
+      <code>composer.lock</code>.</p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <section id="next-steps">
+    <h2>Where to go next</h2>
+    <div class="next-cards">
+      <a href={`${base}/docs/cve/`} class="next-card">
+        <strong>CVE Commands</strong>
+        <span>Search, list, fetch, and track CVEs</span>
+      </a>
+      <a href={`${base}/docs/scoring/`} class="next-card">
+        <strong>Scoring & Prioritization</strong>
+        <span>How risk scores and P0-P4 priorities work</span>
+      </a>
+    </div>
+  </section>
+</DocsLayout>
+
+<style>
+  .doc-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+
+  .doc-lead {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+  }
+
+  p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  code {
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+
+  .doc-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  .doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 0.9rem;
+  }
+
+  .doc-table th {
+    text-align: left;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+  }
+
+  .doc-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .next-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .next-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+
+  .next-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .next-card strong {
+    font-size: 0.95rem;
+  }
+
+  .next-card span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+</style>

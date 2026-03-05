@@ -1,12 +1,13 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import TerminalWindow from '../../components/TerminalWindow.astro';
-const base = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <DocsLayout
   title="CVE Command — vulnex docs"
   description="Search, list, fetch, and track CVEs from the National Vulnerability Database using the vulnex CLI."
+  slug="cve"
 >
   <Fragment slot="sidebar">
     <span class="sidebar-heading">CVE Command</span>

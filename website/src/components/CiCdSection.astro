@@ -1,6 +1,7 @@
 ---
 import TabbedPanel from './TabbedPanel.astro';
 import { cicdExamples } from '../content/cicd';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section id="cicd">
@@ -11,6 +12,7 @@ import { cicdExamples } from '../content/cicd';
       <p class="section-desc">
         <code>vulnex scan</code> checks lockfiles or SBOMs. <code>sbom diff</code> catches new vulns a PR introduces. Both exit 1 on failure.
       </p>
+      <a href={`${base}/docs/cve/`} class="section-link">Full pipeline docs &rarr;</a>
     </div>
 
     <div class="cicd-wrap">
@@ -73,6 +75,19 @@ import { cicdExamples } from '../content/cicd';
     font-size: 1.05rem;
     max-width: 600px;
     margin: 0 auto;
+  }
+
+  .section-link {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .section-link:hover {
+    text-decoration: underline;
   }
 
   .section-desc :global(code) {

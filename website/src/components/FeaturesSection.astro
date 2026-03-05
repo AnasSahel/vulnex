@@ -1,6 +1,7 @@
 ---
 import FeatureCard from './FeatureCard.astro';
 import { features } from '../content/features';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section id="features">
@@ -9,6 +10,7 @@ import { features } from '../content/features';
       <span class="section-label">FEATURES</span>
       <h2 class="section-title">Everything you need in one query</h2>
       <p class="section-desc">Combine five vulnerability data sources, score risk, scan SBOMs, and pipe results — all from a single static binary.</p>
+      <a href={`${base}/docs/cve/`} class="section-link">Explore command reference &rarr;</a>
     </div>
 
     <div class="features-grid">
@@ -55,6 +57,19 @@ import { features } from '../content/features';
     font-size: 1.05rem;
     max-width: 600px;
     margin: 0 auto;
+  }
+
+  .section-link {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .section-link:hover {
+    text-decoration: underline;
   }
 
   .features-grid {

@@ -9,6 +9,8 @@ An open-source, offline-capable, multi-source vulnerability intelligence CLI.
 
 vulnex aggregates data from **NVD**, **CISA KEV**, **EPSS**, **GitHub Advisory Database**, and **OSV.dev** into a unified command-line experience with local SQLite caching, composite risk scoring, and pipe-friendly output.
 
+**[Documentation](https://anassahel.github.io/vulnex/docs/)** | **[Getting Started](https://anassahel.github.io/vulnex/docs/getting-started/)**
+
 ### Demo
 
 ```

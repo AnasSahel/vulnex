@@ -2,13 +2,20 @@
 import BaseLayout from './BaseLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
+import { docsSections, getPagerLinks } from '../content/docs-nav';
 
 interface Props {
   title: string;
   description: string;
+  slug?: string;
 }
 
-const { title, description } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const { title, description, slug } = Astro.props;
+const pager = slug ? getPagerLinks(slug) : { prev: undefined, next: undefined };
+
+// Determine which section this page belongs to for sidebar highlighting
+const currentSection = slug ? docsSections.find(s => s.pages.some(p => p.slug === slug)) : undefined;
 ---
 
 <BaseLayout title={title} description={description}>
@@ -16,11 +23,38 @@ const { title, description } = Astro.props;
   <div class="docs-page">
     <aside class="docs-sidebar" id="docs-sidebar">
       <nav class="sidebar-nav">
+        <a href={`${base}/docs/`} class="sidebar-back">&larr; All docs</a>
         <slot name="sidebar" />
       </nav>
     </aside>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+    </button>
     <main class="docs-content">
+      {slug && (
+        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+          <a href={`${base}/docs/`}>Docs</a>
+          {currentSection && <span class="breadcrumb-sep">/</span>}
+          {currentSection && <span class="breadcrumb-current">{currentSection.label}</span>}
+        </nav>
+      )}
       <slot />
+      {(pager.prev || pager.next) && (
+        <nav class="docs-pager" aria-label="Page navigation">
+          {pager.prev ? (
+            <a href={`${base}/docs/${pager.prev.slug}/`} class="pager-link pager-prev">
+              <span class="pager-dir">&larr; Previous</span>
+              <span class="pager-title">{pager.prev.title}</span>
+            </a>
+          ) : <span />}
+          {pager.next ? (
+            <a href={`${base}/docs/${pager.next.slug}/`} class="pager-link pager-next">
+              <span class="pager-dir">Next &rarr;</span>
+              <span class="pager-title">{pager.next.title}</span>
+            </a>
+          ) : <span />}
+        </nav>
+      )}
     </main>
   </div>
   <Footer />
@@ -33,6 +67,7 @@ const { title, description } = Astro.props;
     margin: 0 auto;
     padding-top: 60px;
     min-height: 100vh;
+    position: relative;
   }
 
   .docs-sidebar {
@@ -50,6 +85,23 @@ const { title, description } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: 4px;
+  }
+
+  .sidebar-back {
+    display: block;
+    padding: 6px 12px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .sidebar-back:hover {
+    background: var(--surface);
+    text-decoration: none;
   }
 
   .sidebar-nav :global(a) {
@@ -82,19 +134,149 @@ const { title, description } = Astro.props;
     padding-top: 0;
   }
 
+  .sidebar-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 90;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+
   .docs-content {
     flex: 1;
     min-width: 0;
     padding: 40px 48px 80px;
   }
 
+  /* Breadcrumbs */
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    margin-bottom: 24px;
+  }
+
+  .breadcrumbs a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .breadcrumbs a:hover {
+    text-decoration: underline;
+  }
+
+  .breadcrumb-sep {
+    color: var(--text-secondary);
+  }
+
+  .breadcrumb-current {
+    color: var(--text-secondary);
+  }
+
+  /* Prev/Next Pager */
+  .docs-pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+
+  .pager-link {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+    min-width: 0;
+  }
+
+  .pager-link:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+
+  .pager-next {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .pager-dir {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .pager-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
   @media (max-width: 900px) {
     .docs-sidebar {
       display: none;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      bottom: 0;
+      z-index: 80;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      width: 260px;
+    }
+
+    .docs-sidebar.open {
+      display: block;
+    }
+
+    .sidebar-toggle {
+      display: flex;
     }
 
     .docs-content {
       padding: 32px 20px 64px;
     }
+
+    .docs-pager {
+      flex-direction: column;
+    }
+
+    .pager-next {
+      text-align: left;
+    }
   }
 </style>
+
+<script>
+  const toggle = document.getElementById('sidebar-toggle');
+  const sidebar = document.getElementById('docs-sidebar');
+
+  if (toggle && sidebar) {
+    toggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+    });
+
+    // Close sidebar when clicking a link (mobile)
+    sidebar.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+      });
+    });
+  }
+</script>
