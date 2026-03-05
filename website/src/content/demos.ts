@@ -67,16 +67,26 @@ export const demos = [
     title: 'vulnex exploit check CVE-2021-44228',
     html: `<span class="t-prompt">$</span> <span class="t-cmd">vulnex exploit check</span> <span class="t-cve">CVE-2021-44228</span>
 
-<span class="t-accent">CVE-2021-44228</span> — 8 known exploit(s)
+<span class="t-accent">CVE-2021-44228</span> — 10 known exploit(s)
 
-  <span class="t-dim">SOURCE       NAME                                          URL</span>
-  github       kozmer/log4j-shell-poc <span class="t-dim">(1.2k)</span>                 <span class="t-dim">https://github.com/kozmer/log4j-shell-poc</span>
-  github       fullhunt/log4j-scan <span class="t-dim">(3.1k)</span>                    <span class="t-dim">https://github.com/fullhunt/log4j-scan</span>
-  metasploit   exploit/multi/http/log4shell_header_injection  <span class="t-dim">https://github.com/rapid7/...</span>
-  nuclei       http/cves/2021/cve-2021-44228.yaml            <span class="t-dim">https://github.com/projectdiscovery/...</span>
-  exploitdb    50592                                          <span class="t-dim">https://www.exploit-db.com/exploits/50592</span>
+  <span class="t-label">GitHub (5)</span>
+    fullhunt/log4j-scan              3.4k ★  Python   <span class="t-dim">Vulnerability scanner for Log4Shell</span>
+    NCSC-NL/log4shell                1.9k ★  Java     <span class="t-dim">Operational information regarding...</span>
+    kozmer/log4j-shell-poc           1.8k ★  Python   <span class="t-dim">A Proof-Of-Concept for the CVE-20...</span>
 
-<span class="t-dim">Sources:</span> GitHub (5) · Metasploit (2) · Nuclei (1) · ExploitDB (1)`,
+  <span class="t-label">Metasploit (4)</span>
+    scanner/http/log4shell_scanner               auxiliary    <span class="t-dim">Log4Shell HTTP Scanner</span>
+    multi/http/log4shell_header_injection         <span class="t-critical">exploit</span>      <span class="t-dim">Log4Shell Header Injection</span>
+    multi/http/vmware_vcenter_log4shell           <span class="t-critical">exploit</span>      <span class="t-dim">VMware vCenter Log4Shell</span>
+
+  <span class="t-label">Nuclei (1)</span>
+    http/cves/2021/cve-2021-44228.yaml           <span class="t-dim">detection template</span>
+
+  <span class="t-label">Summary</span>
+    <span class="t-label">Weaponization</span>    <span class="t-critical">CRITICAL</span> — Metasploit exploit modules available
+    <span class="t-label">Breakdown</span>        3 exploit modules · 1 scanners · 5 PoC/tools · 1 detection
+    <span class="t-label">Languages</span>        Python (2) · Java (2) · Go (1)
+    <span class="t-label">Most starred</span>     fullhunt/log4j-scan (3.4k ★)`,
   },
   {
     id: 'sc-ignore',

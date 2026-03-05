@@ -979,7 +979,7 @@ func (tf *tableFormatter) FormatSBOMDiffResult(w io.Writer, result *model.SBOMDi
 	return nil
 }
 
-// FormatExploitResult renders a single exploit check result as a styled table.
+// FormatExploitResult renders a single exploit check result grouped by source with summary stats.
 func (tf *tableFormatter) FormatExploitResult(w io.Writer, result *model.ExploitResult) error {
 	if result == nil {
 		return nil
@@ -987,48 +987,275 @@ func (tf *tableFormatter) FormatExploitResult(w io.Writer, result *model.Exploit
 
 	// Header
 	header := fmt.Sprintf("%s — %d known exploit(s)", result.CVEID, len(result.Exploits))
-	fmt.Fprintf(w, "\n%s\n\n", tf.headerStyle.Render(header))
+	fmt.Fprintf(w, "\n%s\n", tf.headerStyle.Render(header))
 
 	if len(result.Exploits) == 0 {
-		fmt.Fprintf(w, "  No known exploits found.\n")
+		fmt.Fprintf(w, "\n  No known exploits found.\n")
 		return nil
 	}
 
-	// Column headers
-	fmt.Fprintf(w, "  %-13s%-50s%s\n",
-		tf.headerStyle.Render("SOURCE"),
-		tf.headerStyle.Render("NAME"),
-		tf.headerStyle.Render("URL"))
-
+	// Group by source
+	groups := map[string][]model.ExploitRef{}
 	for _, ref := range result.Exploits {
-		name := ref.Name
-		if !tf.long {
-			name = truncate(name, 47)
-		}
-		fmt.Fprintf(w, "  %-13s%-50s%s\n", ref.Source, name, ref.URL)
+		groups[ref.Source] = append(groups[ref.Source], ref)
 	}
 
-	// Source breakdown footer
-	counts := make(map[string]int)
-	for _, ref := range result.Exploits {
-		counts[ref.Source]++
-	}
-	order := []string{"github", "metasploit", "nuclei", "exploitdb"}
-	names := map[string]string{
+	sourceOrder := []string{"github", "metasploit", "nuclei", "exploitdb"}
+	sourceNames := map[string]string{
 		"github": "GitHub", "metasploit": "Metasploit",
 		"nuclei": "Nuclei", "exploitdb": "ExploitDB",
 	}
-	var parts []string
-	for _, src := range order {
-		if count, ok := counts[src]; ok {
-			parts = append(parts, fmt.Sprintf("%s (%d)", names[src], count))
+
+	for _, src := range sourceOrder {
+		refs, ok := groups[src]
+		if !ok || len(refs) == 0 {
+			continue
+		}
+
+		fmt.Fprintf(w, "\n  %s\n", tf.labelStyle.Render(fmt.Sprintf("%s (%d)", sourceNames[src], len(refs))))
+
+		switch src {
+		case "github":
+			tf.formatGitHubGroup(w, refs)
+		case "metasploit":
+			tf.formatMetasploitGroup(w, refs)
+		case "nuclei":
+			tf.formatNucleiGroup(w, refs)
+		case "exploitdb":
+			tf.formatExploitDBGroup(w, refs)
 		}
 	}
-	if len(parts) > 0 {
-		fmt.Fprintf(w, "\n%s %s\n", tf.labelStyle.Render("Sources:"), tf.noneStyle.Render(strings.Join(parts, " \u00b7 ")))
-	}
+
+	// Summary stats
+	tf.formatExploitSummary(w, result.Exploits)
 
 	return nil
+}
+
+func (tf *tableFormatter) formatGitHubGroup(w io.Writer, refs []model.ExploitRef) {
+	for _, ref := range refs {
+		name := ref.ID // full_name like "fullhunt/log4j-scan"
+		if !tf.long {
+			name = truncate(name, 30)
+		}
+
+		stars := ""
+		if ref.Stars > 0 {
+			stars = fmt.Sprintf("%s ★", formatStars(ref.Stars))
+		}
+
+		lang := ref.Language
+		if lang == "" {
+			lang = "-"
+		}
+
+		desc := ref.Description
+		if desc == "" {
+			desc = ""
+		} else if !tf.long {
+			desc = truncate(desc, 40)
+		}
+
+		fmt.Fprintf(w, "    %-32s %7s  %-8s %s\n", name, stars, lang, tf.noneStyle.Render(desc))
+	}
+}
+
+func (tf *tableFormatter) formatMetasploitGroup(w io.Writer, refs []model.ExploitRef) {
+	for _, ref := range refs {
+		// Strip the type prefix from the path for display (show from platform onward)
+		path := ref.ID
+		parts := strings.SplitN(path, "/", 2)
+		displayPath := path
+		if len(parts) == 2 {
+			displayPath = parts[1]
+		}
+		if !tf.long {
+			displayPath = truncate(displayPath, 45)
+		}
+
+		modType := ref.ModuleType
+		if modType == "" {
+			modType = "-"
+		}
+
+		name := ref.Name
+		if name == ref.ID {
+			name = "" // don't repeat the path
+		}
+		if name != "" && !tf.long {
+			name = truncate(name, 30)
+		}
+
+		typeStyle := tf.noneStyle
+		if modType == "exploit" {
+			typeStyle = tf.criticalStyle
+		}
+
+		fmt.Fprintf(w, "    %-47s %s  %s\n", displayPath, typeStyle.Render(fmt.Sprintf("%-11s", modType)), tf.noneStyle.Render(name))
+	}
+}
+
+func (tf *tableFormatter) formatNucleiGroup(w io.Writer, refs []model.ExploitRef) {
+	for _, ref := range refs {
+		fmt.Fprintf(w, "    %-47s %s\n", ref.ID, tf.noneStyle.Render("detection template"))
+	}
+}
+
+func (tf *tableFormatter) formatExploitDBGroup(w io.Writer, refs []model.ExploitRef) {
+	for _, ref := range refs {
+		platform := ref.Platform
+		if platform == "" {
+			platform = "-"
+		}
+		fmt.Fprintf(w, "    EDB-%-42s %s\n", ref.ID, tf.noneStyle.Render(platform))
+	}
+}
+
+func (tf *tableFormatter) formatExploitSummary(w io.Writer, refs []model.ExploitRef) {
+	// Weaponization level
+	level, reason := exploitWeaponizationLevel(refs)
+
+	// Breakdown: count exploit types
+	var msfExploits, msfAux, githubCount, nucleiCount, edbCount int
+	for _, ref := range refs {
+		switch ref.Source {
+		case "github":
+			githubCount++
+		case "metasploit":
+			if ref.ModuleType == "exploit" {
+				msfExploits++
+			} else {
+				msfAux++
+			}
+		case "nuclei":
+			nucleiCount++
+		case "exploitdb":
+			edbCount++
+		}
+	}
+
+	var breakdown []string
+	if msfExploits > 0 {
+		breakdown = append(breakdown, fmt.Sprintf("%d exploit modules", msfExploits))
+	}
+	if msfAux > 0 {
+		breakdown = append(breakdown, fmt.Sprintf("%d scanners", msfAux))
+	}
+	if githubCount > 0 {
+		breakdown = append(breakdown, fmt.Sprintf("%d PoC/tools", githubCount))
+	}
+	if nucleiCount > 0 {
+		breakdown = append(breakdown, fmt.Sprintf("%d detection", nucleiCount))
+	}
+	if edbCount > 0 {
+		breakdown = append(breakdown, fmt.Sprintf("%d ExploitDB", edbCount))
+	}
+
+	// Languages
+	langCounts := map[string]int{}
+	for _, ref := range refs {
+		if ref.Language != "" {
+			langCounts[ref.Language]++
+		}
+	}
+	var langs []string
+	// Sort by count desc
+	for len(langCounts) > 0 {
+		maxLang, maxCount := "", 0
+		for lang, count := range langCounts {
+			if count > maxCount {
+				maxLang, maxCount = lang, count
+			}
+		}
+		langs = append(langs, fmt.Sprintf("%s (%d)", maxLang, maxCount))
+		delete(langCounts, maxLang)
+	}
+
+	// Most starred
+	var topRepo string
+	var topStars int
+	for _, ref := range refs {
+		if ref.Stars > topStars {
+			topStars = ref.Stars
+			topRepo = ref.ID
+		}
+	}
+
+	// Render
+	fmt.Fprintf(w, "\n  %s\n", tf.labelStyle.Render("Summary"))
+
+	// Weaponization level with color
+	levelStyle := tf.noneStyle
+	switch level {
+	case "CRITICAL":
+		levelStyle = tf.criticalStyle
+	case "HIGH":
+		levelStyle = tf.highStyle
+	case "MODERATE":
+		levelStyle = tf.mediumStyle
+	case "LOW":
+		levelStyle = tf.lowStyle
+	}
+	fmt.Fprintf(w, "    %-17s%s — %s\n", tf.labelStyle.Render("Weaponization"), levelStyle.Render(level), reason)
+
+	if len(breakdown) > 0 {
+		fmt.Fprintf(w, "    %-17s%s\n", tf.labelStyle.Render("Breakdown"), strings.Join(breakdown, " · "))
+	}
+	if len(langs) > 0 {
+		fmt.Fprintf(w, "    %-17s%s\n", tf.labelStyle.Render("Languages"), strings.Join(langs, " · "))
+	}
+	if topRepo != "" {
+		fmt.Fprintf(w, "    %-17s%s (%s ★)\n", tf.labelStyle.Render("Most starred"), topRepo, formatStars(topStars))
+	}
+
+	fmt.Fprintln(w)
+}
+
+func exploitWeaponizationLevel(refs []model.ExploitRef) (string, string) {
+	var hasMSFExploit, hasMSFAux bool
+	var githubCount, maxStars int
+	var hasNuclei, hasEDB bool
+
+	for _, ref := range refs {
+		switch ref.Source {
+		case "metasploit":
+			if ref.ModuleType == "exploit" {
+				hasMSFExploit = true
+			} else {
+				hasMSFAux = true
+			}
+		case "github":
+			githubCount++
+			if ref.Stars > maxStars {
+				maxStars = ref.Stars
+			}
+		case "nuclei":
+			hasNuclei = true
+		case "exploitdb":
+			hasEDB = true
+		}
+	}
+
+	if hasMSFExploit {
+		return "CRITICAL", "Metasploit exploit modules available"
+	}
+	if hasMSFAux || (githubCount >= 3 && maxStars >= 500) {
+		return "HIGH", "Multiple high-quality PoCs or scanners available"
+	}
+	if hasNuclei || githubCount > 0 {
+		return "MODERATE", "Detection templates or PoCs available"
+	}
+	if hasEDB {
+		return "LOW", "Limited exploit references"
+	}
+	return "LOW", "Minimal exploit evidence"
+}
+
+func formatStars(n int) string {
+	if n >= 1000 {
+		return fmt.Sprintf("%.1fk", float64(n)/1000)
+	}
+	return fmt.Sprintf("%d", n)
 }
 
 // FormatExploitResults renders multiple exploit check results.

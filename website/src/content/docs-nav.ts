@@ -68,6 +68,12 @@ export const docsSections: DocsSection[] = [
           { id: "advisory-affected", label: "advisory affected" },
         ],
       },
+      {
+        slug: "exploit", title: "exploit", description: "Find public exploits, PoCs, and attack tools for CVEs across GitHub, Metasploit, Nuclei, and ExploitDB.",
+        subcommands: [
+          { id: "exploit-check", label: "exploit check" },
+        ],
+      },
     ],
   },
   {
