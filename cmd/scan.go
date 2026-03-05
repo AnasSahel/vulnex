@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/trustin-tech/vulnex/internal/ignore"
 	"github.com/trustin-tech/vulnex/internal/model"
+	"github.com/trustin-tech/vulnex/internal/policy"
 	"github.com/trustin-tech/vulnex/internal/sbom"
 )
 
@@ -121,6 +122,28 @@ func runScanPipeline(cmd *cobra.Command, filePath string) error {
 		return err
 	}
 
+	// Policy evaluation
+	policyPath, _ := cmd.Flags().GetString("policy")
+	if policyPath != "" {
+		pol, err := policy.Load(policyPath)
+		if err != nil {
+			return fmt.Errorf("loading policy: %w", err)
+		}
+		policyResult := pol.EvaluateAll(findings)
+		if !quiet {
+			for _, v := range policyResult.Warnings {
+				fmt.Fprintf(os.Stderr, "[WARN] %s: %s (%s)\n", v.RuleName, v.Finding.Advisory.ID, v.Finding.Name)
+			}
+			for _, v := range policyResult.Failures {
+				fmt.Fprintf(os.Stderr, "[FAIL] %s: %s (%s)\n", v.RuleName, v.Finding.Advisory.ID, v.Finding.Name)
+			}
+		}
+		if !policyResult.Passed {
+			os.Exit(1)
+		}
+		return nil
+	}
+
 	os.Exit(1)
 	return nil
 }
@@ -206,6 +229,37 @@ func enrichFindings(cmd *cobra.Command, findings []model.SBOMFinding, quiet bool
 		}
 	}
 
+	// Compute EPSS trends
+	for i := range findings {
+		for _, cveID := range findings[i].CVEIDs {
+			if findings[i].EPSS != nil {
+				entries, err := app.EPSS.GetTimeSeries(ctx, cveID, 30)
+				if err != nil {
+					slog.Debug("EPSS time series failed", "cve", cveID, "error", err)
+					break
+				}
+				if len(entries) >= 2 {
+					current := entries[len(entries)-1].Score
+					previous := entries[0].Score
+					delta := current - previous
+					direction := "stable"
+					if delta >= 0.05 {
+						direction = "rising"
+					} else if delta <= -0.05 {
+						direction = "falling"
+					}
+					findings[i].EPSSTrend = &model.EPSSTrend{
+						Current:    current,
+						Previous30: previous,
+						Delta:      delta,
+						Direction:  direction,
+					}
+				}
+				break
+			}
+		}
+	}
+
 	if !quiet {
 		fmt.Fprintf(os.Stderr, "Enriched %d findings with EPSS/KEV/exploit data\n", enrichedCount)
 	}
@@ -214,12 +268,13 @@ func enrichFindings(cmd *cobra.Command, findings []model.SBOMFinding, quiet bool
 }
 
 func init() {
-	scanCmd.Flags().Bool("vex", false, "Output an OpenVEX document instead of a table")
-	scanCmd.Flags().Bool("enrich", false, "Enrich findings with EPSS, KEV, CVSS, and exploit data")
+	scanCmd.Flags().Bool("vex", false, "Output a VEX (Vulnerability Exploitability eXchange) document for sharing triage decisions")
+	scanCmd.Flags().Bool("enrich", false, "Add exploit likelihood, known-exploitation status, and severity scores from multiple sources")
 	scanCmd.Flags().String("ecosystem", "", "Filter components by ecosystem (npm, pip, maven, go, etc.)")
 	scanCmd.Flags().String("severity", "", "Filter results by severity (critical, high, medium, low)")
 	scanCmd.Flags().String("ignore-file", "", "Path to suppression file (default: .vulnexignore)")
-	scanCmd.Flags().Bool("strict", false, "Ignore suppression file and report all findings")
+	scanCmd.Flags().Bool("strict", false, "Show all findings, including those suppressed by .vulnexignore")
+	scanCmd.Flags().String("policy", "", "Path to policy file for pass/fail evaluation")
 
 	rootCmd.AddCommand(scanCmd)
 }

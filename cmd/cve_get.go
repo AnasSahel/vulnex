@@ -18,7 +18,13 @@ var cveGetCmd = &cobra.Command{
 Use 'vulnex enrich' to get the full multi-source view.`,
 	Example: `  vulnex cve get CVE-2021-44228
   vulnex cve get CVE-2024-3094 CVE-2023-44228 --output json
-  echo "CVE-2024-3094" | vulnex cve get --stdin`,
+  echo "CVE-2024-3094" | vulnex cve get --stdin
+
+  # Score with a preset profile
+  vulnex cve get CVE-2024-3094 --scoring-profile exploit-focused
+
+  # Custom weights: severity 50%, exploit probability 30%, known-exploited 20%
+  vulnex cve get CVE-2024-3094 --cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 		stdin, _ := cmd.Flags().GetBool("stdin")
@@ -74,9 +80,9 @@ Use 'vulnex enrich' to get the full multi-source view.`,
 
 func init() {
 	cveGetCmd.Flags().Bool("stdin", false, "Read CVE IDs from stdin (one per line)")
-	cveGetCmd.Flags().String("scoring-profile", "", "Scoring profile: default, exploit-focused, severity-focused")
-	cveGetCmd.Flags().Float64("cvss-weight", 0, "Custom CVSS weight (0.0-1.0), overrides profile")
-	cveGetCmd.Flags().Float64("epss-weight", 0, "Custom EPSS weight (0.0-1.0), overrides profile")
-	cveGetCmd.Flags().Float64("kev-weight", 0, "Custom KEV weight (0.0-1.0), overrides profile")
+	cveGetCmd.Flags().String("scoring-profile", "", "Preset weight balance for scoring: default (balanced), exploit-focused, or severity-focused")
+	cveGetCmd.Flags().Float64("cvss-weight", 0, "How much severity (CVSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight)")
+	cveGetCmd.Flags().Float64("epss-weight", 0, "How much exploit probability (EPSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight)")
+	cveGetCmd.Flags().Float64("kev-weight", 0, "How much known-exploited status (KEV) influences the final score, from 0.0 (ignore) to 1.0 (full weight)")
 	cveCmd.AddCommand(cveGetCmd)
 }

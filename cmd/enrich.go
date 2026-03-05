@@ -21,7 +21,16 @@ vulnerability intelligence view.`,
 	Example: `  vulnex enrich CVE-2021-44228
   vulnex enrich CVE-2024-3094 CVE-2023-44228 --output json
   echo "CVE-2024-3094" | vulnex enrich --stdin --output table
-  cat cves.txt | vulnex enrich --stdin --output csv > enriched.csv`,
+  cat cves.txt | vulnex enrich --stdin --output csv > enriched.csv
+
+  # Use a preset scoring profile
+  vulnex enrich CVE-2024-3094 --scoring-profile exploit-focused
+
+  # Custom weights: prioritize severity at 50%, exploit probability at 30%, known-exploited at 20%
+  vulnex enrich CVE-2024-3094 --cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2
+
+  # Ignore CVSS entirely, score only on real-world exploitation evidence
+  vulnex enrich CVE-2024-3094 --cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 		stdin, _ := cmd.Flags().GetBool("stdin")
@@ -71,9 +80,9 @@ vulnerability intelligence view.`,
 
 func init() {
 	enrichCmd.Flags().Bool("stdin", false, "Read CVE IDs from stdin (one per line)")
-	enrichCmd.Flags().String("scoring-profile", "", "Scoring profile: default, exploit-focused, severity-focused")
-	enrichCmd.Flags().Float64("cvss-weight", 0, "Custom CVSS weight (0.0-1.0), overrides profile")
-	enrichCmd.Flags().Float64("epss-weight", 0, "Custom EPSS weight (0.0-1.0), overrides profile")
-	enrichCmd.Flags().Float64("kev-weight", 0, "Custom KEV weight (0.0-1.0), overrides profile")
+	enrichCmd.Flags().String("scoring-profile", "", "Preset weight balance for scoring: default (balanced), exploit-focused, or severity-focused")
+	enrichCmd.Flags().Float64("cvss-weight", 0, "How much severity (CVSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight)")
+	enrichCmd.Flags().Float64("epss-weight", 0, "How much exploit probability (EPSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight)")
+	enrichCmd.Flags().Float64("kev-weight", 0, "How much known-exploited status (KEV) influences the final score, from 0.0 (ignore) to 1.0 (full weight)")
 	rootCmd.AddCommand(enrichCmd)
 }

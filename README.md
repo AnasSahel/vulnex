@@ -137,7 +137,7 @@ These flags apply to all commands:
 | `--no-cache` | Bypass cache for this request |
 | `--offline` | Only use locally cached data (no network) |
 | `--config <path>` | Path to config file |
-| `--timeout <duration>` | HTTP timeout (e.g. `30s`, `1m`) |
+| `--timeout <duration>` | HTTP request timeout (e.g., `30s`, `1m`, `2m30s`) |
 | `-v, --verbose` | Verbose output |
 | `-q, --quiet` | Suppress non-essential output |
 
@@ -160,11 +160,12 @@ Supported SBOMs: CycloneDX (JSON), SPDX (JSON).
 
 | Flag | Description |
 |------|-------------|
-| `--vex` | Output an OpenVEX document instead of a table |
+| `--vex` | Output a VEX document for sharing triage decisions |
+| `--enrich` | Add exploit likelihood, known-exploitation status, and severity scores from multiple sources |
 | `--ecosystem` | Filter components by ecosystem |
 | `--severity` | Filter results by severity (exits 0 if no matches) |
 | `--ignore-file` | Path to suppression file (default: `.vulnexignore`) |
-| `--strict` | Ignore suppression file and report all findings |
+| `--strict` | Show all findings, including those suppressed by `.vulnexignore` |
 
 ### `vulnex enrich` — Multi-source aggregation
 
@@ -180,15 +181,18 @@ cat cves.txt | vulnex enrich --stdin --output csv > enriched.csv
 vulnex enrich CVE-2024-24790 --scoring-profile default
 vulnex enrich CVE-2024-24790 --scoring-profile exploit-focused
 vulnex enrich CVE-2024-24790 --cvss-weight 0.5 --epss-weight 0.3 --kev-weight 0.2
+
+# Ignore CVSS entirely, score only on real-world exploitation evidence
+vulnex enrich CVE-2024-3094 --cvss-weight 0 --epss-weight 0.7 --kev-weight 0.3
 ```
 
 | Flag | Description |
 |------|-------------|
 | `--stdin` | Read CVE IDs from stdin |
-| `--scoring-profile` | Scoring profile: `default`, `exploit-focused`, `severity-focused` |
-| `--cvss-weight` | Custom CVSS weight (0.0-1.0), overrides profile |
-| `--epss-weight` | Custom EPSS weight (0.0-1.0), overrides profile |
-| `--kev-weight` | Custom KEV weight (0.0-1.0), overrides profile |
+| `--scoring-profile` | Preset weight balance for scoring: `default` (balanced), `exploit-focused`, or `severity-focused` |
+| `--cvss-weight` | How much severity (CVSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight) |
+| `--epss-weight` | How much exploit probability (EPSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight) |
+| `--kev-weight` | How much known-exploited status (KEV) influences the final score, from 0.0 (ignore) to 1.0 (full weight) |
 
 ### `vulnex cve` — CVE operations
 
@@ -376,11 +380,12 @@ Summary: 3 components scanned, 2 vulnerable, 3 findings
 
 | Flag | Description |
 |------|-------------|
-| `--vex` | Output an OpenVEX document instead of a table |
+| `--vex` | Output a VEX document for sharing triage decisions |
+| `--enrich` | Add exploit likelihood, known-exploitation status, and severity scores from multiple sources |
 | `--ecosystem` | Filter components by ecosystem |
 | `--severity` | Filter results by severity (exits 0 if no matches) |
 | `--ignore-file` | Path to suppression file (default: `.vulnexignore`) |
-| `--strict` | Ignore suppression file and report all findings |
+| `--strict` | Show all findings, including those suppressed by `.vulnexignore` |
 
 #### `sbom diff` — Compare two SBOMs for vulnerability changes
 
@@ -417,7 +422,7 @@ Summary: old=3 components (56 vulns), new=4 components (57 vulns), +2 added, -1 
 | `--ecosystem` | Filter components by ecosystem |
 | `--severity` | Filter results by severity |
 | `--ignore-file` | Path to suppression file (default: `.vulnexignore`) |
-| `--strict` | Ignore suppression file and report all findings |
+| `--strict` | Show all findings, including those suppressed by `.vulnexignore` |
 
 ### `.vulnexignore` — Suppressing accepted risks
 

@@ -108,10 +108,10 @@ import TerminalWindow from '../../components/TerminalWindow.astro';
         <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td><code>--stdin</code></td><td>bool</td><td>false</td><td>Read CVE IDs from stdin (one per line)</td></tr>
-          <tr><td><code>--scoring-profile</code></td><td>string</td><td>—</td><td>Scoring profile: <code>default</code>, <code>exploit-focused</code>, <code>severity-focused</code></td></tr>
-          <tr><td><code>--cvss-weight</code></td><td>float</td><td>—</td><td>Custom CVSS weight (0.0–1.0), overrides profile</td></tr>
-          <tr><td><code>--epss-weight</code></td><td>float</td><td>—</td><td>Custom EPSS weight (0.0–1.0), overrides profile</td></tr>
-          <tr><td><code>--kev-weight</code></td><td>float</td><td>—</td><td>Custom KEV weight (0.0–1.0), overrides profile</td></tr>
+          <tr><td><code>--scoring-profile</code></td><td>string</td><td>—</td><td>Preset weight balance for scoring: <code>default</code> (balanced), <code>exploit-focused</code>, or <code>severity-focused</code></td></tr>
+          <tr><td><code>--cvss-weight</code></td><td>float</td><td>—</td><td>How much severity (CVSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight)</td></tr>
+          <tr><td><code>--epss-weight</code></td><td>float</td><td>—</td><td>How much exploit probability (EPSS) influences the final score, from 0.0 (ignore) to 1.0 (full weight)</td></tr>
+          <tr><td><code>--kev-weight</code></td><td>float</td><td>—</td><td>How much known-exploited status (KEV) influences the final score, from 0.0 (ignore) to 1.0 (full weight)</td></tr>
         </tbody>
       </table>
     </div>

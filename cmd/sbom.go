@@ -399,18 +399,19 @@ func mapEcosystemToOSV(ecosystem string) string {
 }
 
 func init() {
-	sbomCheckCmd.Flags().Bool("vex", false, "Output an OpenVEX document instead of a table")
-	sbomCheckCmd.Flags().Bool("enrich", false, "Enrich findings with EPSS, KEV, CVSS, and exploit data")
+	sbomCheckCmd.Flags().Bool("vex", false, "Output a VEX (Vulnerability Exploitability eXchange) document for sharing triage decisions")
+	sbomCheckCmd.Flags().Bool("enrich", false, "Add exploit likelihood, known-exploitation status, and severity scores from multiple sources")
 	sbomCheckCmd.Flags().String("ecosystem", "", "Filter components by ecosystem (npm, pip, maven, go, etc.)")
 	sbomCheckCmd.Flags().String("severity", "", "Filter results by severity (critical, high, medium, low)")
 	sbomCheckCmd.Flags().String("ignore-file", "", "Path to suppression file (default: .vulnexignore)")
-	sbomCheckCmd.Flags().Bool("strict", false, "Ignore suppression file and report all findings")
+	sbomCheckCmd.Flags().Bool("strict", false, "Show all findings, including those suppressed by .vulnexignore")
+	sbomCheckCmd.Flags().String("policy", "", "Path to policy file for pass/fail evaluation")
 
-	sbomDiffCmd.Flags().Bool("enrich", false, "Enrich findings with EPSS, KEV, CVSS, and exploit data")
+	sbomDiffCmd.Flags().Bool("enrich", false, "Add exploit likelihood, known-exploitation status, and severity scores from multiple sources")
 	sbomDiffCmd.Flags().String("ecosystem", "", "Filter components by ecosystem (npm, pip, maven, go, etc.)")
 	sbomDiffCmd.Flags().String("severity", "", "Filter results by severity (critical, high, medium, low)")
 	sbomDiffCmd.Flags().String("ignore-file", "", "Path to suppression file (default: .vulnexignore)")
-	sbomDiffCmd.Flags().Bool("strict", false, "Ignore suppression file and report all findings")
+	sbomDiffCmd.Flags().Bool("strict", false, "Show all findings, including those suppressed by .vulnexignore")
 
 	sbomCmd.AddCommand(sbomCheckCmd)
 	sbomCmd.AddCommand(sbomDiffCmd)

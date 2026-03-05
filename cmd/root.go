@@ -66,7 +66,7 @@ This product uses the NVD API but is not endorsed or certified by the NVD.`,
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Skip bootstrap for completion and version commands
-		if cmd.Name() == "completion" || cmd.Name() == "version" || cmd.Name() == "__complete" || cmd.Name() == "scoring" {
+		if cmd.Name() == "completion" || cmd.Name() == "version" || cmd.Name() == "__complete" || cmd.Name() == "scoring" || cmd.Name() == "init" {
 			return nil
 		}
 		return bootstrap(cmd)
@@ -84,7 +84,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-cache", false, "Bypass cache for this request")
 	rootCmd.PersistentFlags().Bool("offline", false, "Only use cached data")
 	rootCmd.PersistentFlags().String("api-key", "", "NVD API key (overrides config/env)")
-	rootCmd.PersistentFlags().Duration("timeout", 0, "HTTP request timeout")
+	rootCmd.PersistentFlags().Duration("timeout", 0, "HTTP request timeout (e.g., 30s, 1m, 2m30s)")
 
 	_ = viper.BindPFlag("output.format", rootCmd.PersistentFlags().Lookup("output"))
 	_ = viper.BindPFlag("output.no_color", rootCmd.PersistentFlags().Lookup("no-color"))
