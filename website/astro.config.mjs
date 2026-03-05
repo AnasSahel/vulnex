@@ -5,5 +5,6 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  site: 'https://vulnex.dev',
+  site: 'https://anassahel.github.io',
+  base: '/vulnex',
 });

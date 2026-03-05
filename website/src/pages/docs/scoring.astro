@@ -1,6 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import TerminalWindow from '../../components/TerminalWindow.astro';
+const base = import.meta.env.BASE_URL;
 ---
 
 <DocsLayout
@@ -347,11 +348,11 @@ import TerminalWindow from '../../components/TerminalWindow.astro';
   <section id="related">
     <h2>Related commands</h2>
     <div class="subcommand-grid">
-      <a href="/docs/cve/" class="subcommand-card">
+      <a href={`${base}/docs/cve/`} class="subcommand-card">
         <h3>cve get / enrich</h3>
         <p>Fetch CVE details with scoring</p>
       </a>
-      <a href="/docs/cve/#scoring" class="subcommand-card">
+      <a href={`${base}/docs/cve/#scoring`} class="subcommand-card">
         <h3>Scoring profiles</h3>
         <p>Profile table and custom weights</p>
       </a>
