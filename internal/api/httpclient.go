@@ -49,6 +49,13 @@ func NewClient(limiter *ratelimit.Limiter, opts ...ClientOption) *Client {
 	retryClient.RetryWaitMin = 1 * time.Second
 	retryClient.RetryWaitMax = 30 * time.Second
 	retryClient.Logger = nil // Suppress default logger
+	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		// Never retry rate-limit responses — they won't resolve within our backoff window
+		if resp != nil && (resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusTooManyRequests) {
+			return false, nil
+		}
+		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+	}
 
 	c := &Client{
 		http:    retryClient.StandardClient(),

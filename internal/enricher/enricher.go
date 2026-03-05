@@ -56,7 +56,7 @@ func (e *Enricher) Enrich(ctx context.Context, cveID string) (*model.EnrichedCVE
 			var err error
 			nvdResult, err = e.nvd.GetCVE(gctx, cveID)
 			if err != nil {
-				slog.Warn("NVD fetch failed", "cve", cveID, "error", err)
+				slog.Debug("NVD fetch failed", "cve", cveID, "error", err)
 			}
 			return nil // non-fatal
 		})
@@ -68,7 +68,7 @@ func (e *Enricher) Enrich(ctx context.Context, cveID string) (*model.EnrichedCVE
 			var err error
 			epssResult, err = e.epss.GetScore(gctx, cveID)
 			if err != nil {
-				slog.Warn("EPSS fetch failed", "cve", cveID, "error", err)
+				slog.Debug("EPSS fetch failed", "cve", cveID, "error", err)
 			}
 			return nil
 		})
@@ -80,7 +80,7 @@ func (e *Enricher) Enrich(ctx context.Context, cveID string) (*model.EnrichedCVE
 			var err error
 			kevResult, err = e.kev.Check(gctx, cveID)
 			if err != nil {
-				slog.Warn("KEV check failed", "cve", cveID, "error", err)
+				slog.Debug("KEV check failed", "cve", cveID, "error", err)
 			}
 			return nil
 		})
@@ -92,7 +92,7 @@ func (e *Enricher) Enrich(ctx context.Context, cveID string) (*model.EnrichedCVE
 			var err error
 			ghsaAdvs, ghsaPkgs, err = e.ghsa.FindByCVE(gctx, cveID)
 			if err != nil {
-				slog.Warn("GHSA fetch failed", "cve", cveID, "error", err)
+				slog.Debug("GHSA fetch failed", "cve", cveID, "error", err)
 			}
 			return nil
 		})
@@ -104,7 +104,7 @@ func (e *Enricher) Enrich(ctx context.Context, cveID string) (*model.EnrichedCVE
 			var err error
 			osvAdvs, osvPkgs, err = e.osv.QueryByCVE(gctx, cveID)
 			if err != nil {
-				slog.Warn("OSV fetch failed", "cve", cveID, "error", err)
+				slog.Debug("OSV fetch failed", "cve", cveID, "error", err)
 			}
 			return nil
 		})
@@ -129,7 +129,7 @@ func (e *Enricher) EnrichBatch(ctx context.Context, cveIDs []string) ([]*model.E
 
 			enriched, err := e.Enrich(gctx, id)
 			if err != nil {
-				slog.Warn("enrichment failed", "cve", id, "error", err)
+				slog.Debug("enrichment failed", "cve", id, "error", err)
 				return nil
 			}
 			results[i] = enriched

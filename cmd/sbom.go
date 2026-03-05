@@ -604,14 +604,13 @@ func enrichFindings(cmd *cobra.Command, findings []model.SBOMFinding, quiet bool
 	// Check for exploits in batch
 	exploitMap := make(map[string]bool)
 	if app.Exploit != nil {
-		for _, id := range uniqueCVEIDs {
-			result, err := app.Exploit.Check(ctx, id)
-			if err != nil {
-				slog.Debug("exploit check failed", "cve", id, "error", err)
-				continue
-			}
-			if result != nil && len(result.Exploits) > 0 {
-				exploitMap[id] = true
+		results, err := app.Exploit.CheckBatch(ctx, uniqueCVEIDs)
+		if err != nil {
+			slog.Debug("exploit batch check failed", "error", err)
+		}
+		for i, r := range results {
+			if r != nil && r.HasExploit {
+				exploitMap[uniqueCVEIDs[i]] = true
 			}
 		}
 	}
