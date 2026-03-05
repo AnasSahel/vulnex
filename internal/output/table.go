@@ -458,6 +458,81 @@ func (tf *tableFormatter) FormatEPSSScores(w io.Writer, scores map[string]*model
 	return nil
 }
 
+// wordWrap wraps text at word boundaries to fit within the given width.
+// Each line is prefixed with the indent string.
+func wordWrap(text, indent string, width int) string {
+	maxLineLen := width - len(indent)
+	if maxLineLen <= 0 {
+		maxLineLen = width
+	}
+
+	var result strings.Builder
+	for _, paragraph := range strings.Split(text, "\n") {
+		if paragraph == "" {
+			result.WriteString(indent)
+			result.WriteByte('\n')
+			continue
+		}
+		words := strings.Fields(paragraph)
+		if len(words) == 0 {
+			result.WriteString(indent)
+			result.WriteByte('\n')
+			continue
+		}
+		lineLen := 0
+		result.WriteString(indent)
+		for i, word := range words {
+			wl := len(word)
+			if i > 0 && lineLen+1+wl > maxLineLen {
+				result.WriteByte('\n')
+				result.WriteString(indent)
+				lineLen = 0
+			} else if i > 0 {
+				result.WriteByte(' ')
+				lineLen++
+			}
+			result.WriteString(word)
+			lineLen += wl
+		}
+		result.WriteByte('\n')
+	}
+	return result.String()
+}
+
+// stripMarkdownHeadings converts markdown headings to plain bold-style labels.
+func stripMarkdownHeadings(text string) string {
+	var lines []string
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "#") {
+			// Strip leading # characters and whitespace
+			cleaned := strings.TrimLeft(trimmed, "#")
+			cleaned = strings.TrimSpace(cleaned)
+			if cleaned != "" {
+				lines = append(lines, cleaned)
+			}
+		} else {
+			lines = append(lines, line)
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
+// labelReference returns a tag label for a reference URL based on URL patterns.
+func labelReference(url string) string {
+	lower := strings.ToLower(url)
+	switch {
+	case strings.Contains(lower, "/commit/") || strings.Contains(lower, "/pull/"):
+		return "[Patch]"
+	case strings.Contains(lower, "nvd.nist.gov"):
+		return "[NVD]"
+	case strings.Contains(lower, "/advisories/") || strings.Contains(lower, "/security/"):
+		return "[Advisory]"
+	default:
+		return ""
+	}
+}
+
 // FormatAdvisory renders a single enriched advisory in a detailed key-value display.
 func (tf *tableFormatter) FormatAdvisory(w io.Writer, adv *model.EnrichedAdvisory) error {
 	severityStr := strings.ToUpper(adv.Severity)
@@ -490,26 +565,33 @@ func (tf *tableFormatter) FormatAdvisory(w io.Writer, adv *model.EnrichedAdvisor
 	}
 
 	// Published
+	publishedDate := ""
 	if adv.PublishedAt != "" {
-		published := adv.PublishedAt
-		if len(published) >= 10 {
-			published = published[:10]
+		publishedDate = adv.PublishedAt
+		if len(publishedDate) >= 10 {
+			publishedDate = publishedDate[:10]
 		}
-		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Published:"), tf.valueStyle.Render(published))
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Published:"), tf.valueStyle.Render(publishedDate))
 	}
 
-	// Updated
-	if adv.UpdatedAt != "" && adv.UpdatedAt != adv.PublishedAt {
-		updated := adv.UpdatedAt
-		if len(updated) >= 10 {
-			updated = updated[:10]
+	// Updated (only if truncated date differs from Published)
+	if adv.UpdatedAt != "" {
+		updatedDate := adv.UpdatedAt
+		if len(updatedDate) >= 10 {
+			updatedDate = updatedDate[:10]
 		}
-		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Updated:"), tf.valueStyle.Render(updated))
+		if updatedDate != publishedDate {
+			fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Updated:"), tf.valueStyle.Render(updatedDate))
+		}
 	}
 
 	// Withdrawn
 	if adv.WithdrawnAt != "" {
-		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Withdrawn:"), tf.criticalStyle.Render(adv.WithdrawnAt[:10]))
+		withdrawn := adv.WithdrawnAt
+		if len(withdrawn) >= 10 {
+			withdrawn = withdrawn[:10]
+		}
+		fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Withdrawn:"), tf.criticalStyle.Render(withdrawn))
 	}
 
 	// URL
@@ -526,13 +608,15 @@ func (tf *tableFormatter) FormatAdvisory(w io.Writer, adv *model.EnrichedAdvisor
 	if adv.Description != "" {
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("Description"))
-		desc := adv.Description
+		desc := stripMarkdownHeadings(adv.Description)
+		truncated := false
 		if !tf.long && len(desc) > 300 {
 			desc = desc[:297] + "..."
+			truncated = true
 		}
-		// Wrap lines for readability
-		for _, line := range strings.Split(desc, "\n") {
-			fmt.Fprintf(w, "  %s\n", tf.valueStyle.Render(line))
+		fmt.Fprint(w, wordWrap(desc, "  ", 80))
+		if truncated {
+			fmt.Fprintf(w, "  %s\n", tf.noneStyle.Render("(use --long for full output)"))
 		}
 	}
 
@@ -556,9 +640,15 @@ func (tf *tableFormatter) FormatAdvisory(w io.Writer, adv *model.EnrichedAdvisor
 		for _, pkg := range adv.Packages {
 			fix := pkg.Fixed
 			if fix == "" {
-				fix = "no fix available"
+				fix = "no fix"
 			}
-			fmt.Fprintf(w, "  %s/%s (fixed: %s)\n", tf.valueStyle.Render(pkg.Ecosystem), tf.headerStyle.Render(pkg.Name), fix)
+
+			versionInfo := fmt.Sprintf("fixed: %s", fix)
+			if pkg.VulnerableRange != "" {
+				versionInfo = fmt.Sprintf("%s, fixed: %s", pkg.VulnerableRange, fix)
+			}
+
+			fmt.Fprintf(w, "  %s/%s (%s)\n", tf.valueStyle.Render(pkg.Ecosystem), tf.headerStyle.Render(pkg.Name), versionInfo)
 		}
 	}
 
@@ -567,46 +657,80 @@ func (tf *tableFormatter) FormatAdvisory(w io.Writer, adv *model.EnrichedAdvisor
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "%s\n", tf.headerStyle.Render("References"))
 		for _, ref := range adv.References {
-			fmt.Fprintf(w, "  %s\n", tf.noneStyle.Render(ref))
+			label := labelReference(ref)
+			if label != "" {
+				fmt.Fprintf(w, "  %s %s\n", tf.noneStyle.Render(ref), tf.valueStyle.Render(label))
+			} else {
+				fmt.Fprintf(w, "  %s\n", tf.noneStyle.Render(ref))
+			}
 		}
 	}
 
 	return nil
 }
 
-// FormatAdvisories renders advisory data as a table.
+// FormatAdvisories renders advisory data as a plain space-aligned table.
 func (tf *tableFormatter) FormatAdvisories(w io.Writer, advisories []model.Advisory) error {
-	headers := []string{"ID", "Source", "Severity", "Summary"}
+	if len(advisories) == 0 {
+		fmt.Fprintln(w, "No advisories found.")
+		return nil
+	}
 
-	rows := make([][]string, 0, len(advisories))
+	const (
+		colID       = 20
+		colSeverity = 10
+		colCVE      = 18
+	)
+
+	// Header
+	fmt.Fprintf(w, "%s  %s  %s  %s\n",
+		styledPad("GHSA ID", colID, tf.headerStyle),
+		styledPad("Severity", colSeverity, tf.headerStyle),
+		styledPad("CVE", colCVE, tf.headerStyle),
+		tf.headerStyle.Render("Summary"))
+
+	// Severity counts for footer
+	severityCounts := map[string]int{}
+
 	for _, adv := range advisories {
-		severity := adv.Severity
-		style := tf.severityStyle(severity)
+		sev := strings.ToUpper(adv.Severity)
+		if sev == "" {
+			sev = "UNKNOWN"
+		}
+		severityCounts[sev]++
 
 		summary := adv.Summary
 		if !tf.long {
-			summary = truncate(summary, 60)
+			summary = truncate(summary, 50)
 		}
 
-		rows = append(rows, []string{
-			adv.ID,
-			adv.Source,
-			style.Render(strings.ToUpper(severity)),
-			summary,
-		})
+		cve := adv.CVEID
+		if cve == "" {
+			cve = "-"
+		}
+
+		fmt.Fprintf(w, "%-*s  %s  %-*s  %s\n",
+			colID, adv.ID,
+			styledPad(sev, colSeverity, tf.severityStyle(sev)),
+			colCVE, cve,
+			summary)
 	}
 
-	t := table.New().
-		Headers(headers...).
-		Rows(rows...).
-		StyleFunc(func(row, col int) lipgloss.Style {
-			if row == table.HeaderRow {
-				return tf.headerStyle
-			}
-			return lipgloss.NewStyle()
-		})
+	// Footer with count and severity breakdown
+	fmt.Fprintf(w, "\n%d advisories\n", len(advisories))
 
-	fmt.Fprintln(w, t.Render())
+	sevOrder := []string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"}
+	var parts []string
+	for _, sev := range sevOrder {
+		if count, ok := severityCounts[sev]; ok {
+			style := tf.severityStyle(sev)
+			parts = append(parts, fmt.Sprintf("%s: %d", style.Render(sev), count))
+		}
+	}
+	if len(parts) > 0 {
+		fmt.Fprintf(w, "  %s\n", strings.Join(parts, "  "))
+	}
+
 	return nil
 }
 

@@ -9,10 +9,11 @@ type Reference struct {
 
 // Advisory represents a security advisory from a source like GHSA or OSV.
 type Advisory struct {
-	ID       string `json:"id"`       // GHSA-xxxx-xxxx-xxxx or OSV ID
-	Source   string `json:"source"`   // "ghsa", "osv"
+	ID       string `json:"id"`                 // GHSA-xxxx-xxxx-xxxx or OSV ID
+	CVEID    string `json:"cve_id,omitempty"`   // Associated CVE ID
+	Source   string `json:"source"`             // "ghsa", "osv"
 	URL      string `json:"url"`
-	Severity string `json:"severity"` // "critical", "high", "medium", "low"
+	Severity string `json:"severity"`           // "critical", "high", "medium", "low"
 	Summary  string `json:"summary"`
 }
 
@@ -86,11 +87,12 @@ type CPEMatch struct {
 
 // AffectedPkg represents an affected open-source package from OSV or GHSA.
 type AffectedPkg struct {
-	Ecosystem string  `json:"ecosystem"` // npm, pip, maven, go, rubygems, rust, etc.
-	Name      string  `json:"name"`
-	Versions  []string `json:"versions,omitempty"` // specific affected versions
-	Ranges    []Range `json:"ranges,omitempty"`    // version ranges
-	Fixed     string  `json:"fixed,omitempty"`     // first fixed version
+	Ecosystem       string   `json:"ecosystem"`                  // npm, pip, maven, go, rubygems, rust, etc.
+	Name            string   `json:"name"`
+	Versions        []string `json:"versions,omitempty"`         // specific affected versions
+	Ranges          []Range  `json:"ranges,omitempty"`           // version ranges
+	Fixed           string   `json:"fixed,omitempty"`            // first fixed version
+	VulnerableRange string   `json:"vulnerable_range,omitempty"` // human-readable range (e.g. ">= 4.0.0, < 4.17.23")
 }
 
 // Range represents a version range for an affected package.

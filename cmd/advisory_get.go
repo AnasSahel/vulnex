@@ -76,6 +76,9 @@ func toEnrichedAdvisory(a *ghsa.GHSAdvisory) *model.EnrichedAdvisory {
 		} else if v.PatchedVersions != "" {
 			pkg.Fixed = v.PatchedVersions
 		}
+		if v.VulnerableVersionRange != "" {
+			pkg.VulnerableRange = v.VulnerableVersionRange
+		}
 		adv.Packages = append(adv.Packages, pkg)
 	}
 

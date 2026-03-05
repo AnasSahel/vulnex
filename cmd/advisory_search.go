@@ -39,6 +39,7 @@ var advisorySearchCmd = &cobra.Command{
 		for _, r := range results {
 			advisories = append(advisories, model.Advisory{
 				ID:       r.GHSAID,
+				CVEID:    r.CVEID,
 				Source:   "ghsa",
 				URL:      r.URL,
 				Severity: r.Severity,

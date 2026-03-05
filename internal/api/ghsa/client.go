@@ -222,6 +222,7 @@ func (c *Client) FindByPackage(ctx context.Context, ecosystem, pkg string) ([]GH
 func convertToAdvisory(ghsa *GHSAdvisory) model.Advisory {
 	return model.Advisory{
 		ID:       ghsa.GHSAID,
+		CVEID:    ghsa.CVEID,
 		Source:   "ghsa",
 		URL:      ghsa.URL,
 		Severity: strings.ToLower(ghsa.Severity),
