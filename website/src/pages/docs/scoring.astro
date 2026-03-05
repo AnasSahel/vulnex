@@ -5,17 +5,49 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <DocsLayout
-  title="Scoring &amp; Prioritization — vulnex docs"
-  description="How vulnex scores and prioritizes vulnerabilities using CVSS, EPSS, and KEV signals with configurable weights."
+  title="scoring command — vulnex docs"
+  description="Display built-in scoring profiles and P0–P4 priority thresholds. Explains how vulnex scores and prioritizes vulnerabilities using CVSS, EPSS, and KEV signals."
   slug="scoring"
 >
   <!-- Overview -->
   <section id="overview">
-    <span class="doc-badge">Concepts</span>
-    <h1>Scoring &amp; Prioritization</h1>
+    <span class="doc-badge">Command Reference</span>
+    <h1>vulnex scoring</h1>
     <p class="doc-lead">
+      Display the built-in scoring profiles and P0–P4 priority threshold matrix.
       Not every vulnerability matters equally. A CVE with a perfect 10.0 severity score may never be exploited in practice, while a "medium" severity bug might be actively targeted in the wild. Vulnex combines multiple signals to produce a composite score that reflects real-world risk, not just theoretical severity.
     </p>
+  </section>
+
+  <hr class="doc-divider" />
+
+  <!-- Usage -->
+  <section id="usage">
+    <h2>Usage</h2>
+    <div class="code-inline"><code>vulnex scoring</code></div>
+    <p>No arguments or flags required. Prints all built-in profiles and priority thresholds to stdout. Use <code>--no-color</code> to disable colored output.</p>
+
+    <TerminalWindow title="vulnex scoring">
+      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex scoring</span>
+
+<span class="t-label">Scoring Profiles</span>
+
+  <span class="t-dim">Profile              CVSS    EPSS    KEV</span>
+  <span class="t-value">default</span>              0.30    0.50    0.20
+  <span class="t-value">exploit-focused</span>      0.10    0.60    0.30
+  <span class="t-value">severity-focused</span>     0.60    0.30    0.10
+
+<span class="t-label">Risk Priority Thresholds</span>
+
+  <span class="t-p0">P0-CRITICAL</span>    In CISA KEV (regardless of other scores)
+  <span class="t-high">P1-HIGH</span>        EPSS >= 0.7 OR CVSS >= 9.0
+  <span class="t-medium">P2-MEDIUM</span>      EPSS >= 0.3 OR (CVSS >= 7.0 AND EPSS >= 0.1)
+  <span class="t-value">P3-LOW</span>         CVSS >= 7.0 but EPSS &lt; 0.1
+  <span class="t-dim">P4-MINIMAL</span>     CVSS &lt; 7.0 AND EPSS &lt; 0.1
+
+<span class="t-dim">Use --scoring-profile to select a profile, or --cvss-weight,</span>
+<span class="t-dim">--epss-weight, --kev-weight to set custom weights.</span></pre>
+    </TerminalWindow>
   </section>
 
   <hr class="doc-divider" />
@@ -299,17 +331,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <section id="examples">
     <h2>CLI examples</h2>
 
-    <TerminalWindow title="View built-in profiles and thresholds">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex scoring</span>
-
- <span class="t-dim">Scoring Profiles</span>
- <span class="t-dim">================</span>
-
-   default              CVSS=0.30  EPSS=0.50  KEV=0.20
-   exploit-focused      CVSS=0.10  EPSS=0.60  KEV=0.30
-   severity-focused     CVSS=0.60  EPSS=0.30  KEV=0.10</pre>
-    </TerminalWindow>
-
     <TerminalWindow title="cve get with a preset profile">
       <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex cve get</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--scoring-profile default</span></pre>
     </TerminalWindow>
@@ -335,11 +356,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <div class="subcommand-grid">
       <a href={`${base}/docs/cve/`} class="subcommand-card">
         <h3>cve get</h3>
-        <p>Fetch CVE details with scoring</p>
+        <p>Enriched CVE lookup with scoring profiles</p>
       </a>
-      <a href={`${base}/docs/cve/#scoring`} class="subcommand-card">
-        <h3>Scoring profiles</h3>
-        <p>Profile table and custom weights</p>
+      <a href={`${base}/docs/prioritize/`} class="subcommand-card">
+        <h3>prioritize</h3>
+        <p>Triage scanner findings with risk-based scoring</p>
+      </a>
+      <a href={`${base}/docs/sbom/`} class="subcommand-card">
+        <h3>sbom check</h3>
+        <p>Scan lockfiles and SBOMs with --enrich scoring</p>
       </a>
     </div>
   </section>
@@ -408,6 +433,16 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     font-size: 1.05rem;
     max-width: 640px;
     margin-bottom: 32px;
+  }
+
+  .code-inline {
+    margin-bottom: 20px;
+  }
+
+  .code-inline code {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    display: inline-block;
   }
 
   .doc-note {

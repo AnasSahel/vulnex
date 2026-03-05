@@ -78,20 +78,15 @@ export const docsSections: DocsSection[] = [
         slug: "prioritize", title: "prioritize", description: "Triage scanner findings with risk-based prioritization using CVSS, EPSS, and KEV signals.",
       },
       {
+        slug: "scoring", title: "scoring", description: "Display built-in scoring profiles and P0–P4 priority thresholds.",
+      },
+      {
         slug: "sbom", title: "sbom", description: "Parse SBOMs and lockfiles, check for vulnerabilities, diff between versions, and generate VEX documents.",
         subcommands: [
           { id: "sbom-check", label: "sbom check" },
           { id: "sbom-diff", label: "sbom diff" },
         ],
       },
-    ],
-  },
-  {
-    key: "reference",
-    label: "Reference",
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>`,
-    pages: [
-      { slug: "scoring", title: "Scoring & Prioritization", description: "Composite risk scoring with CVSS, EPSS, and KEV signals." },
     ],
   },
 ];
