@@ -89,6 +89,30 @@ export const demos = [
     <span class="t-label">Most starred</span>     fullhunt/log4j-scan (3.4k ★)`,
   },
   {
+    id: 'sc-prioritize',
+    label: 'Prioritize',
+    title: 'vulnex prioritize trivy-report.json',
+    html: `<span class="t-prompt">$</span> <span class="t-cmd">vulnex prioritize</span> <span class="t-value">trivy-report.json</span>
+
+<span class="t-accent">golang.org/x/net 0.7.0</span> <span class="t-dim">(Go)</span>
+  <span class="t-dim">ID                  Severity   CVSS   EPSS       KEV   Priority        Fixed</span>
+  CVE-2023-44487      <span class="t-high">HIGH</span>       7.5    <span class="t-critical">94.4%↑</span>     <span class="t-critical">YES</span>   <span class="t-p0">P0-CRITICAL</span>     0.17.0
+    <span class="t-dim">→ In CISA KEV — confirmed active exploitation, 94% exploitation probability. Patch immediately.</span>
+  CVE-2023-39325      <span class="t-high">HIGH</span>       7.5    0.2%       —     P3-LOW          0.17.0
+  CVE-2022-27664      <span class="t-high">HIGH</span>       7.5    0.1%       —     P3-LOW          0.0.0-2~
+
+<span class="t-accent">braces 3.0.2</span> <span class="t-dim">(npm)</span>
+  CVE-2024-4068       <span class="t-medium">MEDIUM</span>     7.5    0.2%       —     P3-LOW          3.0.3
+
+<span class="t-dim">Summary: 4 components scanned, 2 vulnerable, 4 findings</span>
+  <span class="t-high">HIGH: 3</span>  <span class="t-medium">MEDIUM: 1</span>
+
+<span class="t-label">Prioritization</span>
+  Action required    1 finding — patch immediately (P0+P1)
+  Can wait           3 findings — low exploitation risk (P2-P4)
+  Top priority       CVE-2023-44487 in golang.org/x/net — upgrade to 0.17.0`,
+  },
+  {
     id: 'sc-ignore',
     label: 'Suppress',
     title: 'vulnex sbom check bom.json',

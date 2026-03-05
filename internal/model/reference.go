@@ -57,10 +57,11 @@ type SBOMFinding struct {
 
 // SBOMResult holds the complete results of an SBOM vulnerability check.
 type SBOMResult struct {
-	File            string        `json:"file"`
-	TotalComponents int           `json:"total_components"`
-	Findings        []SBOMFinding `json:"findings"`
-	Suppressed      []SBOMFinding `json:"suppressed,omitempty"`
+	File            string            `json:"file"`
+	TotalComponents int               `json:"total_components"`
+	Findings        []SBOMFinding     `json:"findings"`
+	Suppressed      []SBOMFinding     `json:"suppressed,omitempty"`
+	PolicyFailures  map[string]string `json:"policy_failures,omitempty"` // advisory ID → rule name
 }
 
 // SBOMDiffResult holds the diff between two SBOM vulnerability checks.

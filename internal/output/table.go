@@ -757,14 +757,29 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 		groups[key] = append(groups[key], f)
 	}
 
-	// Severity counts
+	// Severity counts and priority counts
 	severityCounts := map[string]int{}
-	for _, f := range result.Findings {
+	actionRequired := 0 // P0 + P1
+	canWait := 0        // P2 - P4
+	var topFinding *model.SBOMFinding
+	for i, f := range result.Findings {
 		sev := strings.ToUpper(f.Advisory.Severity)
 		if sev == "" {
 			sev = "UNKNOWN"
 		}
 		severityCounts[sev]++
+
+		if f.Risk != nil {
+			switch f.Risk.Priority {
+			case model.PriorityCritical, model.PriorityHigh:
+				actionRequired++
+				if topFinding == nil {
+					topFinding = &result.Findings[i]
+				}
+			default:
+				canWait++
+			}
+		}
 	}
 
 	// Render each component group using plain formatted text
@@ -779,9 +794,9 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 			colID       = 20
 			colSeverity = 10
 			colCVSS     = 6
-			colEPSS     = 8
+			colEPSS     = 10
 			colKEV      = 5
-			colPriority = 13
+			colPriority = 15
 			colFixed    = 9
 		)
 
@@ -826,7 +841,7 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 
 				epssVal := "N/A"
 				if f.EPSS != nil {
-					epssVal = fmt.Sprintf("%.4f", f.EPSS.Score)
+					epssVal = fmt.Sprintf("%.1f%%", f.EPSS.Score*100)
 					if f.EPSSTrend != nil {
 						switch f.EPSSTrend.Direction {
 						case "rising":
@@ -837,7 +852,7 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 					}
 				}
 
-				kevStr := "-"
+				kevStr := "—"
 				kevStyle := lipgloss.NewStyle()
 				if f.KEV != nil {
 					kevStr = "YES"
@@ -851,6 +866,13 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 					priorityStyle = tf.severityStyle(priorityStr)
 				}
 
+				// Inline policy failure marker
+				if result.PolicyFailures != nil {
+					if _, failed := result.PolicyFailures[f.Advisory.ID]; failed {
+						priorityStr = "[FAIL] " + priorityStr
+					}
+				}
+
 				fmt.Fprintf(w, "  %-*s %s %-*s %-*s %s %s %s\n",
 					colID, f.Advisory.ID,
 					styledPad(sev, colSeverity, style),
@@ -859,6 +881,18 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 					styledPad(kevStr, colKEV, kevStyle),
 					styledPad(priorityStr, colPriority, priorityStyle),
 					fixed)
+
+				// Rationale line for P0 and P1 findings
+				if f.Risk != nil && (f.Risk.Priority == model.PriorityCritical || f.Risk.Priority == model.PriorityHigh) && f.Risk.Rationale != "" {
+					rationale := f.Risk.Rationale
+					if f.EPSS != nil {
+						rationale = fmt.Sprintf("%s, %.0f%% exploitation probability", rationale, f.EPSS.Score*100)
+					}
+					if fixed != "-" {
+						rationale += ". Patch immediately."
+					}
+					fmt.Fprintf(w, "    → %s\n", rationale)
+				}
 			} else {
 				summary := f.Advisory.Summary
 				if !tf.long {
@@ -893,6 +927,36 @@ func (tf *tableFormatter) FormatSBOMResult(w io.Writer, result *model.SBOMResult
 
 	if len(result.Suppressed) > 0 {
 		fmt.Fprintf(w, "  Suppressed: %d (use --strict to show all)\n", len(result.Suppressed))
+	}
+
+	// Prioritization summary block (only when enriched)
+	if enriched && (actionRequired > 0 || canWait > 0) {
+		fmt.Fprintf(w, "\n%s\n", tf.headerStyle.Render("Prioritization"))
+
+		if actionRequired > 0 {
+			label := "P0+P1"
+			if actionRequired == 1 {
+				fmt.Fprintf(w, "  Action required    %d finding — patch immediately (%s)\n", actionRequired, label)
+			} else {
+				fmt.Fprintf(w, "  Action required    %d findings — patch immediately (%s)\n", actionRequired, label)
+			}
+		}
+
+		if canWait > 0 {
+			if canWait == 1 {
+				fmt.Fprintf(w, "  Can wait           %d finding — low exploitation risk (P2-P4)\n", canWait)
+			} else {
+				fmt.Fprintf(w, "  Can wait           %d findings — low exploitation risk (P2-P4)\n", canWait)
+			}
+		}
+
+		if topFinding != nil {
+			fixInfo := ""
+			if topFinding.Fixed != "" && topFinding.Fixed != "-" {
+				fixInfo = fmt.Sprintf(" — upgrade to %s", topFinding.Fixed)
+			}
+			fmt.Fprintf(w, "  Top priority       %s in %s%s\n", topFinding.Advisory.ID, topFinding.Name, fixInfo)
+		}
 	}
 
 	return nil

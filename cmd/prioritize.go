@@ -220,6 +220,14 @@ func runPrioritize(cmd *cobra.Command, args []string) error {
 		Suppressed:      suppressedFindings,
 	}
 
+	// Populate policy failures for inline display
+	if policyResult != nil && len(policyResult.Failures) > 0 {
+		result.PolicyFailures = make(map[string]string, len(policyResult.Failures))
+		for _, v := range policyResult.Failures {
+			result.PolicyFailures[v.Finding.Advisory.ID] = v.RuleName
+		}
+	}
+
 	if err := app.Formatter.FormatSBOMResult(os.Stdout, result); err != nil {
 		return err
 	}

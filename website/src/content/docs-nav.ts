@@ -74,6 +74,9 @@ export const docsSections: DocsSection[] = [
           { id: "exploit-check", label: "exploit check" },
         ],
       },
+      {
+        slug: "prioritize", title: "prioritize", description: "Triage scanner findings with risk-based prioritization using CVSS, EPSS, and KEV signals.",
+      },
     ],
   },
   {
