@@ -382,38 +382,51 @@ func (tf *tableFormatter) FormatCVEList(w io.Writer, cves []*model.EnrichedCVE) 
 	return nil
 }
 
-// FormatKEVList renders a list of KEV entries as a table.
+// FormatKEVList renders a list of KEV entries as a plain space-aligned table.
 func (tf *tableFormatter) FormatKEVList(w io.Writer, entries []model.KEVEntry) error {
-	headers := []string{"CVE ID", "Vendor", "Product", "Date Added", "Due Date", "Ransomware"}
+	if len(entries) == 0 {
+		fmt.Fprintln(w, "No KEV entries found.")
+		return nil
+	}
 
-	rows := make([][]string, 0, len(entries))
+	const (
+		colCVE    = 18
+		colVendor = 16
+		colProd   = 24
+		colDate   = 12
+	)
+
+	fmt.Fprintf(w, "%s  %s  %s  %s  %s\n",
+		styledPad("CVE ID", colCVE, tf.headerStyle),
+		styledPad("Vendor", colVendor, tf.headerStyle),
+		styledPad("Product", colProd, tf.headerStyle),
+		styledPad("Added", colDate, tf.headerStyle),
+		tf.headerStyle.Render("Ransomware"))
+
 	for _, entry := range entries {
+		product := entry.Product
+		if len(product) > colProd {
+			product = product[:colProd-3] + "..."
+		}
+		vendor := entry.VendorProject
+		if len(vendor) > colVendor {
+			vendor = vendor[:colVendor-3] + "..."
+		}
+
 		ransomware := entry.KnownRansomwareCampaign
 		if strings.EqualFold(ransomware, "Known") && !tf.noColor {
 			ransomware = tf.kevYesStyle.Render(ransomware)
 		}
 
-		rows = append(rows, []string{
-			entry.CVEID,
-			entry.VendorProject,
-			entry.Product,
-			entry.DateAdded,
-			entry.DueDate,
-			ransomware,
-		})
+		fmt.Fprintf(w, "%-*s  %-*s  %-*s  %-*s  %s\n",
+			colCVE, entry.CVEID,
+			colVendor, vendor,
+			colProd, product,
+			colDate, entry.DateAdded,
+			ransomware)
 	}
 
-	t := table.New().
-		Headers(headers...).
-		Rows(rows...).
-		StyleFunc(func(row, col int) lipgloss.Style {
-			if row == table.HeaderRow {
-				return tf.headerStyle
-			}
-			return lipgloss.NewStyle()
-		})
-
-	fmt.Fprintln(w, t.Render())
+	fmt.Fprintf(w, "\n%d entries\n", len(entries))
 	return nil
 }
 
