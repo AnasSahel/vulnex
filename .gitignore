@@ -7,7 +7,7 @@ vulnex-*
 .DS_Store
 
 # Content drafts
-docs/linkedin/
+linkedin/
 
 # Vulnex ignore file
 .vulnexignore
@@ -15,7 +15,12 @@ docs/linkedin/
 # Go Cache
 .cache/
 
-# Website (Astro)
-website/node_modules/
-website/dist/
-website/.astro/
+# Dependencies
+node_modules/
+
+# Astro
+.astro/
+dist/
+
+# Claude
+.claude/
