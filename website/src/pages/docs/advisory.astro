@@ -434,44 +434,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     color: var(--text);
   }
 
-  /* Subcommand cards */
-  .subcommand-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin-top: 24px;
-  }
-
-  .subcommand-card {
-    display: block;
-    padding: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color 0.15s;
-  }
-
-  .subcommand-card:hover {
-    border-color: var(--accent);
-    text-decoration: none;
-  }
-
-  .subcommand-card h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0 0 6px;
-    color: var(--accent);
-  }
-
-  .subcommand-card p {
-    font-size: 0.825rem;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.4;
-  }
-
   /* Flag tables */
   .flags-table {
     overflow-x: auto;
@@ -490,14 +452,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   th {
     text-align: left;
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-weight: 600;
     color: var(--text);
     white-space: nowrap;
   }
 
   td {
-    padding: 10px 14px;
+    padding: 12px 16px;
     color: var(--text-secondary);
     border-bottom: 1px solid var(--border);
     vertical-align: top;
@@ -506,6 +468,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   td code {
     font-size: 0.8rem;
     white-space: nowrap;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 15%, transparent);
   }
 
   tr:last-child td {
@@ -574,11 +538,54 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     color: var(--text-secondary);
   }
 
-  @media (max-width: 600px) {
-    .subcommand-grid {
-      grid-template-columns: 1fr;
-    }
+  .subcmd-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-radius: 6px;
+    color: var(--accent);
+  }
 
+  .jump-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .jump-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .jump-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  section :global(.tabbed-panel) {
+    margin: 16px 0 24px;
+  }
+
+  section :global(.tabbed-panel .terminal-window) {
+    margin: 0;
+  }
+
+  @media (max-width: 600px) {
     .info-cards {
       grid-template-columns: 1fr;
     }

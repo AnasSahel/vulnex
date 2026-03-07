@@ -137,8 +137,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <div class="code-inline"><code>vulnex sbom diff &lt;old-sbom&gt; &lt;new-sbom&gt; [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="sbom diff — compare two SBOMs">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">old-bom.json new-bom.json</span>
+    <TabbedPanel groupId="sbom-diff-examples" tabs={[{id:"diff-compare", label:"Compare SBOMs"}, {id:"diff-ci", label:"CI gate"}]}>
+      <div data-tab-id="diff-compare" class="active">
+        <TerminalWindow title="sbom diff — compare two SBOMs">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">old-bom.json new-bom.json</span>
 
 <span class="t-critical">+ ADDED (2 vulnerabilities)</span>
   <span class="t-accent">flask 0.12.0</span> <span class="t-dim">(PyPI)</span>
@@ -155,14 +157,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <span class="t-dim">Summary: old=3 components (56 vulns), new=4 components (57 vulns)</span>
   <span class="t-critical">+2 added</span>  <span class="t-green">-1 removed</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="sbom diff — CI gate">
-      <pre><span class="t-dim"># In CI: fail the build only if new vulnerabilities were introduced</span>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="diff-ci">
+        <TerminalWindow title="sbom diff — CI gate">
+          <pre><span class="t-dim"># In CI: fail the build only if new vulnerabilities were introduced</span>
 <span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom diff</span> <span class="t-value">baseline.json current.json</span> <span class="t-flag">--severity critical</span>
 <span class="t-dim"># Exit code 0 → no new CRITICAL vulns → pipeline passes</span>
 <span class="t-dim"># Exit code 1 → new CRITICAL vulns found → pipeline fails</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">
@@ -561,45 +566,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     margin-bottom: 0;
   }
 
-  /* ── Subcommand cards ───────────────────── */
-
-  .subcommand-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin-top: 24px;
-  }
-
-  .subcommand-card {
-    display: block;
-    padding: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color 0.15s;
-  }
-
-  .subcommand-card:hover {
-    border-color: var(--accent);
-    text-decoration: none;
-  }
-
-  .subcommand-card h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0 0 6px;
-    color: var(--accent);
-  }
-
-  .subcommand-card p {
-    font-size: 0.825rem;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.4;
-  }
-
   /* ── Comparison table ───────────────────── */
 
   .comparison-table {
@@ -735,14 +701,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   th {
     text-align: left;
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-weight: 600;
     color: var(--text);
     white-space: nowrap;
   }
 
   td {
-    padding: 10px 14px;
+    padding: 12px 16px;
     color: var(--text-secondary);
     border-bottom: 1px solid var(--border);
     vertical-align: top;
@@ -751,6 +717,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   td code {
     font-size: 0.8rem;
     white-space: nowrap;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 15%, transparent);
   }
 
   tr:last-child td {
@@ -806,8 +774,54 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     margin-bottom: 6px;
   }
 
+  .subcmd-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-radius: 6px;
+    color: var(--accent);
+  }
+
+  .jump-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .jump-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .jump-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  section :global(.tabbed-panel) {
+    margin: 16px 0 24px;
+  }
+
+  section :global(.tabbed-panel .terminal-window) {
+    margin: 0;
+  }
+
   @media (max-width: 600px) {
-    .subcommand-grid,
     .source-grid,
     .enrich-grid {
       grid-template-columns: 1fr;
