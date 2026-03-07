@@ -31,33 +31,54 @@ const { tabs, groupId } = Astro.props;
 
   .tab-bar {
     display: flex;
-    background: var(--surface);
-    border: 1px solid var(--border);
+    gap: 0;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-bottom: none;
     border-radius: var(--radius) var(--radius) 0 0;
     overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tab-bar::-webkit-scrollbar {
+    display: none;
   }
 
   .tab-btn {
-    flex: 1;
+    position: relative;
     background: none;
     border: none;
-    color: var(--text-secondary);
-    padding: 12px 20px;
-    font-size: 0.875rem;
-    font-family: inherit;
+    color: #8b949e;
+    padding: 10px 16px;
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
     cursor: pointer;
-    transition: color 0.15s, background 0.15s;
+    transition: color 0.15s ease;
     white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+
+  .tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: transparent;
+    transition: background 0.15s ease;
   }
 
   .tab-btn:hover {
-    color: var(--text);
+    color: #c9d1d9;
   }
 
   .tab-btn.active {
+    color: #e6edf3;
+  }
+
+  .tab-btn.active::after {
     background: var(--accent);
-    color: #fff;
-    font-weight: 600;
   }
 
   .tab-content :global([data-tab-id]) {
