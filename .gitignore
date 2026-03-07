@@ -1,6 +1,7 @@
 # Binary
 vulnex
 vulnex-*
+!website/public/images/vulnex-*
 
 # OS
 .DS_Store
