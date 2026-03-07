@@ -1,8 +1,9 @@
 ---
-import { docsSections } from '../content/docs-nav';
+import { getDocsSections } from '../content/docs-helpers';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-// Build flat search index at build time (trusted data from docs-nav.ts)
+// Build flat search index at build time (from content collection)
+const docsSections = await getDocsSections();
 const searchEntries: { title: string; description: string; href: string; section: string }[] = [];
 
 for (const section of docsSections) {

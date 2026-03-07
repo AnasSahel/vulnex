@@ -3,7 +3,8 @@ import BaseLayout from './BaseLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import DocsSidebar from '../components/DocsSidebar.astro';
-import { docsSections, getPagerLinks } from '../content/docs-nav';
+import { getDocsSections, getPagerLinks } from '../content/docs-helpers';
+import '../styles/docs-page.css';
 
 interface Props {
   title: string;
@@ -13,9 +14,10 @@ interface Props {
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const { title, description, slug } = Astro.props;
-const pager = slug ? getPagerLinks(slug) : { prev: undefined, next: undefined };
+const pager = slug ? await getPagerLinks(slug) : { prev: undefined, next: undefined };
 
 // Determine which section this page belongs to for breadcrumbs
+const docsSections = await getDocsSections();
 const currentSection = slug ? docsSections.find(s => s.pages.some(p => p.slug === slug)) : undefined;
 
 // Get subcommands for right sidebar TOC

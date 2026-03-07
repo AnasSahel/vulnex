@@ -1,0 +1,77 @@
+- id: getting-started
+  title: Quick Start
+  description: Install vulnex and run your first query in under two minutes.
+  section: getting-started
+  order: 1
+
+- id: cve
+  title: cve
+  description: Search, list, fetch, and track CVEs from the NVD.
+  section: commands
+  order: 1
+  subcommands:
+    - { id: cve-get, label: "cve get" }
+    - { id: cve-search, label: "cve search" }
+    - { id: cve-list, label: "cve list" }
+    - { id: cve-history, label: "cve history" }
+    - { id: cve-watch, label: "cve watch" }
+
+- id: kev
+  title: kev
+  description: Browse, check, and filter CISA Known Exploited Vulnerabilities.
+  section: commands
+  order: 2
+  subcommands:
+    - { id: kev-list, label: "kev list" }
+    - { id: kev-recent, label: "kev recent" }
+    - { id: kev-check, label: "kev check" }
+    - { id: kev-stats, label: "kev stats" }
+
+- id: epss
+  title: epss
+  description: Query exploit prediction scores, top exploited CVEs, and score trends.
+  section: commands
+  order: 3
+  subcommands:
+    - { id: epss-score, label: "epss score" }
+    - { id: epss-top, label: "epss top" }
+    - { id: epss-trend, label: "epss trend" }
+
+- id: advisory
+  title: advisory
+  description: Search, retrieve, and inspect security advisories from GitHub Advisory Database.
+  section: commands
+  order: 4
+  subcommands:
+    - { id: advisory-search, label: "advisory search" }
+    - { id: advisory-get, label: "advisory get" }
+    - { id: advisory-affected, label: "advisory affected" }
+
+- id: exploit
+  title: exploit
+  description: Find public exploits, PoCs, and attack tools for CVEs across GitHub, Metasploit, Nuclei, and ExploitDB.
+  section: commands
+  order: 5
+  subcommands:
+    - { id: exploit-check, label: "exploit check" }
+
+- id: prioritize
+  title: prioritize
+  description: Triage scanner findings with risk-based prioritization using CVSS, EPSS, and KEV signals.
+  section: commands
+  order: 6
+
+- id: scoring
+  title: scoring
+  description: Display built-in scoring profiles and P0–P4 priority thresholds.
+  section: commands
+  order: 7
+
+- id: sbom
+  title: sbom
+  description: Parse SBOMs and lockfiles, check for vulnerabilities, diff between versions, and generate VEX documents.
+  section: commands
+  order: 8
+  subcommands:
+    - { id: sbom-check, label: "sbom check" }
+    - { id: sbom-diff, label: "sbom diff" }
