@@ -1,0 +1,214 @@
+---
+import TerminalWindow from '../../components/TerminalWindow.astro';
+import TabbedPanel from '../../components/TabbedPanel.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<!-- ── Overview ─────────────────────────── -->
+<section id="overview">
+  <span class="doc-badge">Command Reference</span>
+  <h1>vulnex epss</h1>
+  <p class="doc-lead">
+    Query the <a href="https://www.first.org/epss/" target="_blank" rel="noopener">Exploit Prediction Scoring System</a>
+    to understand real-world exploitation probability. EPSS scores range from 0 to 1, where higher values indicate a
+    greater likelihood of exploitation in the next 30 days.
+  </p>
+
+  <div class="jump-links">
+    <a href="#epss-score" class="jump-pill">epss score</a>
+    <a href="#epss-top" class="jump-pill">epss top</a>
+    <a href="#epss-trend" class="jump-pill">epss trend</a>
+  </div>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── epss score ──────────────────────── -->
+<section id="epss-score">
+  <h2><span class="subcmd-badge">epss score</span></h2>
+  <p>Fetch EPSS scores for one or more CVEs. Supports batched requests and stdin piping.</p>
+
+  <TabbedPanel groupId="epss-score-examples" tabs={[{id:"score-single", label:"Single CVE"}, {id:"score-multi", label:"Multiple CVEs"}, {id:"score-stdin", label:"From stdin"}]}>
+    <div data-tab-id="score-single" class="active">
+      <TerminalWindow title="vulnex epss score">
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss score</span> <span class="t-cve">CVE-2021-44228</span>
+
+<span class="t-label">CVE ID</span>              <span class="t-label">EPSS</span>        <span class="t-label">PERCENTILE</span>
+<span class="t-cve">CVE-2021-44228</span>      <span class="t-value">0.97185</span>     <span class="t-value">99.99%</span></pre>
+      </TerminalWindow>
+    </div>
+    <div data-tab-id="score-multi">
+      <TerminalWindow>
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss score</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-cve">CVE-2023-44228</span> <span class="t-cve">CVE-2021-44228</span></pre>
+      </TerminalWindow>
+    </div>
+    <div data-tab-id="score-stdin">
+      <TerminalWindow>
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">cat cves.txt | vulnex epss score</span> <span class="t-flag">--stdin</span> <span class="t-flag">--output csv</span></pre>
+      </TerminalWindow>
+    </div>
+  </TabbedPanel>
+
+  <table class="doc-table">
+    <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--stdin</code></td><td>Read CVE IDs from stdin (one per line)</td></tr>
+      <tr><td><code>-o, --output</code></td><td>Output format: <code>table</code>, <code>json</code>, <code>csv</code>, <code>markdown</code>, <code>yaml</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── epss top ────────────────────────── -->
+<section id="epss-top">
+  <h2><span class="subcmd-badge">epss top</span></h2>
+  <p>
+    Display the top N CVEs ranked by EPSS exploitation probability. Defaults to 10 results.
+    Use this to monitor the most dangerous CVEs by real-world exploitation likelihood.
+  </p>
+
+  <TabbedPanel groupId="epss-top-examples" tabs={[{id:"top-default", label:"Default"}, {id:"top-custom", label:"Custom count"}]}>
+    <div data-tab-id="top-default" class="active">
+      <TerminalWindow title="vulnex epss top">
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top</span>
+
+<span class="t-label">CVE ID</span>              <span class="t-label">EPSS</span>        <span class="t-label">PERCENTILE</span>
+<span class="t-cve">CVE-2021-44228</span>      <span class="t-value">0.97185</span>     <span class="t-value">99.99%</span>
+<span class="t-cve">CVE-2019-19781</span>      <span class="t-value">0.97173</span>     <span class="t-value">99.99%</span>
+<span class="t-cve">CVE-2019-0708</span>       <span class="t-value">0.97160</span>     <span class="t-value">99.98%</span>
+<span class="t-cve">CVE-2017-0144</span>       <span class="t-value">0.97148</span>     <span class="t-value">99.98%</span>
+<span class="t-dim">... 6 more rows</span></pre>
+      </TerminalWindow>
+    </div>
+    <div data-tab-id="top-custom">
+      <TerminalWindow>
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top 50</span> <span class="t-flag">--output json</span></pre>
+      </TerminalWindow>
+    </div>
+  </TabbedPanel>
+
+  <table class="doc-table">
+    <thead><tr><th>Argument</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>N</code></td><td>Number of results to display (default: 10)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── epss trend ──────────────────────── -->
+<section id="epss-trend">
+  <h2><span class="subcmd-badge">epss trend</span></h2>
+  <p>
+    Display the EPSS score time-series for a CVE, showing how the exploitation probability
+    has changed over time. Uses the FIRST.org EPSS API with <code>scope=time-series</code>
+    to retrieve historical data.
+  </p>
+
+  <TabbedPanel groupId="epss-trend-examples" tabs={[{id:"trend-default", label:"Full history"}, {id:"trend-recent", label:"Recent days"}, {id:"trend-json", label:"JSON output"}]}>
+    <div data-tab-id="trend-default" class="active">
+      <TerminalWindow title="vulnex epss trend">
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2021-44228</span>
+
+<span class="t-label">EPSS Score History:</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-dim">(365 data points)</span>
+
+<span class="t-label">DATE</span>              <span class="t-label">SCORE</span>       <span class="t-label">PERCENTILE</span>
+2024-01-01    0.971850    0.999930
+2024-01-02    0.971860    0.999930
+2024-01-03    0.971840    0.999920
+<span class="t-dim">...</span></pre>
+      </TerminalWindow>
+    </div>
+    <div data-tab-id="trend-recent">
+      <TerminalWindow>
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--days 30</span></pre>
+      </TerminalWindow>
+    </div>
+    <div data-tab-id="trend-json">
+      <TerminalWindow>
+        <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--output json</span></pre>
+      </TerminalWindow>
+    </div>
+  </TabbedPanel>
+
+  <table class="doc-table">
+    <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--days N</code></td><td>Limit to the most recent N days (default: 0 = all available)</td></tr>
+      <tr><td><code>-o, --output</code></td><td>Output format: <code>table</code>, <code>json</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── What is EPSS? ───────────────────── -->
+<section id="what-is-epss">
+  <h2>What is EPSS?</h2>
+  <p>
+    The <strong>Exploit Prediction Scoring System (EPSS)</strong> is a data-driven model maintained by
+    <a href="https://www.first.org/epss/" target="_blank" rel="noopener">FIRST.org</a> that estimates the
+    probability that a CVE will be exploited in the wild within the next 30 days.
+  </p>
+
+  <div class="info-cards">
+    <div class="info-card">
+      <h4>Score (0.0 &ndash; 1.0)</h4>
+      <p>The probability of exploitation. A score of 0.95 means a 95% chance of being exploited in the next 30 days.</p>
+    </div>
+    <div class="info-card">
+      <h4>Percentile (0% &ndash; 100%)</h4>
+      <p>How this CVE's score ranks relative to all other CVEs. The 99th percentile means it has a higher score than 99% of all CVEs.</p>
+    </div>
+  </div>
+
+  <h3>Why EPSS matters</h3>
+  <p>
+    CVSS severity tells you how <em>bad</em> a vulnerability could be. EPSS tells you how <em>likely</em>
+    it is to actually be exploited. Combining both signals gives a much clearer picture of real-world risk &mdash;
+    which is exactly what vulnex's <a href={`${base}/docs/scoring/`}>composite scoring</a> does.
+  </p>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── Tips & Recipes ──────────────────── -->
+<section id="tips">
+  <h2>Tips &amp; recipes</h2>
+
+  <h3>Chain EPSS with enrichment</h3>
+  <p>Find the top EPSS CVEs and enrich them with all data sources:</p>
+  <TerminalWindow>
+    <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top 20</span> <span class="t-flag">-o csv</span> | cut -d, -f1 | <span class="t-cmd">vulnex cve get</span> <span class="t-flag">--stdin</span> <span class="t-flag">-o json</span></pre>
+  </TerminalWindow>
+
+  <h3>Bulk score from a file</h3>
+  <TerminalWindow>
+    <pre><span class="t-prompt">$</span> <span class="t-cmd">cat cves.txt | vulnex epss score</span> <span class="t-flag">--stdin</span> <span class="t-flag">-o csv</span> > scores.csv</pre>
+  </TerminalWindow>
+
+  <h3>Monitor a CVE's EPSS trajectory</h3>
+  <p>Track how a CVE's exploitation likelihood has changed over the last month:</p>
+  <TerminalWindow>
+    <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--days 30</span> <span class="t-flag">--output json</span> | jq '.entries[-1].score'</pre>
+  </TerminalWindow>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── Related Commands ────────────────── -->
+<section id="related">
+  <h2>Related commands</h2>
+  <div class="related-grid">
+    <a href={`${base}/docs/cve/`} class="related-card">
+      <strong>vulnex cve</strong>
+      <span>Search, list, and fetch CVE details from NVD</span>
+    </a>
+    <a href={`${base}/docs/scoring/`} class="related-card">
+      <strong>Scoring &amp; Prioritization</strong>
+      <span>How EPSS integrates into composite risk scoring</span>
+    </a>
+  </div>
+</section>

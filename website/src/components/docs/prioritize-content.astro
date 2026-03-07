@@ -1,0 +1,262 @@
+---
+import TerminalWindow from '../../components/TerminalWindow.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<!-- ── Overview ─────────────────────────── -->
+<section id="overview">
+  <span class="doc-badge">Command Reference</span>
+  <h1>vulnex prioritize</h1>
+  <p class="doc-lead">
+    Turn raw scanner output into an actionable triage list.
+    Feed it a Trivy, Grype, or SARIF report and get findings ranked by real-world exploitation risk &mdash;
+    not just CVSS severity. Each finding gets a priority tier (P0&ndash;P4), an EPSS exploitation probability,
+    KEV status, and a clear rationale explaining <em>why</em> it matters.
+  </p>
+
+  <div class="pain-points">
+    <h3>Pain points it solves</h3>
+    <ul>
+      <li><strong>Scanner output overload.</strong> Hundreds of HIGH/CRITICAL findings with no way to tell which ones are actually being exploited in the wild.</li>
+      <li><strong>CVSS-only prioritization.</strong> A CVSS 9.8 with 0.1% exploitation probability is not the same as a CVSS 7.5 in CISA KEV. This command separates signal from noise.</li>
+      <li><strong>No actionable summary.</strong> Raw scanner reports list findings but don't tell you what to patch first. The prioritization summary gives you a clear next step.</li>
+      <li><strong>Policy compliance.</strong> Apply organization-specific rules (max severity, required fix versions) and see failures inline alongside the priority assessment.</li>
+    </ul>
+  </div>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── Usage ────────────────────────────── -->
+<section id="usage">
+  <h2>Usage</h2>
+  <div class="code-inline"><code>vulnex prioritize &lt;scanner-report&gt; [flags]</code></div>
+
+  <p>Accepts Trivy JSON, Grype JSON, and SARIF formats. The format is auto-detected from file content, or you can specify it with <code>--from</code>.</p>
+
+  <h3>Examples</h3>
+  <TerminalWindow title="prioritize — Trivy report">
+    <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex prioritize</span> <span class="t-value">trivy-report.json</span>
+
+<span class="t-accent">golang.org/x/net 0.7.0</span> <span class="t-dim">(Go)</span>
+<span class="t-dim">ID                  Severity   CVSS   EPSS       KEV   Priority        Fixed</span>
+CVE-2023-44487      <span class="t-high">HIGH</span>       7.5    <span class="t-critical">94.4%↑</span>     <span class="t-critical">YES</span>   <span class="t-p0">P0-CRITICAL</span>     0.17.0
+  <span class="t-dim">→ In CISA KEV — confirmed active exploitation, 94% exploitation probability. Patch immediately.</span>
+CVE-2023-39325      <span class="t-high">HIGH</span>       7.5    0.2%       —     P3-LOW          0.17.0
+CVE-2022-27664      <span class="t-high">HIGH</span>       7.5    0.1%       —     P3-LOW          0.0.0-2~
+
+<span class="t-accent">braces 3.0.2</span> <span class="t-dim">(npm)</span>
+CVE-2024-4068       <span class="t-medium">MEDIUM</span>     7.5    0.2%       —     P3-LOW          3.0.3
+
+<span class="t-dim">Summary: 4 components scanned, 2 vulnerable, 4 findings</span>
+<span class="t-high">HIGH: 3</span>  <span class="t-medium">MEDIUM: 1</span>
+
+<span class="t-label">Prioritization</span>
+Action required    1 finding — patch immediately (P0+P1)
+Can wait           3 findings — low exploitation risk (P2-P4)
+Top priority       CVE-2023-44487 in golang.org/x/net — upgrade to 0.17.0</pre>
+  </TerminalWindow>
+
+  <TerminalWindow title="prioritize — with policy enforcement">
+    <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex prioritize</span> <span class="t-value">grype-report.json</span> <span class="t-flag">--policy policy.yaml</span>
+
+<span class="t-accent">lodash 4.17.20</span> <span class="t-dim">(npm)</span>
+<span class="t-dim">ID                  Severity   CVSS   EPSS       KEV   Priority        Fixed</span>
+GHSA-35jh-r3h4-6jhm <span class="t-high">HIGH</span>       7.4    0.3%       —     <span class="t-critical">[FAIL]</span> P2-MEDIUM   4.17.21
+GHSA-4xc9-xhrj-v574 <span class="t-high">HIGH</span>       6.5    0.1%       —     P3-LOW          4.17.21</pre>
+  </TerminalWindow>
+
+  <TerminalWindow title="prioritize — from stdin">
+    <pre><span class="t-prompt">$</span> trivy fs --format json . | <span class="t-cmd">vulnex prioritize</span> <span class="t-flag">--from trivy</span> -</pre>
+  </TerminalWindow>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── How to read the output ───────────── -->
+<section id="reading-output">
+  <h2>How to read the output</h2>
+
+  <h3>Priority tiers</h3>
+  <p>Each finding gets a priority tier based on a composite of CVSS, EPSS, and KEV signals:</p>
+  <div class="priority-table">
+    <table>
+      <thead><tr><th>Tier</th><th>Criteria</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><span class="priority-p0">P0-CRITICAL</span></td><td>In CISA KEV (confirmed active exploitation)</td><td>Patch immediately</td></tr>
+        <tr><td><span class="priority-p1">P1-HIGH</span></td><td>EPSS &ge; 70% or CVSS &ge; 9.0</td><td>Patch within days</td></tr>
+        <tr><td><span class="priority-p2">P2-MEDIUM</span></td><td>EPSS &ge; 30% or (CVSS &ge; 7.0 and EPSS &ge; 10%)</td><td>Schedule for next sprint</td></tr>
+        <tr><td><span class="priority-p3">P3-LOW</span></td><td>CVSS &ge; 7.0 but EPSS &lt; 10%</td><td>Address when convenient</td></tr>
+        <tr><td><span class="priority-p4">P4-MINIMAL</span></td><td>CVSS &lt; 7.0 and EPSS &lt; 10%</td><td>Accept or defer</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>EPSS column</h3>
+  <p>
+    The EPSS column shows the probability of exploitation in the next 30 days as a percentage.
+    An arrow indicates the trend: <code>↑</code> rising, <code>↓</code> falling.
+    For example, <code>94.4%↑</code> means a 94.4% chance of exploitation and the score is increasing.
+  </p>
+
+  <h3>Rationale lines</h3>
+  <p>
+    P0 and P1 findings include an indented rationale line (<code>→</code>) explaining <em>why</em> they got that priority.
+    This makes it easy to communicate urgency to your team without needing to understand the scoring system.
+  </p>
+
+  <h3>Policy failure markers</h3>
+  <p>
+    When running with <code>--policy</code>, findings that violate policy rules show a <code>[FAIL]</code> marker
+    inline next to the priority column. This makes policy violations visible directly in the triage output.
+  </p>
+
+  <h3>Prioritization summary</h3>
+  <p>
+    The summary block at the bottom tells you exactly what to do: how many findings need immediate action (P0+P1),
+    how many can wait (P2&ndash;P4), and which specific CVE to fix first with its package name and target version.
+  </p>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── Flags ────────────────────────────── -->
+<section id="flags">
+  <h2>Flags</h2>
+  <div class="flags-table">
+    <table>
+      <thead><tr><th>Flag</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--from</code></td><td>string</td><td>auto</td><td>Input format: <code>trivy</code>, <code>grype</code>, or <code>sarif</code></td></tr>
+        <tr><td><code>--ignore-file</code></td><td>string</td><td>.vulnexignore</td><td>Path to suppression file</td></tr>
+        <tr><td><code>--strict</code></td><td>bool</td><td>false</td><td>Show all findings, including suppressed ones</td></tr>
+        <tr><td><code>--scoring-profile</code></td><td>string</td><td>default</td><td>Weight preset: <code>default</code>, <code>exploit-focused</code>, or <code>severity-focused</code></td></tr>
+        <tr><td><code>--cvss-weight</code></td><td>float</td><td>0.30</td><td>CVSS weight in composite score (0.0&ndash;1.0)</td></tr>
+        <tr><td><code>--epss-weight</code></td><td>float</td><td>0.50</td><td>EPSS weight in composite score (0.0&ndash;1.0)</td></tr>
+        <tr><td><code>--kev-weight</code></td><td>float</td><td>0.20</td><td>KEV weight in composite score (0.0&ndash;1.0)</td></tr>
+        <tr><td><code>--policy</code></td><td>string</td><td>.vulnex-policy.yaml</td><td>Path to policy file</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── Supported scanners ───────────────── -->
+<section id="scanners">
+  <h2>Supported scanners</h2>
+  <div class="source-grid">
+    <div class="source-card">
+      <h4>Trivy</h4>
+      <p class="source-subtitle">JSON format</p>
+      <p>Aqua Security's vulnerability scanner. Run with <code>trivy fs --format json</code> or <code>trivy image --format json</code> and pipe the output directly.</p>
+    </div>
+    <div class="source-card">
+      <h4>Grype</h4>
+      <p class="source-subtitle">JSON format</p>
+      <p>Anchore's vulnerability scanner. Run with <code>grype -o json</code> and feed the output to prioritize.</p>
+    </div>
+    <div class="source-card">
+      <h4>SARIF</h4>
+      <p class="source-subtitle">Static Analysis Results</p>
+      <p>Any scanner that outputs SARIF (Static Analysis Results Interchange Format), including CodeQL, Semgrep, and others.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── Tips & Recipes ───────────────────── -->
+<section id="tips">
+  <h2>Tips &amp; recipes</h2>
+
+  <h3>Scan and prioritize in one pipeline</h3>
+  <TerminalWindow title="Trivy → prioritize pipeline">
+    <pre><span class="t-prompt">$</span> trivy fs --format json . | <span class="t-cmd">vulnex prioritize</span> <span class="t-flag">--from trivy</span> -</pre>
+  </TerminalWindow>
+
+  <h3>Focus on exploit-likely findings</h3>
+  <TerminalWindow title="Exploit-focused scoring">
+    <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex prioritize</span> <span class="t-value">report.json</span> <span class="t-flag">--scoring-profile exploit-focused</span></pre>
+  </TerminalWindow>
+
+  <h3>Enforce policy in CI</h3>
+  <TerminalWindow title="CI policy enforcement">
+    <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex prioritize</span> <span class="t-value">report.json</span> <span class="t-flag">--policy policy.yaml</span>
+<span class="t-dim"># Exit code 1 if any policy rule fails</span></pre>
+  </TerminalWindow>
+
+  <h3>Suppress accepted risks</h3>
+  <TerminalWindow title="Suppress with .vulnexignore">
+    <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex prioritize</span> <span class="t-value">report.json</span> <span class="t-flag">--ignore-file .vulnexignore</span></pre>
+  </TerminalWindow>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── Comparison with raw output ───────── -->
+<section id="comparison">
+  <h2>Raw scanner output vs. prioritized output</h2>
+  <p>A typical scanner report lists all findings sorted by severity. The prioritize command re-ranks them by real-world exploitation risk:</p>
+
+  <div class="comparison-table">
+    <table>
+      <thead>
+        <tr><th></th><th>Raw scanner output</th><th>vulnex prioritize</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Ranking</strong></td>
+          <td>By CVSS severity only</td>
+          <td>By composite of CVSS + EPSS + KEV</td>
+        </tr>
+        <tr>
+          <td><strong>EPSS</strong></td>
+          <td>Not shown</td>
+          <td>Shown as percentage with trend arrow</td>
+        </tr>
+        <tr>
+          <td><strong>KEV</strong></td>
+          <td>Not checked</td>
+          <td>Cross-referenced with CISA KEV catalog</td>
+        </tr>
+        <tr>
+          <td><strong>Explanation</strong></td>
+          <td>None</td>
+          <td>Rationale line for P0/P1 findings</td>
+        </tr>
+        <tr>
+          <td><strong>Action guidance</strong></td>
+          <td>None</td>
+          <td>Summary with action-required count and top priority fix</td>
+        </tr>
+        <tr>
+          <td><strong>Policy</strong></td>
+          <td>Not supported</td>
+          <td>Inline [FAIL] markers for policy violations</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="doc-divider" />
+
+<!-- ── Related Commands ─────────────────── -->
+<section id="related">
+  <h2>Related commands</h2>
+  <div class="related-grid">
+    <a href={`${base}/docs/cve/`} class="related-card">
+      <strong>vulnex cve get</strong>
+      <span>Enriched CVE lookup with risk scoring</span>
+    </a>
+    <a href={`${base}/docs/exploit/`} class="related-card">
+      <strong>vulnex exploit check</strong>
+      <span>Find public exploits and PoCs for CVEs</span>
+    </a>
+    <a href={`${base}/docs/scoring/`} class="related-card">
+      <strong>Scoring &amp; Prioritization</strong>
+      <span>Composite risk scoring with CVSS, EPSS, and KEV</span>
+    </a>
+  </div>
+</section>

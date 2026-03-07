@@ -1,9 +1,11 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
+import mdx from '@astrojs/mdx';
 
 const isProd = process.env.NODE_ENV === 'production';
 
 export default defineConfig({
+  integrations: [mdx()],
   vite: {
     plugins: [tailwindcss()],
   },
