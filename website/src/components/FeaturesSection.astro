@@ -5,17 +5,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section id="features">
-  <div class="container">
-    <div class="section-header">
+  <div class="container reveal">
       <span class="section-label">FEATURES</span>
       <h2 class="section-title">Everything you need in one query</h2>
       <p class="section-desc">Combine five vulnerability data sources, score risk, scan SBOMs, and pipe results — all from a single static binary.</p>
       <a href={`${base}/docs/cve/`} class="section-link">Explore command reference &rarr;</a>
-    </div>
-
+    <div style="margin-bottom: 48px;"></div>
     <div class="features-grid">
-      {features.map(f => (
-        <FeatureCard icon={f.icon} title={f.title} description={f.description} />
+      {features.map((f, i) => (
+        <div class:list={[{ 'featured': i < 3 }]}>
+          <FeatureCard icon={f.icon} title={f.title} description={f.description} />
+        </div>
       ))}
     </div>
   </div>
@@ -29,11 +29,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .container {
     max-width: 1120px;
     margin: 0 auto;
-  }
-
-  .section-header {
     text-align: center;
-    margin-bottom: 48px;
   }
 
   .section-label {
@@ -73,14 +69,31 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   }
 
   .features-grid {
+    text-align: left;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    gap: 16px;
+  }
+
+  .features-grid :global(.featured) {
+    grid-column: span 1;
+  }
+
+  .features-grid :global(.featured .feature-card) {
+    padding: 28px 26px;
+  }
+
+  .features-grid :global(.featured h3) {
+    font-size: 1.1rem;
   }
 
   @media (max-width: 900px) {
     .features-grid {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    .features-grid :global(.featured) {
+      grid-column: span 1;
     }
   }
 

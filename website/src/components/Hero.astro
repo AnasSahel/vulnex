@@ -4,6 +4,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section class="hero">
+  <div class="hero-dots" aria-hidden="true"></div>
   <div class="container">
     <span class="badge">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
@@ -42,7 +43,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <span class="t-label">Published</span>           2021-12-10
     <span class="t-label">Modified</span>            2023-11-06
 
-    <span class="t-label">Sources</span>             <span class="t-green">NVD</span> · <span class="t-green">KEV</span> · <span class="t-green">EPSS</span> · <span class="t-green">GHSA</span> · <span class="t-green">OSV</span></pre>
+    <span class="t-label">Sources</span>             <span class="t-green">NVD</span> · <span class="t-green">KEV</span> · <span class="t-green">EPSS</span> · <span class="t-green">GHSA</span> · <span class="t-green">OSV</span>
+
+<span class="t-prompt">$</span> <span class="cursor">_</span></pre>
       </TerminalWindow>
     </div>
   </div>
@@ -50,11 +53,24 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <style>
   .hero {
-    padding: 140px 24px 80px;
+    position: relative;
+    padding: 140px 24px 100px;
     text-align: center;
+    overflow: hidden;
+  }
+
+  .hero-dots {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+    pointer-events: none;
   }
 
   .container {
+    position: relative;
     max-width: 1120px;
     margin: 0 auto;
   }
@@ -77,7 +93,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     font-weight: 800;
     line-height: 1.1;
     margin-bottom: 24px;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
   }
 
   .hero-accent {
@@ -109,12 +125,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     border-radius: 8px;
     font-weight: 600;
     font-size: 0.95rem;
-    transition: background 0.15s;
+    transition: background 0.15s, box-shadow 0.15s;
     text-decoration: none;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
   }
 
   .cta-primary:hover {
     background: var(--accent-hover);
+    box-shadow: 0 0 28px rgba(6, 182, 212, 0.25);
     text-decoration: none;
   }
 
@@ -140,13 +158,32 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .hero-terminal {
     max-width: 720px;
     margin: 0 auto;
+    margin-bottom: -40px;
     text-align: left;
+    position: relative;
+  }
+
+  .hero-terminal :global(.terminal-window) {
+    box-shadow: 0 4px 40px rgba(6, 182, 212, 0.08), 0 0 1px rgba(6, 182, 212, 0.2);
+  }
+
+  .cursor {
+    color: var(--accent-glow, #67E8F9);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
   }
 
   @media (max-width: 768px) {
     .hero {
       padding-top: 100px;
-      padding-bottom: 48px;
+      padding-bottom: 64px;
+    }
+
+    .hero-terminal {
+      margin-bottom: -24px;
     }
 
     .hero-ctas {

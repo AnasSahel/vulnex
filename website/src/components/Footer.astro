@@ -3,29 +3,107 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <footer class="footer">
+  <div class="footer-fade" aria-hidden="true"></div>
   <div class="container">
-    <div class="footer-links">
-      <a href={`${base}/docs/`}>Docs</a>
-      <a href="https://github.com/AnasSahel/vulnex">GitHub</a>
-      <a href="https://github.com/AnasSahel/vulnex/releases">Releases</a>
-      <a href="https://github.com/AnasSahel/vulnex/blob/main/LICENSE">MIT License</a>
+    <div class="footer-cta">
+      <p>Start securing your dependencies today.</p>
+      <a href={`${base}/#install`} class="footer-cta-btn">Install vulnex</a>
     </div>
-    <p>Built by <a href="https://github.com/AnasSahel">Anas Sahel</a></p>
+
+    <div class="footer-bottom">
+      <div class="footer-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+        </svg>
+        <span>vulnex</span>
+      </div>
+
+      <div class="footer-links">
+        <a href={`${base}/docs/`}>Docs</a>
+        <a href="https://github.com/AnasSahel/vulnex">GitHub</a>
+        <a href="https://github.com/AnasSahel/vulnex/releases">Releases</a>
+        <a href="https://github.com/AnasSahel/vulnex/blob/main/LICENSE">MIT License</a>
+      </div>
+
+      <p class="footer-credit">Built by <a href="https://github.com/AnasSahel">Anas Sahel</a></p>
+    </div>
   </div>
 </footer>
 
 <style>
   .footer {
-    padding: 48px 24px;
-    border-top: 1px solid var(--border);
+    position: relative;
+    padding: 64px 24px 48px;
+    background: var(--bg-secondary);
     text-align: center;
     color: var(--text-secondary);
     font-size: 0.875rem;
   }
 
+  .footer-fade {
+    position: absolute;
+    top: -48px;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: linear-gradient(to bottom, transparent, var(--bg-secondary));
+    pointer-events: none;
+  }
+
   .container {
     max-width: 1120px;
     margin: 0 auto;
+  }
+
+  .footer-cta {
+    margin-bottom: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .footer-cta p {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .footer-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 24px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+
+  .footer-cta-btn:hover {
+    background: var(--accent-hover);
+    text-decoration: none;
+  }
+
+  .footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .footer-brand svg {
+    color: var(--accent);
+  }
+
+  .footer-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .footer-links {
@@ -38,13 +116,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .footer-links a {
     color: var(--text-secondary);
     transition: color 0.15s;
+    text-decoration: none;
   }
 
   .footer-links a:hover {
     color: var(--text);
+    text-decoration: none;
   }
 
-  .footer p a {
+  .footer-credit a {
     color: var(--accent);
   }
 </style>

@@ -6,13 +6,13 @@ import { demos } from '../content/demos';
 
 <section id="showcase">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <span class="section-label">IN ACTION</span>
       <h2 class="section-title">See it in your workflow</h2>
       <p class="section-desc">From SBOM audits to composable pipelines — vulnex fits right into your terminal workflow.</p>
     </div>
 
-    <div class="showcase-wrap">
+    <div class="showcase-wrap reveal">
       <TabbedPanel tabs={demos.map(d => ({ id: d.id, label: d.label }))} groupId="showcase">
         {demos.map((d, i) => (
           <div data-tab-id={d.id} class:list={[{ active: i === 0 }]}>

@@ -4,15 +4,15 @@ import { sources } from '../content/sources';
 
 <section id="sources">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <span class="section-label">DATA SOURCES</span>
       <h2 class="section-title">Five sources, one command</h2>
       <p class="section-desc">vulnex queries each source in parallel, caches locally, and merges into a unified view.</p>
     </div>
 
-    <div class="sources-grid">
+    <div class="sources-grid reveal">
       {sources.map(s => (
-        <a href={s.url} class="source-card" target="_blank" rel="noopener">
+        <a href={s.url} class="source-card reveal-child" target="_blank" rel="noopener">
           <div class="source-icon" set:html={s.icon} />
           <h3>{s.name}</h3>
           <p>{s.description}</p>

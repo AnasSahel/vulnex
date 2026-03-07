@@ -8,41 +8,43 @@
 }
 
 .dark {
-  --bg: #0D1117;
-  --bg-secondary: #0a0e14;
-  --surface: #161B22;
-  --border: #30363d;
-  --accent: #8B5CF6;
-  --accent-hover: #7C3AED;
-  --accent-glow: #C4B5FD;
+  --bg: #0a0f14;
+  --bg-secondary: #070b0f;
+  --surface: #111920;
+  --border: #1e2a35;
+  --accent: #06B6D4;
+  --accent-hover: #0891B2;
+  --accent-glow: #67E8F9;
   --text: #E6EDF3;
   --text-secondary: #8b949e;
   --red: #f85149;
   --yellow: #d29922;
   --green: #3fb950;
   --orange: #db6d28;
-  --purple: #a371f7;
-  --nav-bg: rgba(13, 17, 23, 0.85);
-  --icon-bg: rgba(139, 92, 246, 0.12);
+  --teal: #14B8A6;
+  --nav-bg: rgba(10, 15, 20, 0.88);
+  --icon-bg: rgba(6, 182, 212, 0.10);
+  --dot-color: rgba(6, 182, 212, 0.10);
 }
 
 .light {
   --bg: #ffffff;
-  --bg-secondary: #f6f8fa;
-  --surface: #f6f8fa;
+  --bg-secondary: #f0f4f8;
+  --surface: #f0f6fa;
   --border: #d0d7de;
-  --accent: #7C3AED;
-  --accent-hover: #6D28D9;
-  --accent-glow: #8B5CF6;
-  --text: #1f2328;
-  --text-secondary: #656d76;
+  --accent: #0891B2;
+  --accent-hover: #0E7490;
+  --accent-glow: #06B6D4;
+  --text: #1a2332;
+  --text-secondary: #5a6a7a;
   --red: #cf222e;
   --yellow: #9a6700;
   --green: #1a7f37;
   --orange: #bc4c00;
-  --purple: #8250df;
-  --nav-bg: rgba(255, 255, 255, 0.85);
-  --icon-bg: rgba(124, 58, 237, 0.1);
+  --teal: #0D9488;
+  --nav-bg: rgba(255, 255, 255, 0.88);
+  --icon-bg: rgba(8, 145, 178, 0.08);
+  --dot-color: rgba(8, 145, 178, 0.12);
 }
 
 /* ── Base ───────────────────────────────────────── */
@@ -52,7 +54,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
@@ -72,9 +74,42 @@ section {
   scroll-margin-top: 70px;
 }
 
+/* ── Scroll Animations ──────────────────────────── */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-child {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.reveal-child.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-child {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* ── Terminal Syntax Colors (always dark) ────────── */
 
-.t-prompt { color: #C4B5FD; }
+.t-prompt { color: #67E8F9; }
 .t-cmd { color: #e6edf3; }
 .t-flag { color: #d29922; }
 .t-cve { color: #58a6ff; }
@@ -83,13 +118,13 @@ section {
 .t-high { color: #db6d28; font-weight: 700; }
 .t-medium { color: #d29922; font-weight: 700; }
 .t-p0 { color: #f85149; }
-.t-value { color: #C4B5FD; font-weight: 600; }
-.t-green { color: #8B5CF6; }
+.t-value { color: #67E8F9; font-weight: 600; }
+.t-green { color: #06B6D4; }
 .t-dim { color: #8b949e; }
-.t-accent { color: #8B5CF6; }
+.t-accent { color: #06B6D4; }
 
 /* YAML syntax */
-.y-key { color: #C4B5FD; }
+.y-key { color: #67E8F9; }
 .y-str { color: #58a6ff; }
 .y-comment { color: #8b949e; }
 

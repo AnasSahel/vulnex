@@ -6,8 +6,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section id="install">
-  <div class="container">
-    <div class="section-header">
+  <div class="container install-split reveal">
+    <div class="install-text">
       <span class="section-label">INSTALLATION</span>
       <h2 class="section-title">Get started in seconds</h2>
       <p class="section-desc">Pick your preferred method — one command and you're ready.</p>
@@ -46,9 +46,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     margin: 0 auto;
   }
 
-  .section-header {
-    text-align: center;
-    margin-bottom: 48px;
+  .install-split {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .install-text {
+    text-align: left;
   }
 
   .section-label {
@@ -71,7 +77,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     color: var(--text-secondary);
     font-size: 1.05rem;
     max-width: 600px;
-    margin: 0 auto;
   }
 
   .section-link {
@@ -88,8 +93,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   }
 
   .install-wrap {
-    max-width: 680px;
-    margin: 0 auto;
+    max-width: 100%;
   }
 
   .install-code :global(.terminal-window) {
@@ -136,6 +140,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   .copy-btn.copied .icon-copy { display: none; }
   .copy-btn.copied .icon-check { display: block; }
+
+  @media (max-width: 768px) {
+    .install-split {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .install-text {
+      text-align: center;
+    }
+  }
 
   @media (max-width: 600px) {
     section {
