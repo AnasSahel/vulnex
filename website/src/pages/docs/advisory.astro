@@ -1,6 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import TerminalWindow from '../../components/TerminalWindow.astro';
+import TabbedPanel from '../../components/TabbedPanel.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
@@ -30,19 +31,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       </ul>
     </div>
 
-    <div class="subcommand-grid">
-      <a href="#advisory-search" class="subcommand-card">
-        <h3>advisory search</h3>
-        <p>Search advisories by keyword with ecosystem and severity filters</p>
-      </a>
-      <a href="#advisory-get" class="subcommand-card">
-        <h3>advisory get</h3>
-        <p>Get full details on a specific advisory by GHSA ID</p>
-      </a>
-      <a href="#advisory-affected" class="subcommand-card">
-        <h3>advisory affected</h3>
-        <p>Find all advisories affecting a specific package</p>
-      </a>
+    <div class="jump-links">
+      <a href="#advisory-search" class="jump-pill">advisory search</a>
+      <a href="#advisory-get" class="jump-pill">advisory get</a>
+      <a href="#advisory-affected" class="jump-pill">advisory affected</a>
     </div>
   </section>
 
@@ -50,15 +42,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── advisory search ──────────────────── -->
   <section id="advisory-search">
-    <h2>advisory search</h2>
+    <h2><span class="subcmd-badge">advisory search</span></h2>
     <p>Search the GitHub Advisory Database with keywords. Filter by ecosystem, severity, and advisory type. Results show GHSA ID, severity, associated CVE, and summary in a clean table.</p>
 
     <h3>Usage</h3>
     <div class="code-inline"><code>vulnex advisory search &lt;query&gt; [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="advisory search — critical RCE advisories">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"remote code execution" --severity critical --limit 5</span>
+    <TabbedPanel groupId="advisory-search-examples" tabs={[{id:"search-rce", label:"Critical RCE"}, {id:"search-xss", label:"XSS in npm"}, {id:"search-malware", label:"Malware"}]}>
+      <div data-tab-id="search-rce" class="active">
+        <TerminalWindow title="advisory search — critical RCE advisories">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"remote code execution" --severity critical --limit 5</span>
 
 <span class="t-label">GHSA ID               Severity    CVE                 Summary</span>
 <span class="t-cve">GHSA-cj4v-437j-jq4c</span>   <span class="t-critical">CRITICAL</span>    CVE-2026-25921      Gogs: Cross-repository LFS object overwrite via...
@@ -67,15 +61,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <span class="t-dim">5 advisories</span>
   <span class="t-critical">CRITICAL: 5</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="advisory search — XSS in npm, high severity">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"xss" --ecosystem npm --severity high</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="advisory search — malware advisories">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"crypto" --type malware --ecosystem npm</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="search-xss">
+        <TerminalWindow title="advisory search — XSS in npm, high severity">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"xss" --ecosystem npm --severity high</span></pre>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="search-malware">
+        <TerminalWindow title="advisory search — malware advisories">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory search</span> <span class="t-flag">"crypto" --type malware --ecosystem npm</span></pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">
@@ -95,15 +93,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── advisory get ─────────────────────── -->
   <section id="advisory-get">
-    <h2>advisory get</h2>
+    <h2><span class="subcmd-badge">advisory get</span></h2>
     <p>Retrieve full details on a specific advisory by its GHSA ID. Shows CVSS score and vector, EPSS probability, CWE classifications, affected packages with vulnerable version ranges and fix versions, and labeled references.</p>
 
     <h3>Usage</h3>
     <div class="code-inline"><code>vulnex advisory get &lt;GHSA-ID&gt; [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="advisory get — full detail view">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory get</span> <span class="t-cve">GHSA-xxjr-mmjv-4gpg</span>
+    <TabbedPanel groupId="advisory-get-examples" tabs={[{id:"get-detail", label:"Full detail"}, {id:"get-json", label:"JSON output"}]}>
+      <div data-tab-id="get-detail" class="active">
+        <TerminalWindow title="advisory get — full detail view">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory get</span> <span class="t-cve">GHSA-xxjr-mmjv-4gpg</span>
 
 <span class="t-label">Advisory:</span>        <span class="t-cve">GHSA-xxjr-mmjv-4gpg</span>
 <span class="t-label">CVE:</span>             CVE-2025-13465
@@ -137,11 +137,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <span class="t-dim">https://github.com/lodash/lodash/security/advisories/...</span> <span class="t-value">[Advisory]</span>
   <span class="t-dim">https://nvd.nist.gov/vuln/detail/CVE-2025-13465</span> <span class="t-value">[NVD]</span>
   <span class="t-dim">https://github.com/lodash/lodash/commit/edadd452...</span> <span class="t-value">[Patch]</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="advisory get — JSON output">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory get</span> <span class="t-cve">GHSA-g9w5-qffc-6762</span> <span class="t-flag">--output json</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="get-json">
+        <TerminalWindow title="advisory get — JSON output">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory get</span> <span class="t-cve">GHSA-g9w5-qffc-6762</span> <span class="t-flag">--output json</span></pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">
@@ -160,15 +163,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── advisory affected ────────────────── -->
   <section id="advisory-affected">
-    <h2>advisory affected</h2>
+    <h2><span class="subcmd-badge">advisory affected</span></h2>
     <p>Find all security advisories that affect a specific package. Requires the <code>--ecosystem</code> flag to identify the package registry. Automatically paginates through all results.</p>
 
     <h3>Usage</h3>
     <div class="code-inline"><code>vulnex advisory affected &lt;package&gt; --ecosystem &lt;eco&gt; [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="advisory affected — npm package">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> lodash <span class="t-flag">--ecosystem npm</span>
+    <TabbedPanel groupId="advisory-affected-examples" tabs={[{id:"affected-npm", label:"npm"}, {id:"affected-python", label:"Python"}, {id:"affected-go", label:"Go"}]}>
+      <div data-tab-id="affected-npm" class="active">
+        <TerminalWindow title="advisory affected — npm package">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> lodash <span class="t-flag">--ecosystem npm</span>
 
 <span class="t-label">GHSA ID               Severity    CVE                 Summary</span>
 <span class="t-cve">GHSA-xxjr-mmjv-4gpg</span>   <span class="t-medium">MEDIUM</span>      CVE-2025-13465      Lodash has Prototype Pollution Vulnerability i...
@@ -179,15 +184,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <span class="t-dim">10 advisories</span>
   <span class="t-critical">CRITICAL: 2</span>  <span class="t-high">HIGH: 5</span>  <span class="t-medium">MEDIUM: 3</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="advisory affected — Python package">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> django <span class="t-flag">--ecosystem pip</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="advisory affected — Go module">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> golang.org/x/crypto <span class="t-flag">--ecosystem go</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="affected-python">
+        <TerminalWindow title="advisory affected — Python package">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> django <span class="t-flag">--ecosystem pip</span></pre>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="affected-go">
+        <TerminalWindow title="advisory affected — Go module">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex advisory affected</span> golang.org/x/crypto <span class="t-flag">--ecosystem go</span></pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">

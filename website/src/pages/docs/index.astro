@@ -11,12 +11,37 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <div class="hub-header">
     <span class="hub-badge">Documentation</span>
     <h1>vulnex docs</h1>
-    <p class="hub-lead">
-      Learn how to use vulnex for vulnerability intelligence, risk scoring,
-      and CI/CD pipeline gating.
-    </p>
   </div>
 
+  <!-- Introduction -->
+  <section class="intro">
+    <h2>What is vulnex?</h2>
+    <p>
+      <strong>vulnex</strong> is an open-source, offline-capable CLI that aggregates vulnerability data from five authoritative sources into a single, enriched view. It gives security teams and developers a fast way to look up CVEs, score risk, scan SBOMs and lockfiles, and gate CI/CD pipelines &mdash; all from the terminal.
+    </p>
+
+    <h3>Pain points it solves</h3>
+    <ul class="pain-list">
+      <li><strong>Fragmented vulnerability data.</strong> NVD, CISA KEV, EPSS, GitHub Advisories, and OSV each live in separate databases with different APIs. vulnex queries them in parallel and merges the results.</li>
+      <li><strong>No risk context in raw CVE data.</strong> A CVSS score alone doesn't tell you if a vulnerability is actively exploited or likely to be. vulnex combines CVSS, EPSS probability, and KEV status into a composite P0&ndash;P4 priority score.</li>
+      <li><strong>Manual SBOM triage.</strong> Build tools generate SBOMs but don't tell you which components are vulnerable. vulnex scans CycloneDX/SPDX SBOMs and nine lockfile formats, then enriches every finding.</li>
+      <li><strong>No CI gate for new vulnerabilities.</strong> <code>sbom diff</code> compares two SBOMs and exits non-zero only when <em>new</em> vulnerabilities appear &mdash; so you gate on regressions, not pre-existing debt.</li>
+      <li><strong>Online-only tooling.</strong> vulnex caches everything in a local SQLite database with configurable TTLs, so you can work offline or in air-gapped environments.</li>
+    </ul>
+  </section>
+
+  <!-- Architecture Diagram -->
+  <section class="diagram-section">
+    <h2>How it works</h2>
+    <p>vulnex fetches from all five sources in parallel, merges and correlates the data, computes a risk score, and outputs in your chosen format.</p>
+    <div class="diagram-wrap">
+      <img src={`${base}/images/vulnex-architecture.svg`} alt="vulnex architecture diagram showing data flow from NVD, KEV, EPSS, GHSA, and OSV through vulnex processing to multiple output formats" width="1100" height="720" loading="lazy" />
+    </div>
+  </section>
+
+  <hr class="hub-divider" />
+
+  <!-- Quick Start -->
   <div class="hub-quick">
     <a href={`${base}/docs/getting-started/`} class="quick-start-card">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
@@ -28,6 +53,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </a>
   </div>
 
+  <!-- Section Grid -->
   <div class="section-grid">
     {docsSections.map(section => (
       <div class="section-card">
@@ -52,7 +78,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <style>
   .hub-header {
-    margin-bottom: 48px;
+    margin-bottom: 32px;
   }
 
   .hub-badge {
@@ -69,20 +95,104 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .hub-header h1 {
     font-size: 2.25rem;
     font-weight: 800;
-    margin-bottom: 16px;
+    margin-bottom: 0;
     letter-spacing: -0.02em;
   }
 
-  .hub-lead {
+  /* Introduction */
+  .intro {
+    margin-bottom: 40px;
+  }
+
+  .intro h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .intro h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 24px;
+    margin-bottom: 12px;
+  }
+
+  .intro p {
     color: var(--text-secondary);
-    font-size: 1.05rem;
-    max-width: 520px;
+    font-size: 0.95rem;
     line-height: 1.7;
+    max-width: 680px;
+  }
+
+  .intro code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 2px 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .pain-list {
+    padding-left: 20px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pain-list li {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .pain-list li strong {
+    color: var(--text);
+  }
+
+  /* Diagram */
+  .diagram-section {
+    margin-bottom: 40px;
+  }
+
+  .diagram-section h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .diagram-section p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    max-width: 680px;
+  }
+
+  .diagram-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    background: var(--surface);
+    overflow-x: auto;
+  }
+
+  .diagram-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .hub-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
   }
 
   /* Quick start card */
   .hub-quick {
-    margin-bottom: 48px;
+    margin-bottom: 40px;
   }
 
   .quick-start-card {
@@ -95,7 +205,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     border-radius: var(--radius);
     text-decoration: none;
     color: var(--text);
-    transition: border-color 0.15s, background 0.15s;
+    transition: border-color 0.15s;
   }
 
   .quick-start-card:hover {

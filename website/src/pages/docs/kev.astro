@@ -1,6 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import TerminalWindow from '../../components/TerminalWindow.astro';
+import TabbedPanel from '../../components/TabbedPanel.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
@@ -19,23 +20,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       KEV entries by their due date, making this a critical prioritization signal.
     </p>
 
-    <div class="subcommand-grid">
-      <a href="#kev-list" class="subcommand-card">
-        <h3>kev list</h3>
-        <p>Browse the full KEV catalog with pagination</p>
-      </a>
-      <a href="#kev-recent" class="subcommand-card">
-        <h3>kev recent</h3>
-        <p>See entries added in the last N days</p>
-      </a>
-      <a href="#kev-check" class="subcommand-card">
-        <h3>kev check</h3>
-        <p>Check if specific CVEs are in KEV</p>
-      </a>
-      <a href="#kev-stats" class="subcommand-card">
-        <h3>kev stats</h3>
-        <p>Catalog statistics and top vendors</p>
-      </a>
+    <div class="jump-links">
+      <a href="#kev-list" class="jump-pill">kev list</a>
+      <a href="#kev-recent" class="jump-pill">kev recent</a>
+      <a href="#kev-check" class="jump-pill">kev check</a>
+      <a href="#kev-stats" class="jump-pill">kev stats</a>
     </div>
   </section>
 
@@ -43,15 +32,21 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── kev list ──────────────────────────── -->
   <section id="kev-list">
-    <h2>kev list</h2>
+    <h2><span class="subcmd-badge">kev list</span></h2>
     <p>Browse all entries in the CISA KEV catalog. Defaults to 20 entries per page with <code>--limit</code> and <code>--offset</code> for pagination. Use <code>--ransomware</code> to filter to entries linked to known ransomware campaigns.</p>
 
     <h3>Usage</h3>
     <div class="code-inline"><code>vulnex kev list [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="kev list — default (20 entries)">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span>
+    <TabbedPanel groupId="kev-list-examples" tabs={[
+      { id: "list-default", label: "Default" },
+      { id: "list-page", label: "Pagination" },
+      { id: "list-ransomware", label: "Ransomware filter" },
+    ]}>
+      <div data-tab-id="list-default" class="active">
+        <TerminalWindow title="kev list — default (20 entries)">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span>
 
 <span class="t-dim">Showing 20 of 1189 entries</span>
 
@@ -60,18 +55,20 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <span class="t-cve">CVE-2021-27102</span>     Accellion        FTA                      2021-11-03   Unknown
 <span class="t-cve">CVE-2021-27101</span>     Accellion        FTA                      2021-11-03   Known
 <span class="t-dim">... 17 more rows</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="kev list — pagination">
-      <pre><span class="t-dim"># Page 2</span>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="list-page">
+        <TerminalWindow title="kev list — pagination">
+          <pre><span class="t-dim"># Page 2</span>
 <span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--offset 20 --limit 20</span>
 
 <span class="t-dim"># All entries</span>
 <span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--limit 0</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="kev list — ransomware filter">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--ransomware</span>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="list-ransomware">
+        <TerminalWindow title="kev list — ransomware filter">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev list</span> <span class="t-flag">--ransomware</span>
 
 <span class="t-dim">Showing 20 of 238 entries</span>
 
@@ -79,7 +76,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <span class="t-cve">CVE-2021-27101</span>     Accellion        FTA                      2021-11-03   Known
 <span class="t-cve">CVE-2021-27103</span>     Accellion        FTA                      2021-11-03   Known
 <span class="t-dim">...</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">
@@ -100,24 +99,32 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── kev recent ────────────────────────── -->
   <section id="kev-recent">
-    <h2>kev recent</h2>
+    <h2><span class="subcmd-badge">kev recent</span></h2>
     <p>Show KEV entries added in the last N days. Useful for tracking new additions to the catalog.</p>
 
     <h3>Usage</h3>
     <div class="code-inline"><code>vulnex kev recent [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="kev recent — last 7 days">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span>
+    <TabbedPanel groupId="kev-recent-examples" tabs={[
+      { id: "recent-7days", label: "Last 7 days" },
+      { id: "recent-30ransomware", label: "30 days + ransomware" },
+    ]}>
+      <div data-tab-id="recent-7days" class="active">
+        <TerminalWindow title="kev recent — last 7 days">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span>
 
 <span class="t-label">CVE ID</span>             <span class="t-label">VENDOR</span>           <span class="t-label">PRODUCT</span>                  <span class="t-label">ADDED</span>        <span class="t-label">RANSOMWARE</span>
 <span class="t-cve">CVE-2025-1234</span>      Fortinet         FortiOS                  2026-03-03   Unknown
 <span class="t-cve">CVE-2025-5678</span>      Microsoft        Exchange Server          2026-03-01   Known</pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="kev recent — 30 days, ransomware only">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span> <span class="t-flag">--days 30 --ransomware</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="recent-30ransomware">
+        <TerminalWindow title="kev recent — 30 days, ransomware only">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev recent</span> <span class="t-flag">--days 30 --ransomware</span></pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">
@@ -135,15 +142,21 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── kev check ─────────────────────────── -->
   <section id="kev-check">
-    <h2>kev check</h2>
+    <h2><span class="subcmd-badge">kev check</span></h2>
     <p>Check whether one or more CVEs are in the CISA KEV catalog. Displays detailed label-value output for each match, including vendor, product, description, required action, ransomware status, and notes.</p>
 
     <h3>Usage</h3>
     <div class="code-inline"><code>vulnex kev check &lt;CVE-ID...&gt; [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="kev check — single CVE">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2021-44228</span>
+    <TabbedPanel groupId="kev-check-examples" tabs={[
+      { id: "check-single", label: "Single CVE" },
+      { id: "check-full", label: "Full output" },
+      { id: "check-multi", label: "Multiple + stdin" },
+    ]}>
+      <div data-tab-id="check-single" class="active">
+        <TerminalWindow title="kev check — single CVE">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2021-44228</span>
 
 <span class="t-label">CVE ID:</span>           <span class="t-cve">CVE-2021-44228</span>
 <span class="t-label">Name:</span>             Apache Log4j2 Remote Code Execution Vulnerability
@@ -155,17 +168,21 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <span class="t-label">Required Action:</span>  For all affected software assets, apply patches referenced in CISA...
 <span class="t-label">Ransomware:</span>       <span class="t-critical">Known</span>
 <span class="t-label">Notes:</span>            https://logging.apache.org/log4j/2.x/security.html</pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="kev check — full output">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--long</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="kev check — multiple CVEs + stdin">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2024-3094 CVE-2023-44228</span>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="check-full">
+        <TerminalWindow title="kev check — full output">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-flag">--long</span></pre>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="check-multi">
+        <TerminalWindow title="kev check — multiple CVEs + stdin">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev check</span> <span class="t-cve">CVE-2024-3094 CVE-2023-44228</span>
 
 <span class="t-prompt">$</span> echo <span class="t-cve">"CVE-2024-3094"</span> | <span class="t-cmd">vulnex kev check</span> <span class="t-flag">--stdin</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">
@@ -185,15 +202,20 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── kev stats ─────────────────────────── -->
   <section id="kev-stats">
-    <h2>kev stats</h2>
+    <h2><span class="subcmd-badge">kev stats</span></h2>
     <p>Display summary statistics for the KEV catalog: total entries, ransomware-linked count, top vendors, and recent additions.</p>
 
     <h3>Usage</h3>
     <div class="code-inline"><code>vulnex kev stats [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="kev stats">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev stats</span>
+    <TabbedPanel groupId="kev-stats-examples" tabs={[
+      { id: "stats-default", label: "Default stats" },
+      { id: "stats-vendors", label: "More vendors" },
+    ]}>
+      <div data-tab-id="stats-default" class="active">
+        <TerminalWindow title="kev stats">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev stats</span>
 
 <span class="t-label">KEV Catalog Statistics</span>
 
@@ -212,11 +234,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   Fortinet            22
   VMware              21
   Citrix              18</pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="kev stats — more vendors">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev stats</span> <span class="t-flag">--top 20</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="stats-vendors">
+        <TerminalWindow title="kev stats — more vendors">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex kev stats</span> <span class="t-flag">--top 20</span></pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">
@@ -404,42 +429,43 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     margin-top: 16px;
   }
 
-  /* Subcommand cards */
-  .subcommand-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin-top: 24px;
-  }
-
-  .subcommand-card {
-    display: block;
-    padding: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color 0.15s;
-  }
-
-  .subcommand-card:hover {
-    border-color: var(--accent);
-    text-decoration: none;
-  }
-
-  .subcommand-card h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0 0 6px;
+  .subcmd-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-radius: 6px;
     color: var(--accent);
   }
 
-  .subcommand-card p {
-    font-size: 0.825rem;
+  .jump-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .jump-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
     color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.4;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .jump-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
   }
 
   /* Flag tables */
@@ -460,14 +486,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   th {
     text-align: left;
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-weight: 600;
     color: var(--text);
     white-space: nowrap;
   }
 
   td {
-    padding: 10px 14px;
+    padding: 12px 16px;
     color: var(--text-secondary);
     border-bottom: 1px solid var(--border);
     vertical-align: top;
@@ -476,10 +502,21 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   td code {
     font-size: 0.8rem;
     white-space: nowrap;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 15%, transparent);
   }
 
   tr:last-child td {
     border-bottom: none;
+  }
+
+  /* TabbedPanel spacing */
+  section :global(.tabbed-panel) {
+    margin: 16px 0 24px;
+  }
+
+  section :global(.tabbed-panel .terminal-window) {
+    margin: 0;
   }
 
   /* Info cards */
@@ -545,10 +582,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   }
 
   @media (max-width: 600px) {
-    .subcommand-grid {
-      grid-template-columns: 1fr;
-    }
-
     .info-cards {
       grid-template-columns: 1fr;
     }

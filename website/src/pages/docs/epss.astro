@@ -1,6 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import TerminalWindow from '../../components/TerminalWindow.astro';
+import TabbedPanel from '../../components/TabbedPanel.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
@@ -19,19 +20,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       greater likelihood of exploitation in the next 30 days.
     </p>
 
-    <div class="subcommand-grid">
-      <a href="#epss-score" class="subcommand-card">
-        <h3>epss score</h3>
-        <p>Get EPSS scores for one or more CVEs</p>
-      </a>
-      <a href="#epss-top" class="subcommand-card">
-        <h3>epss top</h3>
-        <p>View the most likely-to-be-exploited CVEs</p>
-      </a>
-      <a href="#epss-trend" class="subcommand-card">
-        <h3>epss trend</h3>
-        <p>Track score changes over time</p>
-      </a>
+    <div class="jump-links">
+      <a href="#epss-score" class="jump-pill">epss score</a>
+      <a href="#epss-top" class="jump-pill">epss top</a>
+      <a href="#epss-trend" class="jump-pill">epss trend</a>
     </div>
   </section>
 
@@ -39,25 +31,29 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── epss score ──────────────────────── -->
   <section id="epss-score">
-    <h2>epss score</h2>
+    <h2><span class="subcmd-badge">epss score</span></h2>
     <p>Fetch EPSS scores for one or more CVEs. Supports batched requests and stdin piping.</p>
 
-    <TerminalWindow title="vulnex epss score">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss score</span> <span class="t-cve">CVE-2021-44228</span>
+    <TabbedPanel groupId="epss-score-examples" tabs={[{id:"score-single", label:"Single CVE"}, {id:"score-multi", label:"Multiple CVEs"}, {id:"score-stdin", label:"From stdin"}]}>
+      <div data-tab-id="score-single" class="active">
+        <TerminalWindow title="vulnex epss score">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss score</span> <span class="t-cve">CVE-2021-44228</span>
 
 <span class="t-label">CVE ID</span>              <span class="t-label">EPSS</span>        <span class="t-label">PERCENTILE</span>
 <span class="t-cve">CVE-2021-44228</span>      <span class="t-value">0.97185</span>     <span class="t-value">99.99%</span></pre>
-    </TerminalWindow>
-
-    <h3>Multiple CVEs</h3>
-    <TerminalWindow>
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss score</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-cve">CVE-2023-44228</span> <span class="t-cve">CVE-2021-44228</span></pre>
-    </TerminalWindow>
-
-    <h3>Piping from stdin</h3>
-    <TerminalWindow>
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">cat cves.txt | vulnex epss score</span> <span class="t-flag">--stdin</span> <span class="t-flag">--output csv</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="score-multi">
+        <TerminalWindow>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss score</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-cve">CVE-2023-44228</span> <span class="t-cve">CVE-2021-44228</span></pre>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="score-stdin">
+        <TerminalWindow>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">cat cves.txt | vulnex epss score</span> <span class="t-flag">--stdin</span> <span class="t-flag">--output csv</span></pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <table class="doc-table">
       <thead><tr><th>Flag</th><th>Description</th></tr></thead>
@@ -72,14 +68,16 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── epss top ────────────────────────── -->
   <section id="epss-top">
-    <h2>epss top</h2>
+    <h2><span class="subcmd-badge">epss top</span></h2>
     <p>
       Display the top N CVEs ranked by EPSS exploitation probability. Defaults to 10 results.
       Use this to monitor the most dangerous CVEs by real-world exploitation likelihood.
     </p>
 
-    <TerminalWindow title="vulnex epss top">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top</span>
+    <TabbedPanel groupId="epss-top-examples" tabs={[{id:"top-default", label:"Default"}, {id:"top-custom", label:"Custom count"}]}>
+      <div data-tab-id="top-default" class="active">
+        <TerminalWindow title="vulnex epss top">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top</span>
 
 <span class="t-label">CVE ID</span>              <span class="t-label">EPSS</span>        <span class="t-label">PERCENTILE</span>
 <span class="t-cve">CVE-2021-44228</span>      <span class="t-value">0.97185</span>     <span class="t-value">99.99%</span>
@@ -87,12 +85,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <span class="t-cve">CVE-2019-0708</span>       <span class="t-value">0.97160</span>     <span class="t-value">99.98%</span>
 <span class="t-cve">CVE-2017-0144</span>       <span class="t-value">0.97148</span>     <span class="t-value">99.98%</span>
 <span class="t-dim">... 6 more rows</span></pre>
-    </TerminalWindow>
-
-    <h3>Custom count</h3>
-    <TerminalWindow>
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top 50</span> <span class="t-flag">--output json</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="top-custom">
+        <TerminalWindow>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss top 50</span> <span class="t-flag">--output json</span></pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <table class="doc-table">
       <thead><tr><th>Argument</th><th>Description</th></tr></thead>
@@ -106,15 +106,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── epss trend ──────────────────────── -->
   <section id="epss-trend">
-    <h2>epss trend</h2>
+    <h2><span class="subcmd-badge">epss trend</span></h2>
     <p>
       Display the EPSS score time-series for a CVE, showing how the exploitation probability
       has changed over time. Uses the FIRST.org EPSS API with <code>scope=time-series</code>
       to retrieve historical data.
     </p>
 
-    <TerminalWindow title="vulnex epss trend">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2021-44228</span>
+    <TabbedPanel groupId="epss-trend-examples" tabs={[{id:"trend-default", label:"Full history"}, {id:"trend-recent", label:"Recent days"}, {id:"trend-json", label:"JSON output"}]}>
+      <div data-tab-id="trend-default" class="active">
+        <TerminalWindow title="vulnex epss trend">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2021-44228</span>
 
 <span class="t-label">EPSS Score History:</span> <span class="t-cve">CVE-2021-44228</span> <span class="t-dim">(365 data points)</span>
 
@@ -123,17 +125,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 2024-01-02    0.971860    0.999930
 2024-01-03    0.971840    0.999920
 <span class="t-dim">...</span></pre>
-    </TerminalWindow>
-
-    <h3>Limit to recent days</h3>
-    <TerminalWindow>
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--days 30</span></pre>
-    </TerminalWindow>
-
-    <h3>JSON output</h3>
-    <TerminalWindow>
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--output json</span></pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="trend-recent">
+        <TerminalWindow>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--days 30</span></pre>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="trend-json">
+        <TerminalWindow>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex epss trend</span> <span class="t-cve">CVE-2024-3094</span> <span class="t-flag">--output json</span></pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <table class="doc-table">
       <thead><tr><th>Flag</th><th>Description</th></tr></thead>
@@ -281,44 +285,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     margin: 48px 0;
   }
 
-  /* Subcommand cards */
-  .subcommand-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 24px;
-  }
-
-  .subcommand-card {
-    display: block;
-    padding: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color 0.15s;
-  }
-
-  .subcommand-card:hover {
-    border-color: var(--accent);
-    text-decoration: none;
-  }
-
-  .subcommand-card h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0 0 6px;
-    color: var(--accent);
-  }
-
-  .subcommand-card p {
-    font-size: 0.825rem;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.4;
-  }
-
   /* Flag tables */
   .doc-table {
     width: 100%;
@@ -329,7 +295,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   .doc-table th {
     text-align: left;
-    padding: 10px 16px;
+    padding: 12px 16px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     font-weight: 600;
@@ -340,7 +306,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   }
 
   .doc-table td {
-    padding: 10px 16px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--border);
   }
 
@@ -402,11 +368,54 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     color: var(--text-secondary);
   }
 
-  @media (max-width: 600px) {
-    .subcommand-grid {
-      grid-template-columns: 1fr;
-    }
+  .subcmd-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-radius: 6px;
+    color: var(--accent);
+  }
 
+  .jump-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .jump-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .jump-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  section :global(.tabbed-panel) {
+    margin: 16px 0 24px;
+  }
+
+  section :global(.tabbed-panel .terminal-window) {
+    margin: 0;
+  }
+
+  @media (max-width: 600px) {
     .info-cards {
       grid-template-columns: 1fr;
     }

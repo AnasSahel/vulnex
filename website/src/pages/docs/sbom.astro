@@ -1,6 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import TerminalWindow from '../../components/TerminalWindow.astro';
+import TabbedPanel from '../../components/TabbedPanel.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
@@ -31,15 +32,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       </ul>
     </div>
 
-    <div class="subcommand-grid">
-      <a href="#sbom-check" class="subcommand-card">
-        <h3>sbom check</h3>
-        <p>Check SBOM or lockfile components for vulnerabilities</p>
-      </a>
-      <a href="#sbom-diff" class="subcommand-card">
-        <h3>sbom diff</h3>
-        <p>Compare two SBOMs for vulnerability changes</p>
-      </a>
+    <div class="jump-links">
+      <a href="#sbom-check" class="jump-pill">sbom check</a>
+      <a href="#sbom-diff" class="jump-pill">sbom diff</a>
     </div>
   </section>
 
@@ -47,7 +42,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── sbom check ───────────────────────── -->
   <section id="sbom-check">
-    <h2>sbom check</h2>
+    <h2><span class="subcmd-badge">sbom check</span></h2>
     <p>
       Parse a CycloneDX/SPDX JSON SBOM or a package lockfile and query each component against the OSV vulnerability database.
       Results are displayed as a table by default, or as a VEX document with <code>--vex</code>.
@@ -57,8 +52,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <div class="code-inline"><code>vulnex sbom check &lt;file&gt; [flags]</code></div>
 
     <h3>Examples</h3>
-    <TerminalWindow title="sbom check — lockfile scan">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">pnpm-lock.yaml</span>
+    <TabbedPanel groupId="sbom-check-examples" tabs={[{id:"check-lockfile", label:"Lockfile scan"}, {id:"check-enriched", label:"Enriched"}, {id:"check-filter", label:"Ecosystem filter"}, {id:"check-vex", label:"VEX output"}]}>
+      <div data-tab-id="check-lockfile" class="active">
+        <TerminalWindow title="sbom check — lockfile scan">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">pnpm-lock.yaml</span>
 <span class="t-dim">Parsed 847 components from pnpm-lock.yaml</span>
 <span class="t-dim">Querying OSV for 847 components...</span>
 <span class="t-dim">Found 4 vulnerabilities</span>
@@ -73,10 +70,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <span class="t-dim">Summary: 847 components scanned, 2 vulnerable, 4 findings</span>
   <span class="t-medium">MEDIUM: 4</span>
 <span class="t-dim">Completed in 1.203s</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="sbom check — enriched with EPSS/KEV/priority">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--enrich</span>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="check-enriched">
+        <TerminalWindow title="sbom check — enriched with EPSS/KEV/priority">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--enrich</span>
 <span class="t-dim">Parsed 12 components from bom.json</span>
 <span class="t-dim">Querying OSV for 12 components...</span>
 <span class="t-dim">Enriching 3 unique CVE IDs...</span>
@@ -94,15 +92,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   Action required    1 finding — patch immediately (P0+P1)
   Can wait           1 finding — low exploitation risk (P2-P4)
   Top priority       CVE-2023-44487 in golang.org/x/net — upgrade to 0.17.0</pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="sbom check — filter by ecosystem">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--ecosystem npm --severity HIGH</span></pre>
-    </TerminalWindow>
-
-    <TerminalWindow title="sbom check — VEX output">
-      <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--vex</span> > vex.json</pre>
-    </TerminalWindow>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="check-filter">
+        <TerminalWindow title="sbom check — filter by ecosystem">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--ecosystem npm --severity HIGH</span></pre>
+        </TerminalWindow>
+      </div>
+      <div data-tab-id="check-vex">
+        <TerminalWindow title="sbom check — VEX output">
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">vulnex sbom check</span> <span class="t-value">bom.json</span> <span class="t-flag">--vex</span> > vex.json</pre>
+        </TerminalWindow>
+      </div>
+    </TabbedPanel>
 
     <h3>Flags</h3>
     <div class="flags-table">
@@ -125,7 +127,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ── sbom diff ────────────────────────── -->
   <section id="sbom-diff">
-    <h2>sbom diff</h2>
+    <h2><span class="subcmd-badge">sbom diff</span></h2>
     <p>
       Compare two CycloneDX or SPDX JSON SBOM files and report which vulnerabilities were added, removed, or unchanged.
       Exit code 0 means no new vulnerabilities were introduced. Exit code 1 means at least one was added &mdash; perfect for CI gates.

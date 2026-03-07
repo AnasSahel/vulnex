@@ -15,44 +15,23 @@ const { slug } = Astro.props;
     Home
   </a>
 
-  {docsSections.map(section => {
-    const sectionHasActive = section.pages.some(p => p.slug === slug);
-    return (
-      <div class="sidebar-section">
-        <span class="sidebar-section-label">{section.label}</span>
-        <ul class="sidebar-pages">
-          {section.pages.map(page => {
-            const isActive = page.slug === slug;
-            const hasSubcommands = page.subcommands && page.subcommands.length > 0;
-            return (
-              <li>
-                <a
-                  href={`${base}/docs/${page.slug}/`}
-                  class:list={["sidebar-page-link", { active: isActive }]}
-                >
-                  {page.title}
-                  {hasSubcommands && (
-                    <svg class:list={["chevron", { expanded: isActive }]} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                  )}
-                </a>
-                {hasSubcommands && isActive && (
-                  <ul class="sidebar-subcommands">
-                    {page.subcommands!.map(sub => (
-                      <li>
-                        <a href={`${base}/docs/${page.slug}/#${sub.id}`} class="sidebar-sub-link">
-                          {sub.label}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
-  })}
+  {docsSections.map(section => (
+    <div class="sidebar-section">
+      <span class="sidebar-section-label">{section.label}</span>
+      <ul class="sidebar-pages">
+        {section.pages.map(page => (
+          <li>
+            <a
+              href={`${base}/docs/${page.slug}/`}
+              class:list={["sidebar-page-link", { active: page.slug === slug }]}
+            >
+              {page.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
 </nav>
 
 <style>
@@ -119,7 +98,6 @@ const { slug } = Astro.props;
   .sidebar-page-link {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 6px 12px;
     font-size: 0.85rem;
     color: var(--text-secondary);
@@ -140,40 +118,4 @@ const { slug } = Astro.props;
     background: var(--surface);
   }
 
-  /* Chevron */
-  .chevron {
-    flex-shrink: 0;
-    opacity: 0.4;
-    transition: transform 0.2s;
-  }
-
-  .chevron.expanded {
-    transform: rotate(90deg);
-    opacity: 0.7;
-  }
-
-  /* Subcommands */
-  .sidebar-subcommands {
-    list-style: none;
-    padding: 0;
-    margin: 2px 0 4px 0;
-  }
-
-  .sidebar-sub-link {
-    display: block;
-    padding: 4px 12px 4px 24px;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    border-radius: 0;
-    text-decoration: none;
-    border-left: 1px solid var(--border);
-    margin-left: 12px;
-    transition: color 0.15s, border-color 0.15s;
-  }
-
-  .sidebar-sub-link:hover {
-    color: var(--accent);
-    border-left-color: var(--accent);
-    text-decoration: none;
-  }
 </style>
