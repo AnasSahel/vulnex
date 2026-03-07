@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.0.0](https://github.com/AnasSahel/vulnex/compare/v1.4.0...v2.0.0) (2026-03-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cve:** `vulnex enrich` is removed. Use `vulnex cve get` instead.
+
+### Features
+
+* **advisory:** improve table and detail output formatting ([c7aa5d7](https://github.com/AnasSahel/vulnex/commit/c7aa5d7f8b0b938eeed1f97fa1c387c986c868cb))
+* **cve:** make cve get enriched by default, remove enrich command ([ecc295c](https://github.com/AnasSahel/vulnex/commit/ecc295ca8ef7d24ae4fbd7f25a2eeaeb1c0eb3a5))
+* **exploit:** add docs page, redesign output with grouped sources and stats ([4ae6859](https://github.com/AnasSahel/vulnex/commit/4ae6859d51e20bd42cbd6c1e72e0c4668602670b))
+* **kev:** add readable list output, pagination, and ransomware filter ([5c374f3](https://github.com/AnasSahel/vulnex/commit/5c374f33d04161348223f30224e11dac02481299))
+* **kev:** display missing KEV fields and use row layout for kev check ([e36f574](https://github.com/AnasSahel/vulnex/commit/e36f574f7e2e375b957cc6382a89a2a43628c5ef))
+* **prioritize:** redesign output with EPSS percentages, rationale, and summary ([85e3e99](https://github.com/AnasSahel/vulnex/commit/85e3e993ce5a1f923ef0f0e15e020bf0fb38dbe3))
+* **ui:** apply consistent lipgloss styling to all commands ([c3f0491](https://github.com/AnasSahel/vulnex/commit/c3f04914d51d9d109d76df0a948c19bea06358b2))
+* **website:** add advisory command documentation page ([3499daf](https://github.com/AnasSahel/vulnex/commit/3499daf688165065e4eed267f6425c0371356ba1))
+* **website:** add docs hub, navigation system, and discoverability ([797dcb0](https://github.com/AnasSahel/vulnex/commit/797dcb018356c3f3479fe253be47df6d6d826807))
+* **website:** add persistent sidebar navigation and Cmd+K search ([5c0c429](https://github.com/AnasSahel/vulnex/commit/5c0c4298151da5a9d29b3ad3e7eaf49307b379ef))
+* **website:** redesign with cyan/teal palette, Satoshi font, and scroll animations ([04cf50d](https://github.com/AnasSahel/vulnex/commit/04cf50d44808daa978a46128f8582525efb80a4b))
+
+
+### Bug Fixes
+
+* **enrich:** suppress WARN spam and skip retries on rate-limited APIs ([1fce333](https://github.com/AnasSahel/vulnex/commit/1fce333e0867f836a3253093a63f614014582da2))
+* **output:** align severity column in sbom diff table ([ef4ee9a](https://github.com/AnasSahel/vulnex/commit/ef4ee9a75d498970c355ad53e4967b7a5685e690))
+* **sbom:** hydrate full vulnerability details from OSV batch results ([7d43d0c](https://github.com/AnasSahel/vulnex/commit/7d43d0cda072c48a18ad90f9354129f24f4e17ec))
+* **website:** add architecture diagram SVG and fix gitignore exclusion ([60b82e7](https://github.com/AnasSahel/vulnex/commit/60b82e7f89acfed508f51e6b38cecd06f30f7731))
+* **website:** use base path only in production builds ([c7042c8](https://github.com/AnasSahel/vulnex/commit/c7042c81c327fd2404a042f9a9ab773b2f09c53f))
+
 ## [1.4.0](https://github.com/AnasSahel/vulnex/compare/v1.3.0...v1.4.0) (2026-03-05)
 
 
