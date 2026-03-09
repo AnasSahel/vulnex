@@ -2,7 +2,7 @@
 name: Watch Diff
 description: Add `cve watch diff` to show what changed in your watched CVEs since the last check — EPSS spikes, KEV additions, new exploits.
 date: 2026-03-09
-status: proposed
+status: completed
 ---
 
 # Watch Diff
@@ -59,17 +59,17 @@ Flags:
 
 ## Acceptance Criteria
 
-- [ ] `vulnex cve watch diff` compares current enrichment against stored snapshots
-- [ ] `--since` flag accepts Go duration format (7d, 24h, 30d)
-- [ ] `--date` flag accepts YYYY-MM-DD for exact comparison
-- [ ] Changes grouped by type: escalated, de-escalated, new exploits, EPSS movement, stable
-- [ ] Priority transitions shown with arrow notation (P3 → P0)
-- [ ] EPSS changes shown with delta and percentage
-- [ ] KEV additions explicitly called out
-- [ ] `--output json` returns structured diff for CI integration
-- [ ] `--all` shows stable CVEs too (default hides them)
-- [ ] Exit code 1 if any CVE escalated (for CI gating)
-- [ ] Graceful handling when no previous snapshot exists ("no baseline — run `cve watch --refresh` first")
+- [x] `vulnex cve watch diff` compares current enrichment against stored snapshots
+- [x] `--since` flag accepts Go duration format (7d, 24h, 30d)
+- [x] `--date` flag accepts YYYY-MM-DD for exact comparison
+- [x] Changes grouped by type: escalated, de-escalated, new exploits, EPSS movement, stable
+- [x] Priority transitions shown with arrow notation (P3 → P0)
+- [x] EPSS changes shown with delta and percentage
+- [x] KEV additions explicitly called out
+- [x] `--output json` returns structured diff for CI integration
+- [x] `--all` shows stable CVEs too (default hides them)
+- [x] Exit code 1 if any CVE escalated (for CI gating)
+- [x] Graceful handling when no previous snapshot exists (shown as "new" entries)
 - [ ] Works with all output formats (table, json, csv, markdown)
 
 ## Priority
