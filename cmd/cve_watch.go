@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/trustin-tech/vulnex/internal/enricher"
 )
 
 var cveWatchCmd = &cobra.Command{
@@ -149,6 +150,8 @@ func refreshWatchList(ctx context.Context, s cmdStyles) error {
 	if err != nil {
 		return err
 	}
+
+	enricher.SaveSnapshots(ctx, app.Cache, cves)
 
 	for _, cve := range cves {
 		severity := cve.Severity()

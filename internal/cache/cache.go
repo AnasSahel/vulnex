@@ -3,6 +3,8 @@ package cache
 import (
 	"context"
 	"time"
+
+	"github.com/trustin-tech/vulnex/internal/model"
 )
 
 // Entry represents a cached item with metadata.
@@ -21,6 +23,7 @@ type Stats struct {
 	KEVEntries      int64
 	EPSSEntries     int64
 	AdvisoryEntries int64
+	SnapshotEntries int64
 	SizeBytes       int64
 }
 
@@ -55,6 +58,19 @@ type Cache interface {
 
 	// SetMetadata stores a metadata key-value pair.
 	SetMetadata(ctx context.Context, key, value string) error
+
+	// SaveSnapshot stores a point-in-time snapshot of CVE risk signals.
+	// One snapshot per CVE per day (upserted by cve_id + date).
+	SaveSnapshot(ctx context.Context, snapshot model.Snapshot) error
+
+	// SaveSnapshots stores multiple snapshots in a single transaction.
+	SaveSnapshots(ctx context.Context, snapshots []model.Snapshot) error
+
+	// GetSnapshots retrieves historical snapshots for a CVE since the given time.
+	GetSnapshots(ctx context.Context, cveID string, since time.Time) ([]model.Snapshot, error)
+
+	// GetLatestSnapshot retrieves the most recent snapshot for a CVE.
+	GetLatestSnapshot(ctx context.Context, cveID string) (*model.Snapshot, error)
 
 	// Clear removes all cached data.
 	Clear(ctx context.Context) error

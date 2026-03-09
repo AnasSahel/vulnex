@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/trustin-tech/vulnex/internal/api/osv"
+	"github.com/trustin-tech/vulnex/internal/enricher"
 	"github.com/trustin-tech/vulnex/internal/ignore"
 	"github.com/trustin-tech/vulnex/internal/model"
 	"github.com/trustin-tech/vulnex/internal/policy"
@@ -592,6 +593,9 @@ func enrichFindings(cmd *cobra.Command, findings []model.SBOMFinding, quiet bool
 	if err != nil {
 		slog.Warn("enrichment batch failed", "error", err)
 	}
+
+	// Save snapshots for enriched CVEs
+	enricher.SaveSnapshots(ctx, app.Cache, enrichedCVEs)
 
 	// Build lookup map
 	enrichedMap := make(map[string]*model.EnrichedCVE, len(enrichedCVEs))

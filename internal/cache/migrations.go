@@ -2,8 +2,6 @@ package cache
 
 import "database/sql"
 
-const schemaVersion = 1
-
 var migrations = []string{
 	// Version 1: Initial schema
 	`CREATE TABLE IF NOT EXISTS cve_cache (
@@ -44,6 +42,25 @@ var migrations = []string{
 	);
 
 	INSERT OR REPLACE INTO cache_metadata (key, value) VALUES ('schema_version', '1');`,
+
+	// Version 2: Temporal snapshots
+	`CREATE TABLE IF NOT EXISTS snapshots (
+		cve_id     TEXT    NOT NULL,
+		date       TEXT    NOT NULL,
+		cvss       REAL    NOT NULL DEFAULT 0,
+		epss       REAL    NOT NULL DEFAULT 0,
+		epss_pctl  REAL    NOT NULL DEFAULT 0,
+		in_kev     INTEGER NOT NULL DEFAULT 0,
+		exploits   INTEGER NOT NULL DEFAULT 0,
+		priority   TEXT    NOT NULL DEFAULT '',
+		score      REAL    NOT NULL DEFAULT 0,
+		data       BLOB,
+		PRIMARY KEY (cve_id, date)
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_snapshots_date ON snapshots(date);
+
+	INSERT OR REPLACE INTO cache_metadata (key, value) VALUES ('schema_version', '2');`,
 }
 
 // migrate runs all pending migrations.

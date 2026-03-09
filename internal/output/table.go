@@ -1398,6 +1398,7 @@ func (tf *tableFormatter) FormatCacheStats(w io.Writer, stats *cache.Stats) erro
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("KEV Entries:"), stats.KEVEntries)
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("EPSS Entries:"), stats.EPSSEntries)
 	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("Advisory Entries:"), stats.AdvisoryEntries)
+	fmt.Fprintf(w, "%s %d\n", tf.labelStyle.Render("Snapshots:"), stats.SnapshotEntries)
 	fmt.Fprintf(w, "%s %s\n", tf.labelStyle.Render("Size:"), formatBytes(stats.SizeBytes))
 	return nil
 }

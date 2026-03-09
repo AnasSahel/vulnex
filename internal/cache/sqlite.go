@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/trustin-tech/vulnex/internal/model"
+
 	_ "modernc.org/sqlite"
 )
 
@@ -231,8 +233,148 @@ func (c *SQLiteCache) SetMetadata(ctx context.Context, key, value string) error 
 	return err
 }
 
+func (c *SQLiteCache) SaveSnapshot(ctx context.Context, snapshot model.Snapshot) error {
+	var compressed []byte
+	if len(snapshot.Data) > 0 {
+		var err error
+		compressed, err = compress(snapshot.Data)
+		if err != nil {
+			return fmt.Errorf("compressing snapshot data: %w", err)
+		}
+	}
+
+	inKEV := 0
+	if snapshot.InKEV {
+		inKEV = 1
+	}
+
+	_, err := c.db.ExecContext(ctx,
+		`INSERT OR REPLACE INTO snapshots (cve_id, date, cvss, epss, epss_pctl, in_kev, exploits, priority, score, data)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		snapshot.CVEID, snapshot.Date, snapshot.CVSS, snapshot.EPSS, snapshot.EPSSPctl,
+		inKEV, snapshot.Exploits, string(snapshot.Priority), snapshot.Score, compressed,
+	)
+	return err
+}
+
+func (c *SQLiteCache) SaveSnapshots(ctx context.Context, snapshots []model.Snapshot) error {
+	tx, err := c.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.PrepareContext(ctx,
+		`INSERT OR REPLACE INTO snapshots (cve_id, date, cvss, epss, epss_pctl, in_kev, exploits, priority, score, data)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, s := range snapshots {
+		var compressed []byte
+		if len(s.Data) > 0 {
+			compressed, err = compress(s.Data)
+			if err != nil {
+				return fmt.Errorf("compressing snapshot data for %s: %w", s.CVEID, err)
+			}
+		}
+
+		inKEV := 0
+		if s.InKEV {
+			inKEV = 1
+		}
+
+		if _, err := stmt.ExecContext(ctx,
+			s.CVEID, s.Date, s.CVSS, s.EPSS, s.EPSSPctl,
+			inKEV, s.Exploits, string(s.Priority), s.Score, compressed,
+		); err != nil {
+			return fmt.Errorf("saving snapshot for %s: %w", s.CVEID, err)
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (c *SQLiteCache) GetSnapshots(ctx context.Context, cveID string, since time.Time) ([]model.Snapshot, error) {
+	sinceDate := since.Format("2006-01-02")
+	rows, err := c.db.QueryContext(ctx,
+		`SELECT cve_id, date, cvss, epss, epss_pctl, in_kev, exploits, priority, score, data
+		 FROM snapshots WHERE cve_id = ? AND date >= ? ORDER BY date ASC`,
+		cveID, sinceDate,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return scanSnapshots(rows)
+}
+
+func (c *SQLiteCache) GetLatestSnapshot(ctx context.Context, cveID string) (*model.Snapshot, error) {
+	var s model.Snapshot
+	var inKEV int
+	var priority string
+	var data []byte
+
+	err := c.db.QueryRowContext(ctx,
+		`SELECT cve_id, date, cvss, epss, epss_pctl, in_kev, exploits, priority, score, data
+		 FROM snapshots WHERE cve_id = ? ORDER BY date DESC LIMIT 1`,
+		cveID,
+	).Scan(&s.CVEID, &s.Date, &s.CVSS, &s.EPSS, &s.EPSSPctl, &inKEV, &s.Exploits, &priority, &s.Score, &data)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	s.InKEV = inKEV != 0
+	s.Priority = model.RiskPriority(priority)
+
+	if len(data) > 0 {
+		decompressed, err := decompress(data)
+		if err != nil {
+			return nil, fmt.Errorf("decompressing snapshot data: %w", err)
+		}
+		s.Data = decompressed
+	}
+
+	return &s, nil
+}
+
+func scanSnapshots(rows *sql.Rows) ([]model.Snapshot, error) {
+	var snapshots []model.Snapshot
+	for rows.Next() {
+		var s model.Snapshot
+		var inKEV int
+		var priority string
+		var data []byte
+
+		if err := rows.Scan(&s.CVEID, &s.Date, &s.CVSS, &s.EPSS, &s.EPSSPctl,
+			&inKEV, &s.Exploits, &priority, &s.Score, &data); err != nil {
+			return nil, err
+		}
+
+		s.InKEV = inKEV != 0
+		s.Priority = model.RiskPriority(priority)
+
+		if len(data) > 0 {
+			decompressed, err := decompress(data)
+			if err != nil {
+				return nil, fmt.Errorf("decompressing snapshot data: %w", err)
+			}
+			s.Data = decompressed
+		}
+
+		snapshots = append(snapshots, s)
+	}
+	return snapshots, rows.Err()
+}
+
 func (c *SQLiteCache) Clear(ctx context.Context) error {
-	tables := []string{"cve_cache", "kev_cache", "epss_cache", "advisory_cache"}
+	tables := []string{"cve_cache", "kev_cache", "epss_cache", "advisory_cache", "snapshots"}
 	for _, table := range tables {
 		if _, err := c.db.ExecContext(ctx, "DELETE FROM "+table); err != nil {
 			return err
@@ -248,8 +390,9 @@ func (c *SQLiteCache) Stats(ctx context.Context) (*Stats, error) {
 	_ = c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM kev_cache").Scan(&s.KEVEntries)
 	_ = c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM epss_cache").Scan(&s.EPSSEntries)
 	_ = c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM advisory_cache").Scan(&s.AdvisoryEntries)
+	_ = c.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM snapshots").Scan(&s.SnapshotEntries)
 
-	s.TotalEntries = s.CVEEntries + s.KEVEntries + s.EPSSEntries + s.AdvisoryEntries
+	s.TotalEntries = s.CVEEntries + s.KEVEntries + s.EPSSEntries + s.AdvisoryEntries + s.SnapshotEntries
 
 	// Get database file size
 	var dbPath string

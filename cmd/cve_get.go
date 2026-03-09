@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/trustin-tech/vulnex/internal/enricher"
 	"github.com/trustin-tech/vulnex/internal/model"
 )
 
@@ -103,6 +104,7 @@ func cveGetEnriched(ctx context.Context, ids []string, quiet bool, start time.Ti
 		if err != nil {
 			return err
 		}
+		enricher.SaveSnapshot(ctx, app.Cache, cve)
 		if !quiet {
 			fmt.Fprintf(os.Stderr, "Completed in %s\n", time.Since(start).Round(time.Millisecond))
 		}
@@ -113,6 +115,7 @@ func cveGetEnriched(ctx context.Context, ids []string, quiet bool, start time.Ti
 	if err != nil {
 		return err
 	}
+	enricher.SaveSnapshots(ctx, app.Cache, cves)
 	if !quiet {
 		fmt.Fprintf(os.Stderr, "Completed in %s\n", time.Since(start).Round(time.Millisecond))
 	}
