@@ -1,0 +1,141 @@
+---
+import { getCollection } from 'astro:content';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+const latest = posts[0];
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+---
+
+{latest && (
+  <section id="whats-new">
+    <div class="container reveal">
+      <div class="whatsnew-card">
+        <div class="whatsnew-label">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 12h5v8h10v-8h5z"/></svg>
+          What's New
+        </div>
+        <div class="whatsnew-body">
+          <div class="whatsnew-content">
+            <time datetime={latest.data.date}>{formatDate(latest.data.date)}</time>
+            <h3><a href={`${base}/blog/${latest.id}/`}>{latest.data.title}</a></h3>
+            <p>{latest.data.description}</p>
+          </div>
+          <a href={`${base}/blog/`} class="whatsnew-link">
+            All posts
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  section {
+    padding: 0 24px 72px;
+  }
+
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .whatsnew-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+  }
+
+  .whatsnew-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .whatsnew-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .whatsnew-content {
+    flex: 1;
+  }
+
+  time {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 4px 0 6px;
+  }
+
+  h3 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  h3 a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .whatsnew-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .whatsnew-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 0 16px 56px;
+    }
+
+    .whatsnew-body {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .whatsnew-card {
+      padding: 20px;
+    }
+  }
+</style>

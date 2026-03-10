@@ -5,11 +5,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <footer class="footer">
   <div class="footer-fade" aria-hidden="true"></div>
   <div class="container">
-    <div class="footer-cta">
-      <p>Start securing your dependencies today.</p>
-      <a href={`${base}/#install`} class="footer-cta-btn">Install vulnex</a>
-    </div>
-
     <div class="footer-bottom">
       <div class="footer-brand">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -20,6 +15,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
       <div class="footer-links">
         <a href={`${base}/docs/`}>Docs</a>
+        <a href={`${base}/blog/`}>Blog</a>
         <a href="https://github.com/AnasSahel/vulnex">GitHub</a>
         <a href="https://github.com/AnasSahel/vulnex/releases">Releases</a>
         <a href="https://github.com/AnasSahel/vulnex/blob/main/LICENSE">MIT License</a>
@@ -33,7 +29,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <style>
   .footer {
     position: relative;
-    padding: 64px 24px 48px;
+    padding: 48px 24px 40px;
     background: var(--bg-secondary);
     text-align: center;
     color: var(--text-secondary);
@@ -53,37 +49,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .container {
     max-width: 1120px;
     margin: 0 auto;
-  }
-
-  .footer-cta {
-    margin-bottom: 40px;
-    padding-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .footer-cta p {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 16px;
-  }
-
-  .footer-cta-btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 10px 24px;
-    background: var(--accent);
-    color: #fff;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: background 0.15s;
-    text-decoration: none;
-  }
-
-  .footer-cta-btn:hover {
-    background: var(--accent-hover);
-    text-decoration: none;
   }
 
   .footer-brand {
