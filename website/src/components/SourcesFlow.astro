@@ -23,12 +23,17 @@ const outputs = [
       <p class="section-desc">vulnex aggregates vulnerability intelligence from every major source and distills it into actionable output.</p>
     </div>
 
-    <div class="flow-diagram">
+    <div class="flow-labels">
+      <span class="col-label col-label-left">Intelligence Sources</span>
+      <span class="col-label-spacer"></span>
+      <span class="col-label col-label-right">Actionable Output</span>
+    </div>
+
+    <div class="flow-diagram" id="flow-diagram">
       <!-- Sources column -->
       <div class="flow-col flow-sources">
-        <span class="col-label">Intelligence Sources</span>
-        {sources.map((s, i) => (
-          <div class="flow-node source-node" data-flow-delay={i}>
+        {sources.map((s) => (
+          <div class="flow-node source-node" data-flow="source">
             <div class="flow-node-icon" set:html={s.icon} />
             <div class="flow-node-text">
               <span class="flow-node-label">{s.label}</span>
@@ -38,87 +43,9 @@ const outputs = [
         ))}
       </div>
 
-      <!-- Connector lines + center hub -->
+      <!-- Center hub -->
       <div class="flow-middle">
-        <!-- SVG connector canvas -->
-        <svg class="flow-svg" viewBox="0 0 260 400" fill="none" aria-hidden="true">
-          <!-- Left paths: from each source to center -->
-          <path class="conn conn-in" d="M0,40 C50,40 30,200 130,200" />
-          <path class="conn conn-in" d="M0,120 C50,120 30,200 130,200" />
-          <path class="conn conn-in" d="M0,200 C65,200 65,200 130,200" />
-          <path class="conn conn-in" d="M0,280 C50,280 30,200 130,200" />
-          <path class="conn conn-in" d="M0,360 C50,360 30,200 130,200" />
-
-          <!-- Right paths: from center to each output -->
-          <path class="conn conn-out" d="M130,200 C230,200 210,50 260,50" />
-          <path class="conn conn-out" d="M130,200 C230,200 210,150 260,150" />
-          <path class="conn conn-out" d="M130,200 C230,200 210,250 260,250" />
-          <path class="conn conn-out" d="M130,200 C230,200 210,350 260,350" />
-
-          <!-- Animated dots flowing along paths -->
-          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
-            <animateMotion dur="3s" repeatCount="indefinite" begin="0s">
-              <mpath href="#dot-path-in-0" />
-            </animateMotion>
-          </circle>
-          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
-            <animateMotion dur="3.2s" repeatCount="indefinite" begin="0.6s">
-              <mpath href="#dot-path-in-1" />
-            </animateMotion>
-          </circle>
-          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
-            <animateMotion dur="2.8s" repeatCount="indefinite" begin="0.3s">
-              <mpath href="#dot-path-in-2" />
-            </animateMotion>
-          </circle>
-          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
-            <animateMotion dur="3.4s" repeatCount="indefinite" begin="0.9s">
-              <mpath href="#dot-path-in-3" />
-            </animateMotion>
-          </circle>
-          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
-            <animateMotion dur="3s" repeatCount="indefinite" begin="1.2s">
-              <mpath href="#dot-path-in-4" />
-            </animateMotion>
-          </circle>
-
-          <circle class="flow-dot dot-out" r="2.5" fill="var(--accent)">
-            <animateMotion dur="3s" repeatCount="indefinite" begin="1.5s">
-              <mpath href="#dot-path-out-0" />
-            </animateMotion>
-          </circle>
-          <circle class="flow-dot dot-out" r="2.5" fill="var(--accent)">
-            <animateMotion dur="2.8s" repeatCount="indefinite" begin="1.8s">
-              <mpath href="#dot-path-out-1" />
-            </animateMotion>
-          </circle>
-          <circle class="flow-dot dot-out" r="2.5" fill="var(--accent)">
-            <animateMotion dur="3.2s" repeatCount="indefinite" begin="2.1s">
-              <mpath href="#dot-path-out-2" />
-            </animateMotion>
-          </circle>
-          <circle class="flow-dot dot-out" r="2.5" fill="var(--accent)">
-            <animateMotion dur="3s" repeatCount="indefinite" begin="2.4s">
-              <mpath href="#dot-path-out-3" />
-            </animateMotion>
-          </circle>
-
-          <!-- Hidden paths for animateMotion -->
-          <defs>
-            <path id="dot-path-in-0" d="M0,40 C50,40 30,200 130,200" />
-            <path id="dot-path-in-1" d="M0,120 C50,120 30,200 130,200" />
-            <path id="dot-path-in-2" d="M0,200 C65,200 65,200 130,200" />
-            <path id="dot-path-in-3" d="M0,280 C50,280 30,200 130,200" />
-            <path id="dot-path-in-4" d="M0,360 C50,360 30,200 130,200" />
-            <path id="dot-path-out-0" d="M130,200 C230,200 210,50 260,50" />
-            <path id="dot-path-out-1" d="M130,200 C230,200 210,150 260,150" />
-            <path id="dot-path-out-2" d="M130,200 C230,200 210,250 260,250" />
-            <path id="dot-path-out-3" d="M130,200 C230,200 210,350 260,350" />
-          </defs>
-        </svg>
-
-        <!-- Center hub overlaid on SVG -->
-        <div class="flow-hub">
+        <div class="flow-hub" id="flow-hub">
           <div class="hub-ring"></div>
           <div class="hub-ring hub-ring-2"></div>
           <div class="hub-core">
@@ -130,9 +57,8 @@ const outputs = [
 
       <!-- Outputs column -->
       <div class="flow-col flow-outputs">
-        <span class="col-label">Actionable Output</span>
-        {outputs.map((o, i) => (
-          <div class="flow-node output-node" data-flow-delay={i + 5}>
+        {outputs.map((o) => (
+          <div class="flow-node output-node" data-flow="output">
             <div class="flow-node-icon" set:html={o.icon} />
             <div class="flow-node-text">
               <span class="flow-node-label">{o.label}</span>
@@ -141,9 +67,85 @@ const outputs = [
           </div>
         ))}
       </div>
+
+      <!-- SVG overlay — JS draws paths here -->
+      <svg class="flow-svg" id="flow-svg" aria-hidden="true"></svg>
     </div>
   </div>
 </section>
+
+<script>
+function drawFlowLines() {
+  const diagram = document.getElementById('flow-diagram');
+  const svg = document.getElementById('flow-svg');
+  const hub = document.getElementById('flow-hub');
+  if (!diagram || !svg || !hub) return;
+
+  // Clear existing paths
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const dRect = diagram.getBoundingClientRect();
+  const hRect = hub.getBoundingClientRect();
+  const cx = hRect.left + hRect.width / 2 - dRect.left;
+  const cy = hRect.top + hRect.height / 2 - dRect.top;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const sources = diagram.querySelectorAll('[data-flow="source"]');
+  const outputs = diagram.querySelectorAll('[data-flow="output"]');
+
+  var pathId = 0;
+
+  function addPath(d, withDot, dur, begin) {
+    var id = 'fp' + (pathId++);
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('id', id);
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'var(--border)');
+    path.setAttribute('stroke-width', '1');
+    svg.appendChild(path);
+
+    if (withDot) {
+      var circle = document.createElementNS(ns, 'circle');
+      circle.setAttribute('r', '2.5');
+      circle.setAttribute('fill', 'var(--accent)');
+      circle.setAttribute('opacity', '0.7');
+      var anim = document.createElementNS(ns, 'animateMotion');
+      anim.setAttribute('dur', dur + 's');
+      anim.setAttribute('repeatCount', 'indefinite');
+      anim.setAttribute('begin', begin + 's');
+      var mpath = document.createElementNS(ns, 'mpath');
+      mpath.setAttribute('href', '#' + id);
+      anim.appendChild(mpath);
+      circle.appendChild(anim);
+      svg.appendChild(circle);
+    }
+  }
+
+  // Source nodes → hub center
+  sources.forEach(function(node, i) {
+    var r = node.getBoundingClientRect();
+    var nx = r.right - dRect.left;
+    var ny = r.top + r.height / 2 - dRect.top;
+    var midX = nx + (cx - nx) * 0.5;
+    var d = 'M' + nx + ',' + ny + ' C' + midX + ',' + ny + ' ' + midX + ',' + cy + ' ' + cx + ',' + cy;
+    addPath(d, true, 2.8 + i * 0.2, i * 0.4);
+  });
+
+  // Hub center → output nodes
+  outputs.forEach(function(node, i) {
+    var r = node.getBoundingClientRect();
+    var nx = r.left - dRect.left;
+    var ny = r.top + r.height / 2 - dRect.top;
+    var midX = cx + (nx - cx) * 0.5;
+    var d = 'M' + cx + ',' + cy + ' C' + midX + ',' + cy + ' ' + midX + ',' + ny + ' ' + nx + ',' + ny;
+    addPath(d, true, 2.8 + i * 0.2, 1.5 + i * 0.4);
+  });
+}
+
+drawFlowLines();
+window.addEventListener('resize', drawFlowLines);
+</script>
 
 <style>
   section {
@@ -185,30 +187,12 @@ const outputs = [
     line-height: 1.6;
   }
 
-  /* ── Diagram layout ────────────────────── */
+  /* ── Labels row ────────────────────────── */
 
-  .flow-diagram {
+  .flow-labels {
     display: grid;
     grid-template-columns: 1fr 260px 1fr;
-    align-items: center;
-    gap: 0;
-    min-height: 420px;
-  }
-
-  /* ── Columns ───────────────────────────── */
-
-  .flow-col {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .flow-sources {
-    align-items: flex-end;
-  }
-
-  .flow-outputs {
-    align-items: flex-start;
+    margin-bottom: 16px;
   }
 
   .col-label {
@@ -217,19 +201,55 @@ const outputs = [
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-secondary);
-    margin-bottom: 8px;
     font-family: var(--font-mono);
     opacity: 0.6;
   }
 
-  .flow-sources .col-label {
+  .col-label-left {
     text-align: right;
-    width: 100%;
     padding-right: 4px;
   }
 
-  .flow-outputs .col-label {
+  .col-label-right {
     padding-left: 4px;
+  }
+
+  /* ── Diagram layout ────────────────────── */
+
+  .flow-diagram {
+    display: grid;
+    grid-template-columns: 1fr 260px 1fr;
+    align-items: stretch;
+    gap: 0;
+    position: relative;
+  }
+
+  /* ── SVG overlay ───────────────────────── */
+
+  .flow-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* ── Columns ───────────────────────────── */
+
+  .flow-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: space-evenly;
+  }
+
+  .flow-sources {
+    align-items: flex-end;
+  }
+
+  .flow-outputs {
+    align-items: flex-start;
   }
 
   /* ── Nodes ─────────────────────────────── */
@@ -245,6 +265,8 @@ const outputs = [
     width: 240px;
     transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
     cursor: default;
+    position: relative;
+    z-index: 1;
   }
 
   .flow-node:hover {
@@ -307,27 +329,9 @@ const outputs = [
   .flow-middle {
     position: relative;
     width: 260px;
-    height: 400px;
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .flow-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  .conn {
-    stroke: var(--border);
-    stroke-width: 1;
-    fill: none;
-  }
-
-  .flow-dot {
-    opacity: 0.7;
   }
 
   /* ── Hub ────────────────────────────────── */
@@ -347,18 +351,22 @@ const outputs = [
     inset: -12px;
     border-radius: 50%;
     border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-    animation: hub-pulse 4s ease-in-out infinite;
+    animation: hub-pulse 2.4s ease-in-out infinite;
   }
 
   .hub-ring-2 {
     inset: -24px;
     border-color: color-mix(in srgb, var(--accent) 10%, transparent);
-    animation-delay: 1s;
+    animation-delay: 0.15s;
   }
 
   @keyframes hub-pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.04); }
+    0%   { opacity: 0.3; transform: scale(1); }
+    7%   { opacity: 1;   transform: scale(1.08); }
+    14%  { opacity: 0.4; transform: scale(1); }
+    21%  { opacity: 0.9; transform: scale(1.05); }
+    28%  { opacity: 0.3; transform: scale(1); }
+    100% { opacity: 0.3; transform: scale(1); }
   }
 
   .hub-core {
@@ -392,10 +400,29 @@ const outputs = [
   /* ── Mobile ────────────────────────────── */
 
   @media (max-width: 900px) {
+    .flow-labels {
+      grid-template-columns: 1fr;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .col-label-left {
+      text-align: center;
+      padding: 0;
+    }
+
+    .col-label-spacer,
+    .col-label-right {
+      display: none;
+    }
+
     .flow-diagram {
       grid-template-columns: 1fr;
       gap: 0;
-      min-height: auto;
+    }
+
+    .flow-svg {
+      display: none;
     }
 
     .flow-middle {
@@ -404,16 +431,13 @@ const outputs = [
       padding: 32px 0;
     }
 
-    .flow-svg {
-      display: none;
-    }
-
     .hub-ring {
       display: none;
     }
 
     .flow-col {
       align-items: center !important;
+      justify-content: flex-start;
     }
 
     .flow-node,
@@ -428,12 +452,6 @@ const outputs = [
       align-items: flex-start !important;
     }
 
-    .col-label {
-      text-align: center !important;
-      padding: 0 !important;
-    }
-
-    /* Vertical connector lines */
     .flow-sources::after,
     .flow-outputs::before {
       content: '';
