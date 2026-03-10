@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.1.0](https://github.com/AnasSahel/vulnex/compare/v2.0.0...v2.1.0) (2026-03-10)
+
+
+### Features
+
+* **cache:** add temporal snapshots for CVE risk signal tracking ([033dcd5](https://github.com/AnasSahel/vulnex/commit/033dcd568563cb7195daf5cb5724adf701f8db22))
+* **cmd:** add `cve watch diff` to surface watch list changes ([6a77d14](https://github.com/AnasSahel/vulnex/commit/6a77d149b9a24b308da1f2bee3c58102ac90d50f))
+* **website:** add blog section with Watch Diff launch post ([b98f86a](https://github.com/AnasSahel/vulnex/commit/b98f86a00108622ab3f91a04a69bc4a810afb83e))
+* **website:** complete website redesign with B&W+red theme, sources flow diagram, and editorial blog ([61473f4](https://github.com/AnasSahel/vulnex/commit/61473f409d31cdf1ea5e8ffc9d1c52d82e04f05e))
+* **website:** redesign docs home as terminal-style hub ([821bf52](https://github.com/AnasSahel/vulnex/commit/821bf52042cfe6bb10cd2d619ef1f99dc8aacfd2))
+* **website:** redesign docs home as terminal-style navigation hub ([afbdc3e](https://github.com/AnasSahel/vulnex/commit/afbdc3e3236e707540bc154ff4ed0979834553f8))
+
+
+### Bug Fixes
+
+* **website:** use dynamic SVG paths and heartbeat animation for sources flow ([bb9d66e](https://github.com/AnasSahel/vulnex/commit/bb9d66e9cf57704da229e9df6f04e5a84d9c45fa))
+
 ## [2.0.0](https://github.com/AnasSahel/vulnex/compare/v1.4.0...v2.0.0) (2026-03-07)
 
 
