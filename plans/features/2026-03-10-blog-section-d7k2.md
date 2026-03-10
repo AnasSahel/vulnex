@@ -1,0 +1,103 @@
+---
+name: Blog Section
+description: Add a /blog section to the vulnex website with content collection, listing page, and an inaugural post about Watch Diff.
+date: 2026-03-10
+status: completed
+---
+
+# Blog Section
+
+## Description
+
+The vulnex website currently has a landing page and docs — but no way to announce features, share threat intel insights, or publish content that isn't command reference. A blog section fills this gap: it gives the project a voice and a place to explain *why* features exist, not just *how* to use them.
+
+The first post will cover the Watch Diff feature (`cve watch diff`), showcasing the Threat Intelligence Layer and demonstrating vulnex's unique value prop — no other CLI vuln tool surfaces "what changed since your last check."
+
+### Current problems
+
+1. No place to announce new features — users discover them only via `--help` or changelogs
+2. No narrative content explaining the *why* behind features (docs cover the *how*)
+3. No SEO surface for threat intelligence concepts that would bring new users to vulnex
+
+### Target design
+
+New content collection `blog` with its own layout, listing page, and individual post pages.
+
+**URL structure:**
+- `/blog/` — listing page with all posts, newest first
+- `/blog/<slug>/` — individual post
+
+**Listing page (`/blog/`):**
+- Header with title and description
+- Card grid of posts showing: title, date, description, reading time, tags
+- Posts sorted by date descending
+
+**Post page (`/blog/<slug>/`):**
+- Clean reading layout using `BaseLayout`
+- Post header: title, date, reading time, tags
+- Full MDX content (supports TerminalWindow, TabbedPanel, and other existing components)
+- Back-to-blog link
+- No sidebar (blog posts should feel focused, not cluttered)
+
+**Content schema:**
+```typescript
+const blog = defineCollection({
+  loader: glob({ pattern: '**/*.mdx', base: './src/content/blog' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    date: z.string(),           // YYYY-MM-DD
+    tags: z.array(z.string()).optional(),
+  }),
+});
+```
+
+**Navigation:**
+- Add "Blog" link to `Navbar.astro` between the existing nav links
+
+## User Stories
+
+1. As a vulnex user, I want to read about new features so I understand what they do and why they matter.
+2. As a project maintainer, I want a place to publish release announcements and threat intel insights.
+3. As a potential user, I want to find vulnex through blog posts about vulnerability management topics.
+
+## Acceptance Criteria
+
+- [x] New `blog` content collection in `content.config.ts` with title, description, date, tags schema
+- [x] Blog listing page at `pages/blog/index.astro` showing all posts as cards, sorted by date desc
+- [x] Blog post page at `pages/blog/[slug].astro` rendering MDX with post header (title, date, reading time, tags)
+- [x] Blog-specific styles in `styles/blog.css` following existing CSS variable conventions
+- [x] "Blog" link added to `Navbar.astro`
+- [x] First blog post: "Watch Diff: Know When Your CVEs Get Worse" covering the `cve watch diff` feature
+- [x] Blog post uses `TerminalWindow` component for command examples
+- [x] `cd website && npm run build` succeeds
+- [x] Reading time computed from word count (~200 wpm)
+
+## Priority
+
+**Medium** — Adds content marketing surface and feature announcement capability, but doesn't block core CLI functionality.
+
+## Dependencies
+
+- Watch Diff feature (completed) — the first blog post covers this feature
+
+## Implementation Notes
+
+- **New files:**
+  - `website/src/content/blog/watch-diff.mdx` — first blog post
+  - `website/src/pages/blog/index.astro` — listing page
+  - `website/src/pages/blog/[slug].astro` — post page
+  - `website/src/styles/blog.css` — blog-specific styles
+- **Modified files:**
+  - `website/src/content.config.ts` — add `blog` collection
+  - `website/src/components/Navbar.astro` — add Blog nav link
+- Follow the existing pattern: content in `.mdx`, heavy layout in `.astro` pages
+- Blog posts don't need a sidebar — use `BaseLayout` directly with a centered content column
+- Reuse `docs-page.css` typography classes where possible (headings, code, lists) via a shared `.prose-content` approach or duplicate the needed subset into `blog.css`
+- Keep the listing page simple — card grid similar to the docs hub's `.section-grid` pattern
+- Reading time: `Math.ceil(wordCount / 200)` computed in the `[slug].astro` page
+
+## Documentation Updates
+
+- **Website**: The blog section *is* the documentation update
+- **README.md**: No changes needed — blog is a website-only addition

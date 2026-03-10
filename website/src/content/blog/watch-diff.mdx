@@ -1,0 +1,127 @@
+---
+title: "Watch Diff: Know When Your CVEs Get Worse"
+description: "vulnex can now track how your watched CVEs change over time — surfacing EPSS spikes, KEV additions, priority escalations, and new exploits automatically."
+date: "2026-03-10"
+tags: ["feature", "threat-intel", "watch"]
+---
+
+import TerminalWindow from '../../components/TerminalWindow.astro';
+
+## The problem with point-in-time vulnerability data
+
+Most vulnerability tools show you a snapshot: here's the CVSS score, here's whether it's in KEV, here's the EPSS probability. But vulnerability intelligence isn't static. A CVE that was low-risk last week can become critical overnight — an exploit drops on GitHub, CISA adds it to KEV, or EPSS jumps from 0.12 to 0.67 as active exploitation is detected.
+
+Until now, vulnex had the same limitation. `cve watch --refresh` would show you the *current* state of your watched CVEs, but it couldn't tell you what *changed*. You'd have to remember last week's EPSS values yourself to notice a spike.
+
+Not anymore.
+
+## Introducing `cve watch diff`
+
+The new `cve watch diff` command compares current enrichment data against stored snapshots and surfaces meaningful changes — so you can see at a glance which CVEs need re-triage.
+
+<TerminalWindow title="vulnex cve watch diff">
+<pre>{`$ vulnex cve watch diff --since 7d
+
+ WATCH LIST CHANGES (last 7d)  3 of 12 CVEs changed
+
+ ▲ ESCALATED
+   CVE-2024-3094        Low → Critical  EPSS 0.120→0.670 (+458%)  Added to KEV
+   CVE-2023-44228       Medium → High   EPSS 0.450→0.780 (+73%)
+
+ ● NEW EXPLOITS
+   CVE-2024-21762       High  +2 exploits
+
+ ○ STABLE (9 CVEs unchanged)`}</pre>
+</TerminalWindow>
+
+Changes are grouped by significance:
+
+- **Escalated** — priority level increased (the ones you need to act on)
+- **De-escalated** — priority level decreased (good news)
+- **New exploits** — exploit count increased since last check
+- **EPSS movement** — significant probability change without a priority shift
+- **Stable** — no meaningful changes (collapsed by default)
+
+## How it works under the hood
+
+Watch diff is built on two new capabilities:
+
+### Temporal snapshots
+
+Every time vulnex enriches a CVE — via `cve get`, `cve watch --refresh`, `sbom check`, or `prioritize` — it now saves a timestamped snapshot to the local SQLite cache. Each snapshot captures the key risk signals: CVSS, EPSS, KEV status, exploit count, and the computed P0-P4 priority.
+
+Snapshots are stored as one row per CVE per day (upserted), so storage stays bounded. Even tracking 1,000 CVEs for a year is only ~365K rows.
+
+### Change classification
+
+When you run `cve watch diff`, vulnex:
+
+1. Loads the oldest snapshot in your time window as the baseline
+2. Refreshes all watched CVEs (fetching latest data from all 5 sources)
+3. Compares each CVE's current state against its baseline
+4. Classifies each change by type and groups them by significance
+
+The classification logic uses smart thresholds — tiny EPSS fluctuations (less than 0.02 absolute *and* less than 20% relative) are treated as noise and won't trigger a false "EPSS movement" alert.
+
+## Flexible time windows
+
+Compare against any time window:
+
+<TerminalWindow title="Time window examples">
+<pre>{`$ vulnex cve watch diff                    # default: last 7 days
+$ vulnex cve watch diff --since 24h        # last 24 hours
+$ vulnex cve watch diff --since 2w         # last 2 weeks
+$ vulnex cve watch diff --date 2026-03-01  # since a specific date`}</pre>
+</TerminalWindow>
+
+## CI/CD integration
+
+The diff command is designed for automation. Two key features:
+
+**JSON output** for machine consumption:
+
+<TerminalWindow title="JSON output for CI">
+<pre>{`$ vulnex cve watch diff --output json | jq '.escalated'
+[
+  {
+    "cve_id": "CVE-2024-3094",
+    "type": "escalated",
+    "old_priority": "Low",
+    "new_priority": "Critical",
+    "old_epss": 0.12,
+    "new_epss": 0.67,
+    "kev_added": true
+  }
+]`}</pre>
+</TerminalWindow>
+
+**Exit code 1** when any CVE escalates — so you can gate pipelines:
+
+<TerminalWindow title="CI gating example">
+<pre>{`# In your CI pipeline
+vulnex cve watch diff --output json --since 1d || {
+  echo "⚠ CVE escalation detected — blocking deploy"
+  exit 1
+}`}</pre>
+</TerminalWindow>
+
+## Getting started
+
+If you're already using `cve watch`, you're most of the way there. Snapshots are saved automatically — just start running `cve watch diff`:
+
+<TerminalWindow title="Quick start">
+<pre>{`# Add CVEs to your watch list
+$ vulnex cve watch CVE-2021-44228 CVE-2024-3094 CVE-2023-44487
+
+# Check what changed (refreshes automatically)
+$ vulnex cve watch diff
+
+# See everything including stable CVEs
+$ vulnex cve watch diff --all`}</pre>
+</TerminalWindow>
+
+The more you use vulnex, the richer your snapshot history becomes — and the more valuable `watch diff` gets. Every `cve get`, every `sbom check`, every watch refresh quietly builds up the temporal data that powers change detection.
+
+---
+
+Watch diff is available now in vulnex. Install or update with `go install github.com/trustin-tech/vulnex@latest`.
