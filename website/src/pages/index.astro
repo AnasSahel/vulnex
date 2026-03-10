@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageBackground from '../components/PageBackground.astro';
 import Navbar from '../components/Navbar.astro';
 import Hero from '../components/Hero.astro';
 import ShowcaseSection from '../components/ShowcaseSection.astro';
@@ -8,6 +9,7 @@ import FeaturesSection from '../components/FeaturesSection.astro';
 import InstallSection from '../components/InstallSection.astro';
 import CiCdSection from '../components/CiCdSection.astro';
 import WhatsNew from '../components/WhatsNew.astro';
+import SourcesFlow from '../components/SourcesFlow.astro';
 import Footer from '../components/Footer.astro';
 ---
 
@@ -15,15 +17,17 @@ import Footer from '../components/Footer.astro';
   title="vulnex — Vulnerability intelligence from your terminal"
   description="Open-source CLI and cloud platform that aggregates NVD, CISA KEV, EPSS, GitHub Advisory, and OSV data into a single enriched view with configurable risk scoring, lockfile scanning, and SBOM analysis."
 >
+  <PageBackground />
   <Navbar />
   <main>
     <Hero />
+    <WhatsNew />
+    <SourcesFlow />
     <ShowcaseSection />
     <PlatformSection />
     <FeaturesSection />
     <InstallSection />
     <CiCdSection />
-    <WhatsNew />
   </main>
   <Footer />
 </BaseLayout>
