@@ -85,7 +85,7 @@ The current website is a template-style landing page that undersells the product
 - [x] Features section: two-column Free vs Pro comparison list
 - [x] Install section: single centered tabbed code block
 - [x] What's New section: latest blog post card
-- [x] Navbar: "Join Waitlist" CTA button added
+- [x] Navbar: clean split with only Docs/Blog links, dual CTAs ("Install" outlined + "Join Waitlist" filled), removed landing page anchor links
 - [x] Footer: updated with Blog link, removed redundant CTA
 - [x] Tighter section spacing (96px → 72px)
 - [x] `cd website && npm run build` succeeds
