@@ -1,0 +1,465 @@
+---
+const sources = [
+  { id: 'nvd', label: 'NVD', sub: 'National Vulnerability Database', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>` },
+  { id: 'kev', label: 'CISA KEV', sub: 'Known Exploited Vulns', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>` },
+  { id: 'epss', label: 'EPSS', sub: 'Exploit Prediction Scoring', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>` },
+  { id: 'ghsa', label: 'GitHub Advisory', sub: 'Security Advisories', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>` },
+  { id: 'osv', label: 'OSV', sub: 'Open Source Vulnerabilities', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>` },
+];
+
+const outputs = [
+  { id: 'enrich', label: 'Enriched CVEs', sub: 'Full context per vuln', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>` },
+  { id: 'score', label: 'Risk Scores', sub: 'Priority-ranked vulns', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>` },
+  { id: 'sbom', label: 'SBOM Analysis', sub: 'Lockfile & dependency scan', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>` },
+  { id: 'cicd', label: 'CI/CD Gates', sub: 'Fail builds on thresholds', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>` },
+];
+---
+
+<section id="sources-flow">
+  <div class="flow-container reveal">
+    <div class="section-header">
+      <span class="section-label">How it works</span>
+      <h2 class="section-title">5 sources. One enriched view.</h2>
+      <p class="section-desc">vulnex aggregates vulnerability intelligence from every major source and distills it into actionable output.</p>
+    </div>
+
+    <div class="flow-diagram">
+      <!-- Sources column -->
+      <div class="flow-col flow-sources">
+        <span class="col-label">Intelligence Sources</span>
+        {sources.map((s, i) => (
+          <div class="flow-node source-node" data-flow-delay={i}>
+            <div class="flow-node-icon" set:html={s.icon} />
+            <div class="flow-node-text">
+              <span class="flow-node-label">{s.label}</span>
+              <span class="flow-node-sub">{s.sub}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Connector lines + center hub -->
+      <div class="flow-middle">
+        <!-- SVG connector canvas -->
+        <svg class="flow-svg" viewBox="0 0 260 400" fill="none" aria-hidden="true">
+          <!-- Left paths: from each source to center -->
+          <path class="conn conn-in" d="M0,40 C50,40 30,200 130,200" />
+          <path class="conn conn-in" d="M0,120 C50,120 30,200 130,200" />
+          <path class="conn conn-in" d="M0,200 C65,200 65,200 130,200" />
+          <path class="conn conn-in" d="M0,280 C50,280 30,200 130,200" />
+          <path class="conn conn-in" d="M0,360 C50,360 30,200 130,200" />
+
+          <!-- Right paths: from center to each output -->
+          <path class="conn conn-out" d="M130,200 C230,200 210,50 260,50" />
+          <path class="conn conn-out" d="M130,200 C230,200 210,150 260,150" />
+          <path class="conn conn-out" d="M130,200 C230,200 210,250 260,250" />
+          <path class="conn conn-out" d="M130,200 C230,200 210,350 260,350" />
+
+          <!-- Animated dots flowing along paths -->
+          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
+            <animateMotion dur="3s" repeatCount="indefinite" begin="0s">
+              <mpath href="#dot-path-in-0" />
+            </animateMotion>
+          </circle>
+          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
+            <animateMotion dur="3.2s" repeatCount="indefinite" begin="0.6s">
+              <mpath href="#dot-path-in-1" />
+            </animateMotion>
+          </circle>
+          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
+            <animateMotion dur="2.8s" repeatCount="indefinite" begin="0.3s">
+              <mpath href="#dot-path-in-2" />
+            </animateMotion>
+          </circle>
+          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
+            <animateMotion dur="3.4s" repeatCount="indefinite" begin="0.9s">
+              <mpath href="#dot-path-in-3" />
+            </animateMotion>
+          </circle>
+          <circle class="flow-dot dot-in" r="2.5" fill="var(--accent)">
+            <animateMotion dur="3s" repeatCount="indefinite" begin="1.2s">
+              <mpath href="#dot-path-in-4" />
+            </animateMotion>
+          </circle>
+
+          <circle class="flow-dot dot-out" r="2.5" fill="var(--accent)">
+            <animateMotion dur="3s" repeatCount="indefinite" begin="1.5s">
+              <mpath href="#dot-path-out-0" />
+            </animateMotion>
+          </circle>
+          <circle class="flow-dot dot-out" r="2.5" fill="var(--accent)">
+            <animateMotion dur="2.8s" repeatCount="indefinite" begin="1.8s">
+              <mpath href="#dot-path-out-1" />
+            </animateMotion>
+          </circle>
+          <circle class="flow-dot dot-out" r="2.5" fill="var(--accent)">
+            <animateMotion dur="3.2s" repeatCount="indefinite" begin="2.1s">
+              <mpath href="#dot-path-out-2" />
+            </animateMotion>
+          </circle>
+          <circle class="flow-dot dot-out" r="2.5" fill="var(--accent)">
+            <animateMotion dur="3s" repeatCount="indefinite" begin="2.4s">
+              <mpath href="#dot-path-out-3" />
+            </animateMotion>
+          </circle>
+
+          <!-- Hidden paths for animateMotion -->
+          <defs>
+            <path id="dot-path-in-0" d="M0,40 C50,40 30,200 130,200" />
+            <path id="dot-path-in-1" d="M0,120 C50,120 30,200 130,200" />
+            <path id="dot-path-in-2" d="M0,200 C65,200 65,200 130,200" />
+            <path id="dot-path-in-3" d="M0,280 C50,280 30,200 130,200" />
+            <path id="dot-path-in-4" d="M0,360 C50,360 30,200 130,200" />
+            <path id="dot-path-out-0" d="M130,200 C230,200 210,50 260,50" />
+            <path id="dot-path-out-1" d="M130,200 C230,200 210,150 260,150" />
+            <path id="dot-path-out-2" d="M130,200 C230,200 210,250 260,250" />
+            <path id="dot-path-out-3" d="M130,200 C230,200 210,350 260,350" />
+          </defs>
+        </svg>
+
+        <!-- Center hub overlaid on SVG -->
+        <div class="flow-hub">
+          <div class="hub-ring"></div>
+          <div class="hub-ring hub-ring-2"></div>
+          <div class="hub-core">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span>vulnex</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outputs column -->
+      <div class="flow-col flow-outputs">
+        <span class="col-label">Actionable Output</span>
+        {outputs.map((o, i) => (
+          <div class="flow-node output-node" data-flow-delay={i + 5}>
+            <div class="flow-node-icon" set:html={o.icon} />
+            <div class="flow-node-text">
+              <span class="flow-node-label">{o.label}</span>
+              <span class="flow-node-sub">{o.sub}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    padding: 100px 24px;
+  }
+
+  .flow-container {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .section-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ── Diagram layout ────────────────────── */
+
+  .flow-diagram {
+    display: grid;
+    grid-template-columns: 1fr 260px 1fr;
+    align-items: center;
+    gap: 0;
+    min-height: 420px;
+  }
+
+  /* ── Columns ───────────────────────────── */
+
+  .flow-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .flow-sources {
+    align-items: flex-end;
+  }
+
+  .flow-outputs {
+    align-items: flex-start;
+  }
+
+  .col-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+    opacity: 0.6;
+  }
+
+  .flow-sources .col-label {
+    text-align: right;
+    width: 100%;
+    padding-right: 4px;
+  }
+
+  .flow-outputs .col-label {
+    padding-left: 4px;
+  }
+
+  /* ── Nodes ─────────────────────────────── */
+
+  .flow-node {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 240px;
+    transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+    cursor: default;
+  }
+
+  .flow-node:hover {
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  .source-node {
+    flex-direction: row-reverse;
+  }
+
+  .source-node .flow-node-text {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .flow-node-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    background: var(--icon-bg);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    transition: color 0.25s, background 0.25s;
+  }
+
+  .flow-node:hover .flow-node-icon {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .flow-node-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .flow-node-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .flow-node-sub {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    opacity: 0.7;
+    line-height: 1.3;
+  }
+
+  /* ── Center column ─────────────────────── */
+
+  .flow-middle {
+    position: relative;
+    width: 260px;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .flow-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .conn {
+    stroke: var(--border);
+    stroke-width: 1;
+    fill: none;
+  }
+
+  .flow-dot {
+    opacity: 0.7;
+  }
+
+  /* ── Hub ────────────────────────────────── */
+
+  .flow-hub {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 88px;
+  }
+
+  .hub-ring {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    animation: hub-pulse 4s ease-in-out infinite;
+  }
+
+  .hub-ring-2 {
+    inset: -24px;
+    border-color: color-mix(in srgb, var(--accent) 10%, transparent);
+    animation-delay: 1s;
+  }
+
+  @keyframes hub-pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.04); }
+  }
+
+  .hub-core {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 88px;
+    height: 88px;
+    background: var(--accent);
+    border-radius: 18px;
+    color: #fff;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent),
+      0 8px 32px color-mix(in srgb, var(--accent) 30%, transparent),
+      0 2px 8px color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+
+  .hub-core span {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-top: -2px;
+  }
+
+  .hub-core svg {
+    opacity: 0.8;
+  }
+
+  /* ── Mobile ────────────────────────────── */
+
+  @media (max-width: 900px) {
+    .flow-diagram {
+      grid-template-columns: 1fr;
+      gap: 0;
+      min-height: auto;
+    }
+
+    .flow-middle {
+      width: 100%;
+      height: auto;
+      padding: 32px 0;
+    }
+
+    .flow-svg {
+      display: none;
+    }
+
+    .hub-ring {
+      display: none;
+    }
+
+    .flow-col {
+      align-items: center !important;
+    }
+
+    .flow-node,
+    .source-node {
+      width: 100%;
+      max-width: 320px;
+      flex-direction: row !important;
+      text-align: left !important;
+    }
+
+    .source-node .flow-node-text {
+      align-items: flex-start !important;
+    }
+
+    .col-label {
+      text-align: center !important;
+      padding: 0 !important;
+    }
+
+    /* Vertical connector lines */
+    .flow-sources::after,
+    .flow-outputs::before {
+      content: '';
+      display: block;
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 8px auto 0;
+    }
+
+    .flow-outputs::before {
+      margin: 0 auto 8px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 56px 16px;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+
+    .flow-node {
+      padding: 10px 12px;
+    }
+  }
+</style>

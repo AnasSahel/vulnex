@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import PageBackground from '../components/PageBackground.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import DocsSidebar from '../components/DocsSidebar.astro';
@@ -26,6 +27,7 @@ const subcommands = currentPage?.subcommands ?? [];
 ---
 
 <BaseLayout title={title} description={description}>
+  <PageBackground />
   <Navbar />
   <div class="docs-page">
     <aside class="docs-sidebar" id="docs-sidebar">

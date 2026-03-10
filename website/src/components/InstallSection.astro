@@ -2,16 +2,13 @@
 import TabbedPanel from './TabbedPanel.astro';
 import TerminalWindow from './TerminalWindow.astro';
 import { installMethods } from '../content/install';
-const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section id="install">
-  <div class="container install-split reveal">
-    <div class="install-text">
-      <span class="section-label">INSTALLATION</span>
+  <div class="container reveal">
+    <div class="section-header">
+      <span class="section-label">INSTALL</span>
       <h2 class="section-title">Get started in seconds</h2>
-      <p class="section-desc">Pick your preferred method — one command and you're ready.</p>
-      <a href={`${base}/docs/getting-started/`} class="section-link">Post-install quickstart &rarr;</a>
     </div>
 
     <div class="install-wrap">
@@ -38,7 +35,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <style>
   section {
-    padding: 96px 24px;
+    padding: 80px 24px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
 
   .container {
@@ -46,15 +46,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     margin: 0 auto;
   }
 
-  .install-split {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 48px;
-    align-items: center;
-  }
-
-  .install-text {
-    text-align: left;
+  .section-header {
+    text-align: center;
+    margin-bottom: 32px;
   }
 
   .section-label {
@@ -70,30 +64,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .section-title {
     font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 16px;
-  }
-
-  .section-desc {
-    color: var(--text-secondary);
-    font-size: 1.05rem;
-    max-width: 600px;
-  }
-
-  .section-link {
-    display: inline-block;
-    margin-top: 12px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--accent);
-    text-decoration: none;
-  }
-
-  .section-link:hover {
-    text-decoration: underline;
   }
 
   .install-wrap {
-    max-width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
   }
 
   .install-code :global(.terminal-window) {
@@ -141,20 +116,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .copy-btn.copied .icon-copy { display: none; }
   .copy-btn.copied .icon-check { display: block; }
 
-  @media (max-width: 768px) {
-    .install-split {
-      grid-template-columns: 1fr;
-      gap: 32px;
-    }
-
-    .install-text {
-      text-align: center;
-    }
-  }
-
   @media (max-width: 600px) {
     section {
-      padding: 64px 16px;
+      padding: 56px 16px;
     }
 
     .section-title {

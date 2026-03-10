@@ -1,0 +1,238 @@
+---
+import { platformFeatures } from '../content/platform';
+---
+
+<section id="platform">
+  <div class="platform-bg" aria-hidden="true"></div>
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="platform-badge">Coming Soon</span>
+      <h2 class="section-title">vulnex Cloud</h2>
+      <p class="section-desc">Everything the CLI does, plus continuous monitoring, team collaboration, and a web dashboard. Managed for you.</p>
+    </div>
+
+    <div class="platform-grid reveal">
+      {platformFeatures.map(f => (
+        <div class="platform-card reveal-child">
+          <div class="platform-icon" set:html={f.icon} />
+          <h3>{f.title}</h3>
+          <p>{f.description}</p>
+        </div>
+      ))}
+    </div>
+
+    <div class="waitlist reveal">
+      <h3 class="waitlist-heading">Get early access</h3>
+      <p class="waitlist-desc">Join the waitlist and be first to try vulnex Cloud when it launches.</p>
+      <form class="waitlist-form" action="https://formspree.io/f/placeholder" method="POST">
+        <input type="email" name="email" placeholder="you@company.com" required autocomplete="email" />
+        <button type="submit">Join Waitlist</button>
+      </form>
+      <p class="waitlist-note">No spam. We'll only email you when it's ready.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  section {
+    position: relative;
+    padding: 80px 24px;
+    overflow: hidden;
+  }
+
+  .platform-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--accent) 3%, transparent) 30%,
+      color-mix(in srgb, var(--accent) 5%, transparent) 50%,
+      color-mix(in srgb, var(--accent) 3%, transparent) 70%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .platform-badge {
+    display: inline-block;
+    padding: 5px 16px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .section-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Feature cards */
+  .platform-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 56px;
+  }
+
+  .platform-card {
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.15s;
+  }
+
+  .platform-card:hover {
+    border-color: var(--accent);
+  }
+
+  .platform-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border-radius: 8px;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .platform-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .platform-card p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  /* Waitlist */
+  .waitlist {
+    text-align: center;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .waitlist-heading {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .waitlist-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+  }
+
+  .waitlist-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .waitlist-form input {
+    flex: 1;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .waitlist-form input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+  }
+
+  .waitlist-form input:focus {
+    border-color: var(--accent);
+  }
+
+  .waitlist-form button {
+    padding: 10px 24px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+
+  .waitlist-form button:hover {
+    background: var(--accent-hover);
+  }
+
+  .waitlist-note {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+  }
+
+  @media (max-width: 900px) {
+    .platform-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 56px 16px;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+
+    .platform-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .waitlist-form {
+      flex-direction: column;
+    }
+
+    .waitlist-form button {
+      width: 100%;
+    }
+  }
+</style>

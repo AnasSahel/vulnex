@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageBackground from '../../components/PageBackground.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 
@@ -25,19 +26,19 @@ function formatDate(dateStr: string) {
   });
 }
 
-// Estimate reading time from rendered body length
 const body = post.body ?? '';
 const wordCount = body.split(/\s+/).length;
 const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 ---
 
 <BaseLayout title={`${post.data.title} — vulnex blog`} description={post.data.description}>
+  <PageBackground />
   <Navbar />
   <main class="blog-post">
     <article class="blog-post-inner">
       <a href={`${base}/blog/`} class="back-link">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-        All posts
+        Blog
       </a>
 
       <header class="post-header">
@@ -66,5 +67,181 @@ const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 </BaseLayout>
 
 <style>
-  @import '../../styles/blog.css';
+  .blog-post {
+    padding-top: 140px;
+    padding-bottom: 100px;
+    min-height: 100vh;
+  }
+
+  .blog-post-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin-bottom: 40px;
+    transition: color 0.15s;
+  }
+
+  .back-link:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  /* ── Post header ──────────────────────── */
+
+  .post-header {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    margin-bottom: 20px;
+  }
+
+  .meta-sep {
+    opacity: 0.4;
+  }
+
+  .post-header h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  .post-description {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .post-tag {
+    font-size: 0.65rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .post-tag:not(:last-child)::after {
+    content: '/';
+    margin-left: 6px;
+    opacity: 0.3;
+  }
+
+  /* ── Post content ─────────────────────── */
+
+  .post-content {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+  }
+
+  .post-content :global(h2) {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 48px;
+    margin-bottom: 16px;
+  }
+
+  .post-content :global(h3) {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+
+  .post-content :global(p) {
+    margin-bottom: 20px;
+  }
+
+  .post-content :global(a) {
+    color: var(--accent);
+  }
+
+  .post-content :global(a:hover) {
+    text-decoration: underline;
+  }
+
+  .post-content :global(strong) {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .post-content :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 2px 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+  }
+
+  .post-content :global(ul),
+  .post-content :global(ol) {
+    padding-left: 24px;
+    margin-bottom: 20px;
+  }
+
+  .post-content :global(li) {
+    margin-bottom: 8px;
+  }
+
+  .post-content :global(blockquote) {
+    border-left: 2px solid var(--text);
+    padding: 12px 20px;
+    margin: 24px 0;
+    font-style: italic;
+  }
+
+  .post-content :global(blockquote p) {
+    margin: 0;
+  }
+
+  .post-content :global(hr) {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  .post-content :global(.terminal-window) {
+    margin: 24px 0;
+  }
+
+  @media (max-width: 600px) {
+    .blog-post {
+      padding-top: 100px;
+    }
+
+    .post-header h1 {
+      font-size: 1.75rem;
+    }
+  }
 </style>

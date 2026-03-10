@@ -28,15 +28,19 @@ New content collection `blog` with its own layout, listing page, and individual 
 - `/blog/<slug>/` — individual post
 
 **Listing page (`/blog/`):**
-- Header with title and description
-- Card grid of posts showing: title, date, description, reading time, tags
+- Editorial-style design — no cards, horizontal rows separated by border lines
+- Each row: date (left, 100px mono) + title & description (main) + arrow icon (hidden until hover)
+- "New" tag in red on latest post
+- Header: "Blog" at 3.5rem/800 weight with subtitle
 - Posts sorted by date descending
 
 **Post page (`/blog/<slug>/`):**
-- Clean reading layout using `BaseLayout`
-- Post header: title, date, reading time, tags
+- Clean editorial reading layout using `BaseLayout` with PageBackground grain overlay
+- 680px max-width, 0.95rem body text, 1.8 line-height
+- Post header: title, date, reading time, tags displayed inline with `/` separators (no colored backgrounds)
+- Blockquotes use `border-left: 2px solid var(--text)` (not accent)
+- Back-to-blog link says "Blog" with chevron icon
 - Full MDX content (supports TerminalWindow, TabbedPanel, and other existing components)
-- Back-to-blog link
 - No sidebar (blog posts should feel focused, not cluttered)
 
 **Content schema:**
@@ -64,9 +68,9 @@ const blog = defineCollection({
 ## Acceptance Criteria
 
 - [x] New `blog` content collection in `content.config.ts` with title, description, date, tags schema
-- [x] Blog listing page at `pages/blog/index.astro` showing all posts as cards, sorted by date desc
-- [x] Blog post page at `pages/blog/[slug].astro` rendering MDX with post header (title, date, reading time, tags)
-- [x] Blog-specific styles in `styles/blog.css` following existing CSS variable conventions
+- [x] Blog listing page at `pages/blog/index.astro` — editorial row layout (no cards), sorted by date desc
+- [x] Blog post page at `pages/blog/[slug].astro` — editorial reading layout, 680px max-width, with grain background
+- [x] Blog styles scoped within page components (no separate blog.css) following existing CSS variable conventions
 - [x] "Blog" link added to `Navbar.astro`
 - [x] First blog post: "Watch Diff: Know When Your CVEs Get Worse" covering the `cve watch diff` feature
 - [x] Blog post uses `TerminalWindow` component for command examples
@@ -85,16 +89,16 @@ const blog = defineCollection({
 
 - **New files:**
   - `website/src/content/blog/watch-diff.mdx` — first blog post
-  - `website/src/pages/blog/index.astro` — listing page
-  - `website/src/pages/blog/[slug].astro` — post page
-  - `website/src/styles/blog.css` — blog-specific styles
+  - `website/src/pages/blog/index.astro` — editorial listing page with horizontal row layout
+  - `website/src/pages/blog/[slug].astro` — editorial post page with scoped styles
 - **Modified files:**
   - `website/src/content.config.ts` — add `blog` collection
   - `website/src/components/Navbar.astro` — add Blog nav link
-- Follow the existing pattern: content in `.mdx`, heavy layout in `.astro` pages
-- Blog posts don't need a sidebar — use `BaseLayout` directly with a centered content column
-- Reuse `docs-page.css` typography classes where possible (headings, code, lists) via a shared `.prose-content` approach or duplicate the needed subset into `blog.css`
-- Keep the listing page simple — card grid similar to the docs hub's `.section-grid` pattern
+  - `website/src/components/WhatsNew.astro` — pulls latest blog post for homepage strip
+- No separate `blog.css` — styles are scoped within each `.astro` page component
+- Blog posts use `BaseLayout` + `PageBackground` for grain texture consistency
+- Listing page uses editorial horizontal rows (border-separated) instead of card grid
+- Post page: tags shown inline with `/` separators, blockquotes with solid text-color border
 - Reading time: `Math.ceil(wordCount / 200)` computed in the `[slug].astro` page
 
 ## Documentation Updates

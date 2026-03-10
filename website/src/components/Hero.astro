@@ -4,27 +4,40 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <section class="hero">
-  <div class="hero-dots" aria-hidden="true"></div>
-  <div class="container">
-    <span class="badge">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-      Open Source CLI Tool
-    </span>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="badge">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+        Open Source CLI + Cloud Platform
+      </span>
 
-    <h1 class="hero-heading">
-      Vulnerability intelligence<br>
-      <span class="hero-accent">from your terminal.</span>
-    </h1>
+      <h1 class="hero-heading">
+        Vulnerability intelligence<br>
+        <span class="hero-accent">that watches while you sleep.</span>
+      </h1>
 
-    <p class="hero-sub">
-      Aggregate NVD, CISA KEV, EPSS, GitHub Advisory &amp; OSV into a single enriched
-      view &mdash; with configurable risk scoring, lockfile &amp; SBOM scanning, and
-      pipe-friendly output.
-    </p>
+      <p class="hero-sub">
+        Aggregate five vulnerability sources into a single enriched view. Score risk, scan SBOMs, track changes over time &mdash; from your terminal or our cloud platform.
+      </p>
 
-    <div class="hero-ctas">
-      <a href="#install" class="cta-primary">Install vulnex</a>
-      <a href={`${base}/docs/`} class="cta-secondary">Read the docs</a>
+      <div class="hero-ctas">
+        <a href="#install" class="cta-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+          Install CLI
+        </a>
+        <a href="#platform" class="cta-secondary">Join the Waitlist</a>
+      </div>
+
+      <div class="hero-sources">
+        <span class="source-label">Aggregates</span>
+        <div class="source-badges">
+          <span class="source-badge">NVD</span>
+          <span class="source-badge">CISA KEV</span>
+          <span class="source-badge">EPSS</span>
+          <span class="source-badge">GHSA</span>
+          <span class="source-badge">OSV</span>
+        </div>
+      </div>
     </div>
 
     <div class="hero-terminal">
@@ -55,24 +68,21 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .hero {
     position: relative;
     padding: 140px 24px 100px;
-    text-align: center;
     overflow: hidden;
   }
 
-  .hero-dots {
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
-    background-size: 28px 28px;
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
-    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
-    pointer-events: none;
+  .hero-inner {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 56px;
+    align-items: center;
   }
 
-  .container {
-    position: relative;
-    max-width: 1120px;
-    margin: 0 auto;
+  .hero-copy {
+    text-align: left;
   }
 
   .badge {
@@ -80,20 +90,22 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     align-items: center;
     gap: 8px;
     padding: 6px 16px;
-    border: 1px solid var(--accent);
+    border: 1px solid var(--border);
     border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--accent);
-    margin-bottom: 32px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .hero-heading {
-    font-size: clamp(2.25rem, 6vw, 4rem);
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
     font-weight: 800;
-    line-height: 1.1;
+    line-height: 1.05;
     margin-bottom: 24px;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
   }
 
   .hero-accent {
@@ -103,48 +115,46 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   .hero-sub {
     font-size: 1.1rem;
     color: var(--text-secondary);
-    max-width: 580px;
-    margin: 0 auto 40px;
+    max-width: 480px;
     line-height: 1.7;
+    margin-bottom: 36px;
   }
 
   .hero-ctas {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 16px;
-    margin-bottom: 64px;
+    gap: 12px;
+    margin-bottom: 36px;
   }
 
   .cta-primary {
     display: inline-flex;
     align-items: center;
-    padding: 12px 28px;
+    gap: 8px;
+    padding: 11px 24px;
     background: var(--accent);
     color: #fff;
     border-radius: 8px;
     font-weight: 600;
-    font-size: 0.95rem;
-    transition: background 0.15s, box-shadow 0.15s;
+    font-size: 0.9rem;
+    transition: background 0.15s;
     text-decoration: none;
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
   }
 
   .cta-primary:hover {
     background: var(--accent-hover);
-    box-shadow: 0 0 28px rgba(6, 182, 212, 0.25);
     text-decoration: none;
   }
 
   .cta-secondary {
     display: inline-flex;
     align-items: center;
-    padding: 12px 28px;
+    padding: 11px 24px;
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 8px;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     transition: border-color 0.15s, background 0.15s;
     text-decoration: none;
   }
@@ -155,20 +165,53 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     text-decoration: none;
   }
 
+  /* Source badges strip */
+  .hero-sources {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .source-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .source-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .source-badge {
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  /* Terminal */
   .hero-terminal {
-    max-width: 720px;
-    margin: 0 auto;
-    margin-bottom: -40px;
     text-align: left;
-    position: relative;
   }
 
   .hero-terminal :global(.terminal-window) {
-    box-shadow: 0 4px 40px rgba(6, 182, 212, 0.08), 0 0 1px rgba(6, 182, 212, 0.2);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.08),
+      0 12px 40px rgba(0, 0, 0, 0.20),
+      0 40px 80px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .cursor {
-    color: var(--accent-glow, #67E8F9);
+    color: #e6edf3;
     animation: blink 1s step-end infinite;
   }
 
@@ -176,19 +219,50 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     50% { opacity: 0; }
   }
 
-  @media (max-width: 768px) {
-    .hero {
-      padding-top: 100px;
-      padding-bottom: 64px;
+  @media (max-width: 900px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .hero-copy {
+      text-align: center;
+    }
+
+    .hero-sub {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-ctas {
+      justify-content: center;
+    }
+
+    .hero-sources {
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .source-badges {
+      justify-content: center;
     }
 
     .hero-terminal {
-      margin-bottom: -24px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hero {
+      padding-top: 90px;
+      padding-bottom: 56px;
     }
 
     .hero-ctas {
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .cta-primary,
