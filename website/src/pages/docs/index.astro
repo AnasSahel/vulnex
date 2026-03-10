@@ -9,316 +9,209 @@ const docsSections = await getDocsSections();
   title="Documentation — vulnex"
   description="Browse vulnex documentation: getting started guides, command references, scoring model, and CI/CD integration."
 >
-  <div class="hub-header">
-    <span class="hub-badge">Documentation</span>
-    <h1>vulnex docs</h1>
-  </div>
-
-  <!-- Introduction -->
-  <section class="intro">
-    <h2>What is vulnex?</h2>
-    <p>
-      <strong>vulnex</strong> is an open-source, offline-capable CLI that aggregates vulnerability data from five authoritative sources into a single, enriched view. It gives security teams and developers a fast way to look up CVEs, score risk, scan SBOMs and lockfiles, and gate CI/CD pipelines &mdash; all from the terminal.
-    </p>
-
-    <h3>Pain points it solves</h3>
-    <ul class="pain-list">
-      <li><strong>Fragmented vulnerability data.</strong> NVD, CISA KEV, EPSS, GitHub Advisories, and OSV each live in separate databases with different APIs. vulnex queries them in parallel and merges the results.</li>
-      <li><strong>No risk context in raw CVE data.</strong> A CVSS score alone doesn't tell you if a vulnerability is actively exploited or likely to be. vulnex combines CVSS, EPSS probability, and KEV status into a composite P0&ndash;P4 priority score.</li>
-      <li><strong>Manual SBOM triage.</strong> Build tools generate SBOMs but don't tell you which components are vulnerable. vulnex scans CycloneDX/SPDX SBOMs and nine lockfile formats, then enriches every finding.</li>
-      <li><strong>No CI gate for new vulnerabilities.</strong> <code>sbom diff</code> compares two SBOMs and exits non-zero only when <em>new</em> vulnerabilities appear &mdash; so you gate on regressions, not pre-existing debt.</li>
-      <li><strong>Online-only tooling.</strong> vulnex caches everything in a local SQLite database with configurable TTLs, so you can work offline or in air-gapped environments.</li>
-    </ul>
-  </section>
-
-  <!-- Architecture Diagram -->
-  <section class="diagram-section">
-    <h2>How it works</h2>
-    <p>vulnex fetches from all five sources in parallel, merges and correlates the data, computes a risk score, and outputs in your chosen format.</p>
-    <div class="diagram-wrap">
-      <img src={`${base}/images/vulnex-architecture.svg`} alt="vulnex architecture diagram showing data flow from NVD, KEV, EPSS, GHSA, and OSV through vulnex processing to multiple output formats" width="1100" height="720" loading="lazy" />
-    </div>
-  </section>
-
-  <hr class="hub-divider" />
-
-  <!-- Quick Start -->
-  <div class="hub-quick">
-    <a href={`${base}/docs/getting-started/`} class="quick-start-card">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-      <div>
-        <strong>Quick Start</strong>
-        <span>Install and run your first query in under two minutes</span>
-      </div>
-      <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-    </a>
-  </div>
-
-  <!-- Section Grid -->
-  <div class="section-grid">
-    {docsSections.map(section => (
-      <div class="section-card">
-        <div class="section-card-header">
-          <span class="section-icon" set:html={section.icon} />
-          <h2>{section.label}</h2>
+  <div class="docs-hub">
+    <!-- Terminal-style docs navigator -->
+    <div class="term">
+      <div class="term-chrome">
+        <div class="term-dots">
+          <span></span><span></span><span></span>
         </div>
-        <ul>
-          {section.pages.map(page => (
-            <li>
-              <a href={`${base}/docs/${page.slug}/`}>
-                <strong>{page.title}</strong>
-                <span>{page.description}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        <span class="term-title">vulnex docs</span>
       </div>
-    ))}
+      <div class="term-body">
+        <pre><span class="t-dim">$</span> <span class="t-cmd">vulnex</span> <span class="t-flag">--help</span>
+
+<span class="t-dim">Vulnerability intelligence from your terminal.</span>
+<span class="t-dim">Aggregates NVD, KEV, EPSS, GitHub Advisory, and OSV</span>
+<span class="t-dim">into a single enriched view.</span>
+
+{docsSections.map(section => (<Fragment>
+<span class="t-section">{section.label.toUpperCase()}</span>
+{section.pages.map(page => (
+  <a href={`${base}/docs/${page.slug}/`} class="term-link">
+    <span class="t-name">{page.title.toLowerCase().padEnd(16)}</span><span class="t-desc">{page.description}</span>
+  </a>
+))}
+</Fragment>))}
+<span class="t-dim">───────────────────────────────────────────────────────────────────</span>
+<span class="t-dim">$</span> <span class="t-cmd">vulnex cve get CVE-2024-3094</span> <span class="t-cursor">▊</span></pre>
+      </div>
+    </div>
+
+    <!-- Below-terminal quick links -->
+    <div class="quick-links">
+      <a href={`${base}/docs/getting-started/`} class="quick-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+        Quick Start
+      </a>
+      <a href="https://github.com/AnasSahel/vulnex" class="quick-link">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href={`${base}/#install`} class="quick-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        Install
+      </a>
+    </div>
   </div>
 </DocsLayout>
 
 <style>
-  .hub-header {
-    margin-bottom: 32px;
+  /* Override layout's max-width for the hub page */
+  :global(.docs-content:has(.docs-hub)) {
+    max-width: none;
   }
 
-  .hub-badge {
-    display: inline-block;
-    padding: 4px 14px;
-    border: 1px solid var(--accent);
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 20px;
-  }
-
-  .hub-header h1 {
-    font-size: 2.25rem;
-    font-weight: 800;
-    margin-bottom: 0;
-    letter-spacing: -0.02em;
-  }
-
-  /* Introduction */
-  .intro {
-    margin-bottom: 40px;
-  }
-
-  .intro h2 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-  }
-
-  .intro h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-top: 24px;
-    margin-bottom: 12px;
-  }
-
-  .intro p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    max-width: 680px;
-  }
-
-  .intro code {
-    font-family: var(--font-mono);
-    font-size: 0.85em;
-    padding: 2px 6px;
+  /* Terminal chrome — theme-aware */
+  .term {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-  }
-
-  .pain-list {
-    padding-left: 20px;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .pain-list li {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
-
-  .pain-list li strong {
-    color: var(--text);
-  }
-
-  /* Diagram */
-  .diagram-section {
-    margin-bottom: 40px;
-  }
-
-  .diagram-section h2 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .diagram-section p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    margin-bottom: 20px;
-    max-width: 680px;
-  }
-
-  .diagram-wrap {
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 24px;
-    background: var(--surface);
-    overflow-x: auto;
+    overflow: hidden;
   }
 
-  .diagram-wrap img {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  .hub-divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 40px 0;
-  }
-
-  /* Quick start card */
-  .hub-quick {
-    margin-bottom: 40px;
-  }
-
-  .quick-start-card {
+  .term-chrome {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color 0.15s;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
   }
 
-  .quick-start-card:hover {
-    border-color: var(--accent);
-    text-decoration: none;
-  }
-
-  .quick-start-card svg:first-child {
-    color: var(--accent);
-    flex-shrink: 0;
-  }
-
-  .quick-start-card div {
-    flex: 1;
+  .term-dots {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .quick-start-card strong {
-    font-size: 1rem;
-  }
-
-  .quick-start-card span {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-  }
-
-  .quick-start-card .arrow {
-    color: var(--text-secondary);
-    flex-shrink: 0;
-    transition: transform 0.15s;
-  }
-
-  .quick-start-card:hover .arrow {
-    transform: translateX(4px);
-  }
-
-  /* Section grid */
-  .section-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 20px;
-  }
-
-  .section-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-  }
-
-  .section-card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-
-  .section-icon {
-    color: var(--accent);
-    display: flex;
-  }
-
-  .section-card h2 {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin: 0;
-  }
-
-  .section-card ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
     gap: 8px;
   }
 
-  .section-card li a {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 12px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: var(--text);
-    transition: background 0.15s;
+  .term-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
   }
 
-  .section-card li a:hover {
-    background: var(--bg);
-    text-decoration: none;
-  }
+  .term-dots span:nth-child(1) { background: var(--red); }
+  .term-dots span:nth-child(2) { background: var(--yellow); }
+  .term-dots span:nth-child(3) { background: var(--green); }
 
-  .section-card li a strong {
-    font-size: 0.9rem;
-  }
-
-  .section-card li a span {
+  .term-title {
+    flex: 1;
+    text-align: center;
     font-size: 0.8rem;
     color: var(--text-secondary);
-    line-height: 1.4;
+    font-family: var(--font-mono);
+  }
+
+  .term-body {
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: 0.825rem;
+    line-height: 1.2;
+    color: var(--text);
+  }
+
+  .term-body pre {
+    white-space: pre;
+    margin: 0;
+  }
+
+  /* Terminal syntax — theme-aware */
+  .t-dim { color: var(--text-secondary); }
+  .t-cmd { color: var(--text); font-weight: 600; }
+  .t-flag { color: var(--text-secondary); }
+
+  .t-section {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    margin-top: 8px;
+  }
+
+  .t-cursor {
+    color: var(--accent);
+    animation: blink 1.2s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* Interactive command links */
+  .term-link {
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+    padding: 2px 8px;
+    margin: 0 -8px;
+    border-radius: 4px;
+    transition: background 0.12s;
+  }
+
+  .term-link:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    text-decoration: none;
+  }
+
+  .t-name {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .term-link:hover .t-name {
+    color: var(--accent);
+  }
+
+  .t-desc {
+    color: var(--text-secondary);
+  }
+
+  /* Quick links row */
+  .quick-links {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .quick-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .quick-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  @media (max-width: 768px) {
+    .term-body {
+      font-size: 0.7rem;
+      padding: 16px 20px;
+      overflow-x: auto;
+    }
+
+    .quick-links {
+      flex-wrap: wrap;
+    }
   }
 
   @media (max-width: 600px) {
-    .hub-header h1 {
-      font-size: 1.75rem;
-    }
-
-    .section-grid {
-      grid-template-columns: 1fr;
+    .term-body {
+      font-size: 0.65rem;
+      padding: 12px 16px;
     }
   }
 </style>
