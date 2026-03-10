@@ -1,7 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="4" fill="#0D1117"/>
-  <text x="6" y="24" font-family="monospace" font-size="24" fill="#58A6FF">&#x25B8;</text>
-  <rect x="18" y="8" width="3" height="16" fill="#3FB950">
-    <animate attributeName="opacity" values="1;0;1" dur="1.2s" repeatCount="indefinite"/>
-  </rect>
+  <rect width="32" height="32" rx="7" fill="#0a0a0a"/>
+  <!-- 2x2 grid: 3 aligned dots + 1 displaced -->
+  <circle cx="11" cy="11" r="3.5" fill="#ef4444"/>
+  <circle cx="21" cy="11" r="3.5" fill="#ef4444"/>
+  <circle cx="11" cy="21" r="3.5" fill="#ef4444"/>
+  <!-- displaced dot — the vulnerability found -->
+  <circle cx="24" cy="18" r="3.5" fill="#ef4444" opacity="0.5"/>
 </svg>
