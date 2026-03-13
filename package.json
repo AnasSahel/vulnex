@@ -1,0 +1,5 @@
+{
+  "name": "vulnex",
+  "private": true,
+  "workspaces": ["app", "workers", "packages/*"]
+}

@@ -47,6 +47,8 @@ Breaking changes: use `!` suffix (e.g. `feat!: remove flag`) or a `BREAKING CHAN
 │   ├── db/                  # Local SQLite cache
 │   ├── models/              # Shared data types
 │   └── output/              # Formatters (table, JSON, detail)
+├── app/                     # SaaS web app (Next.js + Tailwind + Shadcn UI)
+├── website/                 # Marketing & docs site (Astro)
 ├── .github/workflows/       # CI/CD pipelines
 ├── .goreleaser.yaml         # GoReleaser config
 ├── release-please-config.json

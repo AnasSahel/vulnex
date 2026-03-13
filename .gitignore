@@ -3,6 +3,11 @@ vulnex
 vulnex-*
 !website/public/images/vulnex-*
 
+# Environment
+.env
+.env.*
+!.env.example
+
 # OS
 .DS_Store
 
@@ -21,6 +26,9 @@ node_modules/
 # Astro
 .astro/
 dist/
+
+# iii engine runtime data
+workers/data/
 
 # Claude
 .claude/
