@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRA Evidence Pack — {{.Meta.Repo}} {{.Meta.Release}}</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #1a1a2e; background: #f8f9fa; }
+.container { max-width: 1024px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* Header */
+.report-header { background: #1a1a2e; color: #fff; padding: 2rem 1.5rem; margin-bottom: 2rem; border-radius: 8px; }
+.report-header h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+.report-header .subtitle { color: #8892b0; font-size: 0.875rem; }
+.report-meta { display: flex; gap: 2rem; margin-top: 1rem; flex-wrap: wrap; }
+.report-meta .meta-item { font-size: 0.8rem; }
+.report-meta .meta-label { color: #8892b0; display: block; }
+.report-meta .meta-value { color: #ccd6f6; font-family: 'SFMono-Regular', Consolas, monospace; }
+
+/* Sections */
+.section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 1.5rem; overflow: hidden; }
+.section-header { background: #f1f5f9; border-bottom: 1px solid #e2e8f0; padding: 0.875rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; }
+.section-number { background: #1a1a2e; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+.section-title { font-weight: 600; font-size: 0.9rem; color: #1a1a2e; }
+.section-body { padding: 1.25rem; }
+
+/* Key-value grid */
+.kv-grid { display: grid; grid-template-columns: 200px 1fr; gap: 0.5rem 1rem; }
+.kv-label { font-size: 0.8rem; color: #64748b; font-weight: 500; padding-top: 2px; }
+.kv-value { font-size: 0.875rem; color: #1a1a2e; }
+.kv-value code { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.8rem; background: #f1f5f9; padding: 1px 6px; border-radius: 3px; }
+
+/* Badge */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.badge-verified { background: #dcfce7; color: #15803d; }
+.badge-unverified { background: #fef9c3; color: #a16207; }
+.badge-unknown { background: #f1f5f9; color: #64748b; }
+.badge-yes { background: #dcfce7; color: #15803d; }
+.badge-no { background: #fee2e2; color: #dc2626; }
+.badge-skipped { background: #f1f5f9; color: #64748b; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { background: #f8fafc; font-weight: 600; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid #e2e8f0; }
+td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f8fafc; }
+
+/* Annex I status badges */
+.status-covered { background: #dcfce7; color: #15803d; }
+.status-partial { background: #fef3c7; color: #92400e; }
+.status-not-covered { background: #fee2e2; color: #dc2626; }
+.status-manual { background: #e0f2fe; color: #0369a1; }
+.status-unknown { background: #f1f5f9; color: #64748b; }
+
+/* Placeholder text */
+.placeholder { color: #94a3b8; font-style: italic; font-size: 0.875rem; }
+
+/* Release notes */
+.release-notes { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; color: #475569; }
+
+/* Footer */
+.report-footer { text-align: center; color: #94a3b8; font-size: 0.75rem; padding: 2rem 0 1rem; }
+
+/* Print */
+@media print {
+  body { background: #fff; }
+  .section { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="report-header">
+  <h1>CRA Evidence Pack</h1>
+  <div class="subtitle">EU Cyber Resilience Act — Compliance Evidence Pack</div>
+  <div class="report-meta">
+    <div class="meta-item">
+      <span class="meta-label">Repository</span>
+      <span class="meta-value">{{.Meta.Repo}}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Release</span>
+      <span class="meta-value">{{.Meta.Release}}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Generated</span>
+      <span class="meta-value">{{.GeneratedAt}}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Tool</span>
+      <span class="meta-value">vulnex {{.CLIVersion}}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Section 1: Product Identity -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <div class="section-title">Product Identity &amp; Release Metadata</div>
+  </div>
+  <div class="section-body">
+    <div class="kv-grid">
+      <span class="kv-label">Product Name</span>
+      <span class="kv-value">{{.Product.Name}}</span>
+
+      <span class="kv-label">Version</span>
+      <span class="kv-value"><code>{{.Product.Version}}</code></span>
+
+      <span class="kv-label">Tag</span>
+      <span class="kv-value"><code>{{.Product.TagName}}</code></span>
+
+      {{if .Product.CommitSHA}}
+      <span class="kv-label">Commit SHA</span>
+      <span class="kv-value"><code>{{.Product.CommitSHA}}</code></span>
+      {{end}}
+
+      {{if .Product.PublishedAt}}
+      <span class="kv-label">Published At</span>
+      <span class="kv-value">{{.Product.PublishedAt}}</span>
+      {{end}}
+
+      {{if .Product.CommitAuthor}}
+      <span class="kv-label">Commit Author</span>
+      <span class="kv-value">{{.Product.CommitAuthor}}{{if .Product.CommitDate}} ({{.Product.CommitDate}}){{end}}</span>
+      {{end}}
+
+      {{if .Product.CommitVerification}}
+      <span class="kv-label">Commit Signing</span>
+      <span class="kv-value">
+        {{if eq .Product.CommitVerification "verified"}}
+          <span class="badge badge-verified">Verified</span>
+        {{else if eq .Product.CommitVerification "unverified"}}
+          <span class="badge badge-unverified">Unverified</span>
+        {{else}}
+          <span class="badge badge-unknown">Unknown</span>
+        {{end}}
+      </span>
+      {{end}}
+
+      {{if .Product.ReleaseURL}}
+      <span class="kv-label">Release URL</span>
+      <span class="kv-value"><a href="{{.Product.ReleaseURL}}">{{.Product.ReleaseURL}}</a></span>
+      {{end}}
+    </div>
+
+    {{if .Product.ReleaseNotes}}
+    <div style="margin-top: 1rem;">
+      <div class="kv-label" style="margin-bottom: 0.5rem;">Release Notes</div>
+      <div class="release-notes">{{.Product.ReleaseNotes}}</div>
+    </div>
+    {{end}}
+  </div>
+</div>
+
+<!-- Section 2: SBOM -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <div class="section-title">Software Bill of Materials (SBOM)</div>
+  </div>
+  <div class="section-body">
+    {{if .SBOM.Provided}}
+    <div class="kv-grid" style="margin-bottom: 1rem;">
+      <span class="kv-label">File</span>
+      <span class="kv-value"><code>{{.SBOM.FilePath}}</code></span>
+      <span class="kv-label">Components</span>
+      <span class="kv-value">{{len .SBOM.Components}} items</span>
+    </div>
+    {{if .SBOM.Components}}
+    <table>
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Version</th>
+          <th>Ecosystem</th>
+          <th>PURL</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .SBOM.Components}}
+        <tr>
+          <td>{{.Name}}</td>
+          <td><code>{{.Version}}</code></td>
+          <td>{{.Ecosystem}}</td>
+          <td style="font-size:0.75rem; color:#64748b; word-break:break-all;">{{.PURL}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    {{end}}
+    {{else}}
+    <p class="placeholder">Not provided — run with <code>--sbom &lt;file&gt;</code> to include SBOM component inventory.</p>
+    {{end}}
+  </div>
+</div>
+
+<!-- Section 3: Known Vulnerabilities -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <div class="section-title">Known Vulnerabilities &amp; VEX Statements</div>
+  </div>
+  <div class="section-body">
+    {{if not .SBOM.Provided}}
+    <p class="placeholder">Requires SBOM — run with <code>--sbom &lt;file&gt;</code> to include vulnerability scan results.</p>
+    {{else if not .Vulns.Findings}}
+    <p style="color: #15803d; font-weight: 500;">&#10003; No vulnerabilities found in SBOM.</p>
+    {{else}}
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Package</th>
+          <th>Version</th>
+          <th>Severity</th>
+          <th>Summary</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Vulns.Findings}}
+        <tr>
+          <td><code>{{.ID}}</code></td>
+          <td>{{.Package}}</td>
+          <td><code>{{.Version}}</code></td>
+          <td>{{if .Severity}}{{.Severity}}{{else}}—{{end}}</td>
+          <td>{{.Summary}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    {{end}}
+  </div>
+</div>
+
+<!-- Section 4: Vulnerability Handling -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <div class="section-title">Vulnerability Handling Record</div>
+  </div>
+  <div class="section-body">
+    {{if .Handling.Provided}}
+    {{if .Handling.Decisions}}
+    <table>
+      <thead>
+        <tr>
+          <th>Vulnerability ID</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Rationale</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Handling.Decisions}}
+        <tr>
+          <td><code>{{.VulnID}}</code></td>
+          <td>{{.Status}}</td>
+          <td>{{.Date}}</td>
+          <td>{{.Rationale}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    {{else}}
+    <p class="placeholder">Handling file provided but contains no decisions.</p>
+    {{end}}
+    {{else}}
+    <p class="placeholder">No decisions recorded — run with <code>--handling &lt;decisions.json&gt;</code> to include handling decisions.</p>
+    {{end}}
+  </div>
+</div>
+
+<!-- Section 5: SDL Attestation -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <div class="section-title">Secure Development Lifecycle Attestation</div>
+  </div>
+  <div class="section-body">
+    {{if .SDL.Skipped}}
+    <p class="placeholder">Section skipped: {{.SDL.SkipReason}}</p>
+    {{else if not .SDL.Available}}
+    <p class="placeholder">Not available — requires a GitHub token with <code>repo</code> scope. Set via <code>vulnex config set api_keys.github &lt;token&gt;</code>.</p>
+    {{else}}
+    <div class="kv-grid">
+      <span class="kv-label">Branch</span>
+      <span class="kv-value"><code>{{.Meta.Branch}}</code></span>
+
+      <span class="kv-label">Branch Protection</span>
+      <span class="kv-value">
+        {{if .SDL.BranchProtected}}
+          <span class="badge badge-yes">Enabled</span>
+        {{else}}
+          <span class="badge badge-no">Not configured</span>
+        {{end}}
+      </span>
+
+      {{if .SDL.BranchProtected}}
+      <span class="kv-label">Required Reviewers</span>
+      <span class="kv-value">{{.SDL.RequiredReviews}}</span>
+
+      <span class="kv-label">Dismiss Stale Reviews</span>
+      <span class="kv-value">
+        {{if .SDL.DismissStaleReviews}}<span class="badge badge-yes">Yes</span>{{else}}<span class="badge badge-no">No</span>{{end}}
+      </span>
+
+      <span class="kv-label">Enforce Admins</span>
+      <span class="kv-value">
+        {{if .SDL.EnforceAdmins}}<span class="badge badge-yes">Yes</span>{{else}}<span class="badge badge-no">No</span>{{end}}
+      </span>
+      {{end}}
+
+      <span class="kv-label">Commit Signing</span>
+      <span class="kv-value">
+        {{if .SDL.CommitSigned}}
+          <span class="badge badge-verified">Verified</span>
+        {{else}}
+          <span class="badge badge-no">Not signed</span>
+        {{end}}
+      </span>
+    </div>
+    {{end}}
+  </div>
+</div>
+
+<!-- Section 6: Annex I Mapping -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-number">6</div>
+    <div class="section-title">Annex I Obligation Mapping</div>
+  </div>
+  <div class="section-body">
+    <table>
+      <thead>
+        <tr>
+          <th>CRA Obligation</th>
+          <th>Evidence</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .AnnexI.Items}}
+        <tr>
+          <td style="font-weight: 500;">{{.Obligation}}</td>
+          <td style="color: #475569;">{{.Evidence}}</td>
+          <td><span class="badge {{statusClass .Status}}">{{statusLabel .Status}}</span></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="report-footer">
+  Generated by <strong>vulnex {{.CLIVersion}}</strong> on {{.GeneratedAt}} &mdash;
+  <a href="https://github.com/AnasSahel/vulnex" style="color: #94a3b8;">github.com/AnasSahel/vulnex</a>
+</div>
+
+</div>
+</body>
+</html>

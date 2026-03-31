@@ -1,0 +1,17 @@
+{
+  "name": "workers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "iii -c iii-config.yaml"
+  },
+  "dependencies": {
+    "@vulnex/db": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "motia": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
